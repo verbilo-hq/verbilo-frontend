@@ -1,0 +1,668 @@
+.page {
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+.header {
+  text-align: center;
+  padding: 28px 40px 0;
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--on-surface);
+}
+
+.brandTag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.welcome {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin-top: 12px;
+}
+
+.progressBar {
+  display: flex;
+  gap: 8px;
+  padding: 20px 40px 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.progressItem {
+  flex: 1;
+}
+
+.progressTrack {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--surface-high);
+  transition: background 0.4s;
+}
+
+.progressTrackDone {
+  background: var(--primary);
+}
+
+.progressLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--outline);
+  margin-top: 6px;
+  display: block;
+}
+
+.progressLabelActive {
+  color: var(--primary);
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.stageEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+}
+
+.stepTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  margin: 6px 0;
+  color: var(--on-surface);
+}
+
+.stepHeader {
+  margin-bottom: 28px;
+}
+
+.footerNav {
+  padding: 24px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(171, 180, 180, 0.07);
+}
+
+.skipLink {
+  font-size: 13px;
+  color: var(--outline);
+  cursor: pointer;
+}
+
+.nextLabel {
+  font-size: 12px;
+  color: var(--outline);
+}
+
+.nextActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ===== Chip toggle (used in Step 1 & 2) ===== */
+.chipToggle {
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid rgba(171, 180, 180, 0.25);
+  background: transparent;
+  color: var(--on-surface);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+
+.chipToggleSelected {
+  border: 2px solid var(--primary);
+  background: rgba(150, 241, 255, 0.19);
+  color: var(--primary);
+}
+
+/* ===== Check item (Step 2) ===== */
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface-lowest);
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1.5px solid rgba(171, 180, 180, 0.13);
+  transition: border-color 0.2s;
+}
+
+.checkItemChecked {
+  border-color: rgba(0, 105, 116, 0.25);
+}
+
+.checkItemBox {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+
+.checkItemLabel {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ===== Step 1 ===== */
+.step1Row {
+  display: flex;
+  gap: 40px;
+}
+
+.step1Side {
+  max-width: 280px;
+}
+
+.step1Heading {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.step1Lead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+}
+
+.step1Body {
+  flex: 1;
+}
+
+.step1AvatarRow {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.step1AvatarBlock {
+  text-align: center;
+}
+
+.uploadHint {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--outline);
+  margin-top: 8px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.bioBlock {
+  margin-bottom: 20px;
+}
+
+.bioTextarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(171, 180, 180, 0.2);
+  background: var(--surface-lowest);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  resize: vertical;
+  color: var(--on-surface);
+  box-sizing: border-box;
+}
+
+.dualCardRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.dualCardEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dualCardEyebrowText {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+
+.select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(171, 180, 180, 0.2);
+  background: var(--surface-lowest);
+  font-size: 13px;
+  font-family: var(--font-body);
+  outline: none;
+  color: var(--on-surface);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chipRowLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ===== Step 2 ===== */
+.step2Row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+}
+
+.step2HeadingFlex {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step2Lead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.step2BottomRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.equipmentCard {
+  padding: 28px;
+  background: var(--surface-low);
+}
+
+.equipmentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.quoteBlock {
+  border-radius: 14px;
+  background: var(--gradient-primary);
+  padding: 28px;
+  color: var(--on-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.quoteBg {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  opacity: 0.08;
+}
+
+.quoteText {
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+.quoteAuthor {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Step 3 ===== */
+.step3Row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+
+.gdcCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.gdcIconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(150, 241, 255, 0.19);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gdcTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.gdcLead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.dropZone {
+  border: 2px dashed rgba(171, 180, 180, 0.31);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  text-align: center;
+  background: var(--surface-low);
+  cursor: pointer;
+}
+
+.dropZoneTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.dropZoneHelp {
+  font-size: 12px;
+  color: var(--outline-variant);
+  margin-top: 4px;
+}
+
+.sideCardStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sideCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.sideCardIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sideCardTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sideCardLead {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.uploadedFile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface-low);
+  border-radius: 10px;
+}
+
+.uploadedFileName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.timelineNotice {
+  margin-top: 24px;
+  padding: 16px 24px;
+  background: rgba(150, 241, 255, 0.082);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.timelineTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.timelineDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* ===== Step 4 ===== */
+.step4Row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.strengthCard {
+  padding: 32px;
+  text-align: center;
+}
+
+.strengthRing {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 4px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.strengthRingValue {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.strengthRingLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+}
+
+.strengthTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.strengthLead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+.summaryStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryCard {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.summaryIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: rgba(150, 241, 255, 0.19);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.summaryEyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--outline);
+}
+
+.summaryHeading {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.summarySub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.focusPills {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.summaryDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.welcomeBanner {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  color: var(--on-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcomeBg {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  opacity: 0.06;
+}
+
+.welcomeQuote {
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  line-height: 1.4;
+}
+
+.welcomeStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 8px 16px;
+  border-radius: 99px;
+  position: relative;
+  z-index: 1;
+}
+
+.welcomeStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.welcomeStatusLabel {
+  font-size: 12px;
+  font-weight: 600;
+}

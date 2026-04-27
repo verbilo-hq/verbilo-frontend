@@ -1,0 +1,429 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+}
+
+.kloeCard {
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.kloeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.kloeTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.kloeLead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+}
+
+.kloeRow {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.kloeChip {
+  flex: 1;
+  text-align: center;
+  padding: 20px 8px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid transparent;
+}
+
+.kloeChip:hover {
+  transform: translateY(-1px);
+}
+
+.kloeChipActive {
+  background: rgba(150, 241, 255, 0.38);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 105, 116, 0.082);
+}
+
+.kloeIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(150, 241, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s;
+}
+
+.kloeChipActive .kloeIconWrap {
+  background: var(--primary);
+}
+
+.kloeChipLabel {
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface);
+}
+
+.kloeChipActive .kloeChipLabel {
+  color: var(--primary);
+}
+
+.docPanel {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--surface-low);
+  border-radius: 14px;
+  animation: fadeSlideIn 0.3s ease;
+}
+
+.docPanelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.docPanelHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docPanelTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.docPanelClose {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--outline);
+  font-weight: 600;
+}
+
+.docList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--surface-lowest);
+  border-radius: 10px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.docRow:hover {
+  background: rgba(150, 241, 255, 0.19);
+  transform: translateX(4px);
+}
+
+.docFileIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.docInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.docName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.docActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.docAction {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(0, 105, 116, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.docAction:hover {
+  background: rgba(0, 105, 116, 0.094);
+}
+
+.kloeMeta {
+  font-size: 11px;
+  color: var(--outline-variant);
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bottomRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.subCard {
+  padding: 28px;
+}
+
+.subHeading {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.protocolItem {
+  padding: 14px 0;
+  border-left: 3px solid var(--error);
+  padding-left: 14px;
+  margin-bottom: 14px;
+}
+
+.protocolName {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.protocolDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+}
+
+.auditRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.auditName {
+  font-size: 13px;
+  color: var(--on-surface);
+}
+
+.referralBlock {
+  background: var(--gradient-primary);
+  border-radius: 14px;
+  padding: 28px;
+  color: var(--on-primary);
+  margin-bottom: 20px;
+}
+
+.referralHeading {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.referralLead {
+  font-size: 13px;
+  opacity: 0.85;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.referralRow {
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s;
+  border: 1px solid transparent;
+}
+
+.referralRowActive {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 0;
+}
+
+.referralLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.referralChevron {
+  font-size: 11px;
+  opacity: 0.7;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.referralChevronOpen {
+  transform: rotate(180deg);
+}
+
+.referralPanel {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 10px 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: none;
+  animation: fadeSlideIn 0.25s ease;
+}
+
+.referralPanelLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+
+.referralDocList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.referralDocRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.referralDocRow:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.referralDocIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.referralDocName {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.referralDocMeta {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 1px;
+}
+
+.referralDocAction {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.referralDocAction:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.labCard {
+  padding: 28px;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.labTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.labLead {
+  font-size: 13px;
+  opacity: 0.8;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.labActions {
+  display: flex;
+  gap: 10px;
+}

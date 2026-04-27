@@ -1,0 +1,435 @@
+.hero {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-lg);
+  padding: 44px 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  color: var(--on-primary);
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-dim), transparent);
+  opacity: 0.3;
+}
+
+.heroBg {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  opacity: 0.05;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin: 14px 0 8px;
+  max-width: 500px;
+  line-height: 1.2;
+  position: relative;
+}
+
+.heroDesc {
+  opacity: 0.85;
+  font-size: 13px;
+  max-width: 440px;
+  line-height: 1.6;
+  position: relative;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--on-surface-variant);
+  margin-bottom: 10px;
+}
+
+.statValueIcon {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.statValueLg {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.statUnit {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statSub {
+  font-size: 11px;
+  color: var(--primary);
+  margin-top: 6px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cardHeading {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewAll {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.newsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.newsRow {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s;
+  align-items: flex-start;
+}
+
+.newsRow:hover {
+  background: rgba(150, 241, 255, 0.13);
+}
+
+.newsIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(150, 241, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.newsTagRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.newsTitle {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.newsDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+.shoutInputRow {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+.shoutInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+}
+
+.shoutGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.shoutCard {
+  padding: 16px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+
+.shoutHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.shoutFrom {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.shoutTo {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+}
+
+.shoutMsg {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.shoutFooter {
+  margin-top: 10px;
+}
+
+.shoutFive {
+  cursor: pointer;
+}
+
+.suggestion {
+  padding: 22px;
+  background: var(--gradient-primary);
+  color: var(--on-primary);
+}
+
+.suggestionRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.suggestionIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.suggestionTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.suggestionDesc {
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.suggestionInputRow {
+  display: flex;
+  gap: 10px;
+}
+
+.suggestionTextarea {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-family: var(--font-body);
+  outline: none;
+  resize: none;
+  color: var(--on-primary);
+  box-sizing: border-box;
+}
+
+.huddle {
+  padding: 20px;
+  margin-bottom: 14px;
+}
+
+.sectionHeading {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.huddleList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.huddleItem {
+  padding: 12px;
+  background: var(--surface-low);
+  border-radius: 10px;
+}
+
+.huddleTag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.huddleText {
+  font-size: 11px;
+  color: var(--on-surface);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.celebrations {
+  padding: 22px;
+}
+
+.eotm {
+  padding: 18px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  color: var(--on-primary);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.eotmEyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.eotmName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.eotmRole {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.eotmQuote {
+  font-size: 11px;
+  opacity: 0.75;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.subSectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--on-surface-variant);
+  margin-bottom: 10px;
+}
+
+.milestoneRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(171, 180, 180, 0.063);
+}
+
+.milestoneName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.milestoneEvent {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+}
+
+.milestoneEmoji {
+  font-size: 14px;
+}
+
+.milestoneWhen {
+  font-size: 9px;
+  color: var(--outline);
+  min-width: 50px;
+  text-align: right;
+}
+
+.subSectionLabelMid {
+  margin-top: 16px;
+}
+
+.achievement {
+  padding: 10px 12px;
+  background: rgba(150, 241, 255, 0.082);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.achievementName {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.achievementText {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+}

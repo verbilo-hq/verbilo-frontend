@@ -1,0 +1,23 @@
+.container {
+  margin-bottom: 28px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-container);
+  border-radius: 14px;
+  padding: 14px 20px;
+  max-width: 600px;
+}
+
+.input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 14px;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+}

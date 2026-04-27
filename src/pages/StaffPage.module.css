@@ -1,0 +1,332 @@
+.searchWrap {
+  margin-bottom: 28px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-container);
+  border-radius: 14px;
+  padding: 14px 20px;
+  max-width: 600px;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 14px;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.lead {
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 28px;
+  border-bottom: 2px solid var(--surface-high);
+}
+
+.tab {
+  padding: 12px 4px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--on-surface-variant);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+}
+
+.featuredCard {
+  padding: 32px;
+  margin-bottom: 28px;
+  display: flex;
+  gap: 32px;
+}
+
+.featuredPhotoWrap {
+  position: relative;
+}
+
+.featuredPhoto {
+  width: 180px;
+  height: 220px;
+  border-radius: 14px;
+  background: var(--on-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.featuredBadge {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-highest);
+  padding: 4px 14px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.featuredBadgeText {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.featuredBody {
+  flex: 1;
+}
+
+.featuredName {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+
+.featuredQual {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 14px;
+}
+
+.featuredBio {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.featuredActions {
+  display: flex;
+  gap: 12px;
+}
+
+.staffGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.staffCard {
+  padding: 20px;
+  text-align: center;
+}
+
+.staffAvatarWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--success);
+  border: 2px solid var(--surface-lowest);
+}
+
+.staffName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 2px;
+}
+
+.staffRole {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+}
+
+.staffActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.shiftCard {
+  background: var(--gradient-primary);
+  border-radius: 14px;
+  padding: 28px;
+  color: var(--on-primary);
+}
+
+.shiftTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.shiftAvatars {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.shiftAvatarMore {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.shiftStat {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+}
+
+.shiftStat + .shiftStat {
+  margin-top: 12px;
+}
+
+.shiftStatHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.shiftStatDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.shiftStatLabel {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.shiftStatValue {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.locationCard {
+  padding: 24px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.locationIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.locationName {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.locationAddress {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.locationStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.locationStat {
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-card);
+}
+
+.locationStat.highlight {
+  background: rgba(150, 241, 255, 0.19);
+  border: 2px solid var(--primary);
+  box-shadow: none;
+}
+
+.locationStatValue {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--on-surface);
+}
+
+.locationStat.highlight .locationStatValue {
+  color: var(--primary);
+}
+
+.locationStatLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+}

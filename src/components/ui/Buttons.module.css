@@ -1,0 +1,38 @@
+.btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: filter 0.2s, background 0.2s, color 0.2s;
+}
+
+.primary {
+  background: var(--gradient-primary);
+  color: var(--on-primary);
+  padding: 14px 28px;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.primary:hover {
+  filter: brightness(1.08);
+}
+
+.secondary {
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  padding: 12px 24px;
+  font-size: 13px;
+}
+
+.outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 12px 24px;
+  font-size: 14px;
+}

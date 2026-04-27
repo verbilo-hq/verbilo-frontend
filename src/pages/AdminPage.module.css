@@ -1,0 +1,599 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.lead {
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  margin-top: 6px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.sectionTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+  padding: 6px;
+  background: var(--surface-low);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.sectionTab {
+  flex: 1;
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  background: transparent;
+  color: var(--on-surface-variant);
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sectionTabActive {
+  background: var(--surface-lowest);
+  box-shadow: var(--shadow-card);
+}
+
+.sectionTabBadge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--surface-high);
+  color: var(--outline);
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.statIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.statLabel {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+}
+
+.filterRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filterChip {
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  transition: all 0.2s;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.5fr;
+  padding: 12px 24px;
+  background: var(--surface-low);
+  gap: 12px;
+}
+
+.tableHeaderCell {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--outline);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.5fr;
+  padding: 14px 24px;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid rgba(171, 180, 180, 0.07);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tableRow:hover {
+  background: var(--surface-low);
+}
+
+.docCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.docIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.docName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.docMeta {
+  font-size: 11px;
+  color: var(--outline-variant);
+}
+
+.statusCell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.statusLabel {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.uploaderCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uploaderName {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.dateCell {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.rowActionBtn {
+  padding: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+}
+
+.empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--on-surface-variant);
+}
+
+.emptyText {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.cloudFooter {
+  margin-top: 20px;
+  padding: 14px 24px;
+  background: rgba(150, 241, 255, 0.082);
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cloudInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cloudInfoText {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.cloudInfoBold {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.cloudSync {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ============== Upload modal ============== */
+.modalScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modalCard {
+  background: var(--surface-lowest);
+  border-radius: 20px;
+  padding: 36px;
+  width: 520px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.modalCloser {
+  cursor: pointer;
+}
+
+.modalBlock {
+  margin-bottom: 20px;
+}
+
+.modalLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sectionPicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sectionPickerBtn {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  transition: all 0.2s;
+}
+
+.dropZone {
+  border: 2px dashed var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 36px 24px;
+  text-align: center;
+  background: var(--surface-low);
+  transition: all 0.2s;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.dropZoneActive {
+  border-color: var(--primary);
+  background: rgba(150, 241, 255, 0.13);
+}
+
+.dropZoneIconWrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(150, 241, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.dropZoneTitle {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-bottom: 4px;
+}
+
+.dropZoneHelp {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.dropZoneLink {
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropZoneFormats {
+  font-size: 11px;
+  color: var(--outline-variant);
+  margin-top: 10px;
+}
+
+.modalTextarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(171, 180, 180, 0.2);
+  background: var(--surface-lowest);
+  font-size: 13px;
+  font-family: var(--font-body);
+  outline: none;
+  resize: vertical;
+  color: var(--on-surface);
+  box-sizing: border-box;
+}
+
+.modalNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: rgba(150, 241, 255, 0.13);
+  border-radius: 10px;
+}
+
+.modalNoticeText {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+}
+
+/* ============== Detail Panel ============== */
+.panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 420px;
+  height: 100vh;
+  background: var(--surface-lowest);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panelHead {
+  padding: 28px 28px 0;
+  flex-shrink: 0;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.panelPreview {
+  height: 120px;
+  background: var(--surface-low);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.panelPreviewMeta {
+  font-size: 11px;
+  color: var(--outline);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px 28px;
+}
+
+.panelDocName {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.panelTags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.panelMetaList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.panelMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panelMetaLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--outline);
+}
+
+.panelMetaValue {
+  font-size: 13px;
+  color: var(--on-surface);
+  margin-top: 1px;
+}
+
+.rejectionBox {
+  padding: 14px;
+  background: rgba(168, 56, 54, 0.03);
+  border-radius: 10px;
+  border-left: 3px solid var(--error);
+  margin-bottom: 20px;
+}
+
+.rejectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--error);
+  margin-bottom: 4px;
+}
+
+.rejectionReason {
+  font-size: 12px;
+  color: var(--on-surface);
+  line-height: 1.5;
+}
+
+.panelActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.approveRejectRow {
+  display: flex;
+  gap: 8px;
+}
+
+.approveBtn {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(76, 175, 80, 0.082);
+  color: var(--success);
+  border: 1.5px solid rgba(76, 175, 80, 0.25);
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.rejectBtn {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(168, 56, 54, 0.03);
+  color: var(--error);
+  border: 1.5px solid rgba(168, 56, 54, 0.25);
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.deleteBtn {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  color: var(--error);
+  border: none;
+  border-radius: 9999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0.7;
+}
