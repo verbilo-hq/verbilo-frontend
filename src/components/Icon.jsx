@@ -13,7 +13,7 @@ import {
   HelpCircle, CloudDownload, BookMarked, CheckCircle, Lightbulb,
   Upload, Trash2, MoreVertical, Filter, ChevronDown, XCircle,
   CheckSquare, Clock3, Archive, RefreshCw, Cloud, FilePlus,
-  UserCheck, ShieldAlert, BarChart3, Layers,
+  UserCheck, ShieldAlert, BarChart3, Layers, Info, ChevronLeft, Phone,
 } from "lucide-react";
 
 const iconMap = {
@@ -37,7 +37,7 @@ const iconMap = {
   chevrondown: ChevronDown, xcircle: XCircle, checksquare: CheckSquare,
   clock3: Clock3, archive: Archive, refresh: RefreshCw, cloud: Cloud,
   fileplus: FilePlus, usercheck: UserCheck, shieldalert: ShieldAlert,
-  barchart: BarChart3, layers: Layers,
+  barchart: BarChart3, layers: Layers, info: Info, back: ChevronLeft, phone: Phone,
 };
 
 export const I = ({ name, size = 18, strokeWidth = 1.75, color }) => {

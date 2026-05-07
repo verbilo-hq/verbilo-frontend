@@ -101,7 +101,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 320px;
   gap: 24px;
 }
 
@@ -1020,4 +1020,761 @@
   font-size: 12px;
   color: var(--on-surface);
   margin-top: 1px;
+}
+
+/* ══ Section dividers ══ */
+.sectionBlock {
+  margin-bottom: 40px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(171, 180, 180, 0.1);
+}
+
+.sectionHeaderIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sectionHeaderTitle {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--on-surface);
+}
+
+.sectionHeaderSub {
+  display: block;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ══ Internal module cards ══ */
+.internalGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.internalCard {
+  display: flex;
+  background: var(--surface-container);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(171, 180, 180, 0.08);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.internalCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.internalCardAccent {
+  width: 4px;
+  background: linear-gradient(180deg, #9C27B0, #7B1FA2);
+  flex-shrink: 0;
+}
+
+.internalCardBody {
+  padding: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.internalCardTop {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.internalCardTitle {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.internalCardDesc {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.internalCardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.internalCardMeta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.internalCardUpdated {
+  font-size: 10px;
+  color: var(--outline);
+}
+
+/* ══ How To video cards ══ */
+.howToGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 12px;
+}
+
+.howToCard {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface-container);
+  border: 1px solid rgba(171, 180, 180, 0.08);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.howToCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.howToThumb {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.howToPlay {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.howToDur {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.howToSampleBadge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.howToBody {
+  padding: 10px 12px 12px;
+}
+
+.howToCat {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.howToTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+
+/* ══ Search results ══ */
+.searchResultsMeta {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin-bottom: 16px;
+}
+
+.searchEmpty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.searchResultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.searchResultItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--surface-container);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(171, 180, 180, 0.08);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.searchResultItem:hover {
+  background: var(--surface-high);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.searchResultLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.searchResultTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.searchResultMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ══ How To extras ══ */
+.howToExtBadge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 2px 5px;
+  display: flex;
+  align-items: center;
+}
+
+.howToCatFilter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.howToCatBtn {
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1.5px solid rgba(171, 180, 180, 0.2);
+  background: var(--surface-container);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.howToCatBtn:hover {
+  border-color: #E91E63;
+  color: #E91E63;
+}
+
+.howToCatBtnActive {
+  background: rgba(233, 30, 99, 0.09);
+  border-color: #E91E63;
+  color: #E91E63;
+}
+
+.howToEmpty {
+  text-align: center;
+  padding: 40px;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+
+/* ══ Add How To modal ══ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.htModal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+}
+
+.htModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 24px 0;
+  gap: 12px;
+}
+
+.htModalTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--on-surface);
+}
+
+.htModalSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.htModalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.htModalBody {
+  padding: 20px 24px;
+}
+
+.htModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 24px 24px;
+}
+
+.htFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.htField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.htFieldFull {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  grid-column: span 2;
+}
+
+.htFieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+}
+
+.htFieldInput {
+  padding: 10px 12px;
+  border: 1.5px solid rgba(171, 180, 180, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--surface-low);
+  color: var(--on-surface);
+  outline: none;
+  font-family: inherit;
+}
+
+.htFieldInput:focus {
+  border-color: var(--primary);
+}
+
+.htFieldSelect {
+  padding: 10px 12px;
+  border: 1.5px solid rgba(171, 180, 180, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--surface-low);
+  color: var(--on-surface);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.htFieldSelect:focus {
+  border-color: var(--primary);
+}
+
+.htFieldInputErr {
+  border-color: var(--error) !important;
+}
+
+.htFieldErr {
+  font-size: 11px;
+  color: var(--error);
+}
+
+/* ══ Upload zone ══ */
+.uploadZone {
+  border: 2px dashed rgba(171, 180, 180, 0.3);
+  border-radius: 12px;
+  padding: 28px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--surface-low);
+}
+
+.uploadZone:hover {
+  border-color: #E91E63;
+  background: rgba(233, 30, 99, 0.03);
+}
+
+.uploadZoneDrag {
+  border-color: #E91E63;
+  background: rgba(233, 30, 99, 0.06);
+}
+
+.uploadZoneErr {
+  border-color: var(--error);
+}
+
+.uploadZoneFilled {
+  border-style: solid;
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.04);
+  cursor: default;
+}
+
+.uploadPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.uploadIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(233, 30, 99, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.uploadPromptText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.uploadPromptSub {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.uploadFilled {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.uploadFileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.uploadFileName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uploadFileMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+.uploadChangeBtn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(171, 180, 180, 0.3);
+  background: var(--surface-container);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.uploadChangeBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.uploadIconPurple {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(156, 39, 176, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.htFieldTextarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.6;
+}
+
+/* ══ Upload Training button ══ */
+.uploadTrainingBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #9C27B0;
+  background: rgba(156, 39, 176, 0.08);
+  color: #9C27B0;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.uploadTrainingBtn:hover {
+  background: rgba(156, 39, 176, 0.16);
+  transform: translateY(-1px);
+}
+
+.uploadTrainingBtn:active {
+  transform: none;
+}
+
+/* ══ Add Video button ══ */
+.addVideoBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #E91E63;
+  background: rgba(233, 30, 99, 0.08);
+  color: #E91E63;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.addVideoBtn:hover {
+  background: rgba(233, 30, 99, 0.16);
+  transform: translateY(-1px);
+}
+
+.addVideoBtn:active {
+  transform: none;
+}
+
+/* ══ How To search ══ */
+.howToSearchWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  background: var(--surface-lowest);
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+
+.howToSearchWrap:focus-within {
+  border-color: var(--primary);
+}
+
+.howToSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+}
+
+.howToSearchInput::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.7;
+}
+
+.howToSearchClear {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.howToSearchClear:hover {
+  opacity: 1;
+}
+
+/* ══ How To video player modal ══ */
+.htPlayerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(6px);
+  animation: htFadeIn 0.18s ease;
+}
+
+@keyframes htFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.htPlayerInner {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  width: 92vw;
+  max-width: 1200px;
+  height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
+  animation: htSlideUp 0.2s ease;
+}
+
+@keyframes htSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.htPlayerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  gap: 12px;
+}
+
+.htPlayerMeta {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #E91E63;
+  margin-bottom: 4px;
+}
+
+.htPlayerTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.htPlayerClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.htPlayerClose:hover {
+  opacity: 1;
+}
+
+.htPlayerVideo {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: block;
+  object-fit: contain;
+  background: #000;
 }

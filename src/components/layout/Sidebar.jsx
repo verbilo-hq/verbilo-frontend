@@ -1,17 +1,29 @@
 import { I } from "../Icon";
+import { Avatar } from "../ui/Avatar";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: "dashboard" },
-  { id: "clinical", label: "Clinical Resources", icon: "clinical" },
-  { id: "staff", label: "Staff Directory", icon: "staff" },
-  { id: "marketing", label: "Marketing Hub", icon: "marketing" },
-  { id: "hr", label: "HR Hub", icon: "building" },
-  { id: "training", label: "Training Hub", icon: "training" },
-  { id: "admin", label: "Document Upload Centre", icon: "upload" },
+  { id: "dashboard", label: "Dashboard",            icon: "dashboard"                    },
+  { id: "manager",   label: "Manager Hub",          icon: "layers",   roles: ["manager"] },
+  { id: "clinical",  label: "Clinical Resources",   icon: "clinical"                     },
+  { id: "staff",     label: "Staff Directory",      icon: "staff"                        },
+  { id: "marketing", label: "Marketing Hub",        icon: "marketing"                    },
+  { id: "hr",        label: "HR Hub",               icon: "building"                     },
+  { id: "training",  label: "Training Hub",         icon: "training"                     },
+  { id: "cpd",       label: "CPD Hub",              icon: "award"                        },
+  { id: "cqc",       label: "CQC Compliance Hub",   icon: "checksquare"                  },
+  { id: "lab",       label: "Lab Work Hub",         icon: "clipboard"                    },
 ];
 
-export const Sidebar = ({ current, onNav }) => (
+const roleLabel = {
+  manager:     "Practice Manager",
+  dentist:     "Dentist",
+  nurse:       "Dental Nurse",
+  hygienist:   "Hygienist / Therapist",
+  receptionist:"Receptionist",
+};
+
+export const Sidebar = ({ current, onNav, currentUser }) => (
   <aside className={styles.sidebar}>
     <div className={styles.brand}>
       <div className={styles.brandRow}>
@@ -26,7 +38,7 @@ export const Sidebar = ({ current, onNav }) => (
     </div>
 
     <nav className={styles.nav}>
-      {navItems.map((item) => {
+      {navItems.filter(item => !item.roles || item.roles.includes(currentUser?.role)).map((item) => {
         const active = current === item.id;
         return (
           <a
@@ -42,10 +54,20 @@ export const Sidebar = ({ current, onNav }) => (
     </nav>
 
     <div className={styles.footer}>
-      <a className={styles.footerLink}>
-        <I name="settings" size={16} /> Settings
-      </a>
-      <a onClick={() => onNav("login")} className={styles.footerLink}>
+      {/* Logged-in user */}
+      {currentUser && (
+        <div className={styles.currentUser}>
+          <Avatar name={currentUser.displayName} size={32} />
+          <div className={styles.currentUserInfo}>
+            <span className={styles.currentUserName}>{currentUser.displayName}</span>
+            <span className={styles.currentUserRole}>
+              {roleLabel[currentUser.role] || currentUser.role}
+            </span>
+          </div>
+        </div>
+      )}
+
+<a onClick={() => onNav("login")} className={styles.footerLink}>
         <I name="logout" size={16} /> Logout
       </a>
       <p className={styles.copyright}>

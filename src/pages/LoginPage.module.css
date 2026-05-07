@@ -90,6 +90,60 @@
   padding: 40px 36px;
 }
 
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  background: var(--surface-lowest);
+  color: var(--on-surface-variant);
+  transition: border-color 0.15s;
+}
+
+.inputWrap:focus-within {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.inputWrapErr {
+  border-color: var(--error);
+}
+
+.input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 14px;
+  color: var(--on-surface);
+  font-family: var(--font-body);
+}
+
+.errorMsg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--error);
+  background: rgba(168, 56, 54, 0.07);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+
 .passwordHeader {
   display: flex;
   justify-content: space-between;
@@ -205,4 +259,11 @@
 .statusLabel {
   font-size: 12px;
   color: var(--on-surface-variant);
+}
+
+.copyright {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  opacity: 0.5;
+  margin-top: 10px;
 }

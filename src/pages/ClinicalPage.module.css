@@ -1,154 +1,201 @@
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-}
-
-.kloeCard {
-  padding: 32px;
-  margin-bottom: 24px;
-}
-
-.kloeHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.kloeTitle {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary);
-  margin-bottom: 8px;
-}
-
-.kloeLead {
+/* ── Search results ──────────────────────────────────────────────────────── */
+.searchCount {
   font-size: 13px;
   color: var(--on-surface-variant);
-  line-height: 1.6;
+  margin-bottom: 12px;
 }
+.searchCount strong { color: var(--on-surface); }
 
-.kloeRow {
-  display: flex;
-  gap: 16px;
-  margin-top: 24px;
-}
-
-.kloeChip {
-  flex: 1;
-  text-align: center;
-  padding: 20px 8px;
-  background: var(--surface-low);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.25s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 2px solid transparent;
-}
-
-.kloeChip:hover {
-  transform: translateY(-1px);
-}
-
-.kloeChipActive {
-  background: rgba(150, 241, 255, 0.38);
-  border-color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 105, 116, 0.082);
-}
-
-.kloeIconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: rgba(150, 241, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.25s;
-}
-
-.kloeChipActive .kloeIconWrap {
-  background: var(--primary);
-}
-
-.kloeChipLabel {
-  font-size: 11px;
-  font-weight: 700;
-  margin-top: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--on-surface);
-}
-
-.kloeChipActive .kloeChipLabel {
-  color: var(--primary);
-}
-
-.docPanel {
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--surface-low);
-  border-radius: 14px;
-  animation: fadeSlideIn 0.3s ease;
-}
-
-.docPanelHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.docPanelHeading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.docPanelTitle {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.docPanelClose {
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--outline);
-  font-weight: 600;
-}
-
-.docList {
+.searchResultList {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.docRow {
+.searchResultRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+.searchResultRow:hover {
+  background: var(--surface-container-low);
+  border-color: var(--primary);
+}
+
+.searchResultLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.searchResultMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.searchResultSection {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.searchResultLabel {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.searchResultName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.searchResultDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 0;
+  color: var(--on-surface-variant);
+  font-size: 14px;
+}
+.searchEmpty p { margin: 0; }
+.searchEmpty strong { color: var(--on-surface); }
+
+/* ── Emergency reference banner ─────────────────────────────────────────── */
+.emergencyBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.emergencyBannerLeft {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
-  background: var(--surface-lowest);
-  border-radius: 10px;
-  transition: all 0.2s;
+}
+
+.emergencyBannerIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.emergencyBannerTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  font-family: var(--font-display);
+}
+
+.emergencyBannerSub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+.emergencyBannerActions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.emergencyBannerBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-display);
   cursor: pointer;
+  transition: background 0.15s;
+}
+.emergencyBannerBtn:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Tab navigation ──────────────────────────────────────────────────────── */
+.tabNav {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--surface-container);
 }
 
-.docRow:hover {
-  background: rgba(150, 241, 255, 0.19);
-  transform: translateX(4px);
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 18px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  margin-bottom: -1px;
 }
+.tabBtn:hover { color: var(--on-surface); }
+.tabBtnActive { color: var(--primary); border-bottom-color: var(--primary); }
 
-.docFileIcon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+.tabContent { padding-top: 4px; }
+
+/* ── Shared doc row ──────────────────────────────────────────────────────── */
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.docRow:last-child { border-bottom: none; }
+
+.docIconWrap {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: rgba(0,105,116,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,6 +205,9 @@
 .docInfo {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .docName {
@@ -172,10 +222,6 @@
 .docMeta {
   font-size: 11px;
   color: var(--on-surface-variant);
-  margin-top: 2px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .docActions {
@@ -184,246 +230,1056 @@
   flex-shrink: 0;
 }
 
-.docAction {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(0, 105, 116, 0.03);
+.docBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--surface-lowest);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   transition: background 0.15s;
 }
+.docBtn:hover { background: rgba(0,105,116,0.1); }
 
-.docAction:hover {
-  background: rgba(0, 105, 116, 0.094);
+/* ── Protocols tab ───────────────────────────────────────────────────────── */
+.protoCatRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
-.kloeMeta {
-  font-size: 11px;
-  color: var(--outline-variant);
-  margin-top: 20px;
+.protoCatBtn {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--surface-container);
+  background: var(--surface-lowest);
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.protoCatBtn:hover { border-color: var(--primary); color: var(--on-surface); }
+.protoCatBtnActive { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.protoCard { padding: 0; overflow: hidden; }
+
+.protoCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--surface-container);
 }
 
-.bottomRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+.protoCardTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.subCard {
-  padding: 28px;
+.protoCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(0,105,116,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.subHeading {
+.protoCardTitle {
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 700;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.protocolItem {
-  padding: 14px 0;
-  border-left: 3px solid var(--error);
-  padding-left: 14px;
-  margin-bottom: 14px;
-}
-
-.protocolName {
-  font-size: 14px;
-  font-weight: 700;
-  font-family: var(--font-display);
-}
-
-.protocolDesc {
+.protoCardCount {
   font-size: 12px;
   color: var(--on-surface-variant);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
-.auditRow {
+.protoList { padding: 0 24px; }
+
+.protoRow {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.protoRow:last-child { border-bottom: none; }
+
+.protoRowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.auditName {
-  font-size: 13px;
+.protoName {
+  font-size: 14px;
+  font-weight: 600;
   color: var(--on-surface);
 }
 
-.referralBlock {
-  background: var(--gradient-primary);
-  border-radius: 14px;
-  padding: 28px;
-  color: var(--on-primary);
-  margin-bottom: 20px;
+.protoDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
 }
 
-.referralHeading {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px;
+.protoRowRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.referralLead {
-  font-size: 13px;
-  opacity: 0.85;
-  line-height: 1.5;
-  margin-bottom: 20px;
+.protoReviewed {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
 }
 
-.referralRow {
-  padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  margin-bottom: 10px;
-  font-size: 13px;
+/* ── Consent & PILs tab ──────────────────────────────────────────────────── */
+.consentLayout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+
+.consentCatTabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.consentCatTab {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--surface-container);
+  background: var(--surface-lowest);
+  color: var(--on-surface-variant);
+  font-size: 12px;
   font-weight: 600;
+  font-family: var(--font-display);
   cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.consentCatTab:hover { border-color: var(--primary); }
+.consentCatTabActive { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.consentCard { padding: 0; overflow: hidden; }
+
+.consentCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--surface-container);
+}
+
+.consentCardTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.consentCardCount {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  background: var(--surface-lowest);
+  border-radius: 9999px;
+  padding: 3px 10px;
+}
+
+.consentDocList { padding: 0 24px; }
+
+.pilCard { padding: 0; overflow: hidden; }
+
+.pilHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--surface-container);
+}
+
+.pilTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pilCount {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.pilList { padding: 0 16px; }
+
+.pilRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.pilRow:last-child { border-bottom: none; }
+
+.pilRowLeft {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pilName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.pilCategory {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* ── Guidelines tab ──────────────────────────────────────────────────────── */
+.guidelineIntro {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--primary);
+}
+
+.guidelineGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.guidelineCard { padding: 0; overflow: hidden; }
+
+.guidelineCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: background 0.2s;
-  border: 1px solid transparent;
+  padding: 14px 20px;
+  background: var(--surface-lowest);
+  border-bottom: 1px solid var(--surface-container);
 }
 
-.referralRowActive {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.3);
-  border-bottom: none;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  margin-bottom: 0;
-}
-
-.referralLabel {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.referralChevron {
+.guidelineOrg {
   font-size: 11px;
-  opacity: 0.7;
-  display: inline-block;
-  transition: transform 0.2s;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
 }
 
-.referralChevronOpen {
-  transform: rotate(180deg);
+.guidelineItemCount {
+  font-size: 11px;
+  color: var(--on-surface-variant);
 }
 
-.referralPanel {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0 0 10px 10px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-top: none;
-  animation: fadeSlideIn 0.25s ease;
+.guidelineRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--surface-container);
 }
+.guidelineRow:last-child { border-bottom: none; }
 
-.referralPanelLabel {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.6;
-  margin-bottom: 10px;
-}
-
-.referralDocList {
+.guidelineRowMain {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
 }
 
-.referralDocRow {
+.guidelineName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.guidelineSummary {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+}
+
+.guidelineRowRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.guidelineYear {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+
+/* ── Referrals tab ───────────────────────────────────────────────────────── */
+.referralGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.referralItem { display: flex; flex-direction: column; }
+
+.referralToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-container);
+  background: var(--surface-container);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--on-surface);
+  transition: all 0.15s;
+}
+.referralToggle:hover { border-color: var(--primary); }
+.referralToggleOpen {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.referralToggleUrgent {
+  background: linear-gradient(135deg, #b71c1c, #c62828);
+  border-color: #b71c1c;
+  color: #fff;
+}
+
+.referralToggleLeft {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+}
+
+/* ── Consent Forms ── */
+.consentSourceBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.consentSourceBadge:hover { opacity: 0.75; }
+
+.consentFormCount {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.25);
+  color: inherit;
 }
 
-.referralDocRow:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.referralDocIcon {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+.referralToggleIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.referralDocName {
+.urgentPill {
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.06em;
+}
+
+.referralPanel {
+  border: 1px solid var(--surface-container);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: 0 16px;
+  background: var(--surface-lowest);
+}
+
+.referralDocRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.referralDocRow:last-child { border-bottom: none; }
+
+/* ── Safeguarding tab ────────────────────────────────────────────────────── */
+.safeguardingLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.sgContactsCard,
+.sgDocsCard,
+.sgAlertCard,
+.sgPathwayCard { margin-bottom: 16px; }
+
+.sgContactsCard,
+.sgDocsCard,
+.sgPathwayCard { padding: 20px; }
+
+.sgCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.sgCardSub {
   font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.sgContactRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.sgContactRow:last-child { border-bottom: none; }
+
+.sgContactInfo { display: flex; flex-direction: column; gap: 2px; }
+
+.sgContactRole {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
   font-weight: 600;
+}
+
+.sgContactName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.sgContactPhone {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sgAlertCard {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 14px;
+  padding: 16px 20px !important;
+  background: rgba(229,57,53,0.05) !important;
+  border: 1px solid rgba(229,57,53,0.2) !important;
+  align-items: flex-start;
+}
+
+.sgAlertIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(229,57,53,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.sgAlertTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--error, #e53935);
+  font-family: var(--font-display);
+  margin-bottom: 4px;
+}
+
+.sgAlertBody {
+  font-size: 12px;
+  color: var(--on-surface);
+  line-height: 1.5;
+}
+
+.sgDocList { display: flex; flex-direction: column; }
+
+.sgStep {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.sgStep:last-child { margin-bottom: 0; }
+
+.sgStepNum {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sgStepLabel {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-bottom: 2px;
+}
+
+.sgStepDesc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+}
+
+/* ── Lab & Digital tab ───────────────────────────────────────────────────── */
+.labLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.labCardTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.labContactRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.labContactRow:last-child { border-bottom: none; }
+
+.labContactMain { display: flex; flex-direction: column; gap: 3px; }
+.labContactName { font-size: 13px; font-weight: 700; color: var(--on-surface); }
+.labContactSpec { font-size: 11px; color: var(--on-surface-variant); }
+
+.labContactRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.labTurnaround {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.labPhone {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.labGuideList { display: flex; flex-direction: column; }
+
+/* ── Emergency modal ─────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.emergencyModal {
+  background: var(--surface-low);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 1000px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.emergencyModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 28px;
+  background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+  flex-shrink: 0;
+}
+
+.emergencyModalEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.7);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.emergencyModalTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.modalCloseBtn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  padding: 4px;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.modalCloseBtn:hover { background: rgba(255,255,255,0.25); }
+
+.emergencyTableWrap {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0 28px 24px;
+}
+
+.emergencyTableHead {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 2px solid var(--surface-container);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--on-surface-variant);
+  position: sticky;
+  top: 0;
+  background: var(--surface-low);
+  z-index: 1;
+  margin-top: 16px;
+}
+
+.emergencyTableRow {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--surface-container);
+  font-size: 12px;
+  line-height: 1.5;
+  align-items: flex-start;
+}
+.emergencyTableRow:last-child { border-bottom: none; }
+
+.emergencyDrugName { font-weight: 700; color: var(--on-surface); }
+.emergencyIndication { color: var(--on-surface-variant); }
+.emergencyDose { font-weight: 700; color: var(--primary); }
+.emergencyRoute { color: var(--on-surface); }
+.emergencyNotes { font-size: 11px; color: var(--on-surface-variant); font-style: italic; }
+
+/* LA calculator */
+.laWrap { overflow-y: auto; flex: 1; padding: 0 28px 24px; }
+
+.laCalcRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-md);
+  margin: 16px 0 0;
+  flex-wrap: wrap;
+}
+
+.laCalcLabel { font-size: 13px; font-weight: 700; color: var(--on-surface); }
+
+.laWeightInput {
+  width: 80px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-container);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+.laWeightInput:focus { border-color: var(--primary); }
+
+.laCalcUnit { font-size: 14px; font-weight: 600; color: var(--on-surface-variant); }
+
+.laCalcNote { font-size: 12px; color: var(--on-surface-variant); flex: 1; }
+
+.laMaxCarts { font-weight: 800; font-size: 14px; color: var(--primary); }
+
+.laDisclaimer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  padding: 10px 14px;
+  background: rgba(245,124,0,0.08);
+  border-radius: var(--radius-sm);
+  margin-top: 16px;
+  border-left: 3px solid #F57C00;
+}
+
+/* ── Lab Work Tracker ─────────────────────────────────────────────────────── */
+
+.labTrackerWrap {
+  margin-top: 24px;
+}
+
+.labTrackerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.labTrackerTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 3px;
+}
+
+.labTrackerSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.logCaseBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.logCaseBtn:hover { opacity: 0.88; }
+
+.labTrackerCard {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.labTrackerTableHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--surface-lowest);
+  border-bottom: 1px solid var(--outline-variant);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+}
+
+.labTrackerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--outline-variant);
+  transition: background 0.12s;
+}
+.labTrackerRow:last-child { border-bottom: none; }
+.labTrackerRow:hover { background: var(--surface-container-low); }
+
+.labPatientName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.referralDocMeta {
-  font-size: 10px;
-  opacity: 0.6;
-  margin-top: 1px;
+.labClinician {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.referralDocAction {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
+.labWorkType {
+  font-size: 13px;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labNotes {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+.labLabName {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labSentDate {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.labDueDate {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-top: 2px;
+}
+
+.labDueDateOverdue {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e53935;
+  margin-top: 2px;
+}
+
+.labStatusPill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.labAdvanceBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--outline-variant);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.labAdvanceBtn:hover {
+  background: var(--surface-container-low);
+  border-color: var(--primary);
+}
+
+/* ── Log Case modal ──────────────────────────────────────────────────────── */
+
+.labCaseModal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 640px;
+  max-width: 96vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  overflow: hidden;
+}
+
+.labCaseModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px 16px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.labCaseModalTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+
+.labCaseModalSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.labCaseModalBody {
+  padding: 20px 26px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.labCaseGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.labCaseField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.labCaseFieldSpan {
+  grid-column: 1 / -1;
+}
+
+.labCaseLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.labCaseInput {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-container);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.labCaseInput:focus { border-color: var(--primary); }
+
+.labCaseInputErr { border-color: var(--error) !important; }
+
+.labCaseErr {
+  font-size: 11px;
+  color: var(--error);
+}
+
+.labCaseOptional {
+  font-weight: 400;
+  color: var(--on-surface-variant);
+}
+
+.labCaseModalFooter {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.referralDocAction:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.labCard {
-  padding: 28px;
-  background: var(--primary);
-  color: var(--on-primary);
-}
-
-.labTitle {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.labLead {
-  font-size: 13px;
-  opacity: 0.8;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.labActions {
-  display: flex;
+  justify-content: flex-end;
   gap: 10px;
+  padding: 16px 26px;
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface-lowest);
 }
+
+.labCaseCancelBtn {
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.labCaseCancelBtn:hover { background: var(--surface-container-low); }

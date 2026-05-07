@@ -1,0 +1,660 @@
+/* ── UDA Hero ────────────────────────────────────────────────────────────── */
+.udaHero { padding: 24px; margin-bottom: 16px; }
+
+.udaHeroHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.udaHeroTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-bottom: 3px;
+}
+
+.udaHeroPeriod {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.udaDivider {
+  height: 1px;
+  background: var(--outline-variant);
+  margin: 16px 0 12px;
+}
+
+.udaDentistHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+
+.udaDentistRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--surface-container);
+}
+.udaDentistRow:last-child { border-bottom: none; }
+
+.udaDentistName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.udaDentistStat {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--on-surface-variant);
+}
+
+.udaDentistPct {
+  flex: 1;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.udaMiniBarTrack {
+  height: 8px;
+  background: var(--surface-container);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.udaMiniBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ── Accordion ───────────────────────────────────────────────────────────── */
+.accordion {
+  border: 1px solid var(--outline-variant);
+  border-left: 3px solid var(--acc, var(--primary));
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--acc-bg, var(--surface));
+}
+
+.accordionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--acc-header, transparent);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: filter 0.12s;
+}
+.accordionHeader:hover { filter: brightness(0.96); }
+
+.accordionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.accordionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+  font-family: var(--font-display);
+}
+
+.accordionBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.accordionBody {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.allClear {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2e7d32;
+  background: rgba(46,125,50,0.07);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.actionList { display: flex; flex-direction: column; gap: 2px; }
+
+.groupLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 4px;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.actionRowCritical { border-left: 2px solid var(--error);  background: rgba(229,57,53,0.03);  }
+.actionRowWarning  { border-left: 2px solid #f57c00;       background: rgba(245,124,0,0.03);  }
+
+.actionCategory {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--error);
+  background: rgba(229,57,53,0.08);
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.actionText {
+  flex: 1;
+  font-size: 12px;
+  color: var(--on-surface);
+}
+
+/* ── Leave Requests ──────────────────────────────────────────────────────── */
+.leaveList { display: flex; flex-direction: column; gap: 2px; }
+
+.leaveRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.leaveRow:last-child { border-bottom: none; }
+
+.leaveInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.leaveName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.leaveMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.leaveActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.approveBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(46,125,50,0.3);
+  background: rgba(46,125,50,0.08);
+  color: #2e7d32;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.approveBtn:hover { background: rgba(46,125,50,0.16); }
+
+.declineBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(229,57,53,0.3);
+  background: rgba(229,57,53,0.08);
+  color: #e53935;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.declineBtn:hover { background: rgba(229,57,53,0.16); }
+
+.leavePill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ── UDA Performance ─────────────────────────────────────────────────────── */
+.udaPeriod {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-bottom: 16px;
+}
+
+.udaStats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 16px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-md);
+  padding: 12px 0;
+}
+
+.udaStat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.udaStatVal {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--on-surface);
+  font-family: var(--font-display);
+}
+
+.udaStatLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.udaStatDivider {
+  width: 1px;
+  height: 36px;
+  background: var(--outline-variant);
+  flex-shrink: 0;
+}
+
+.udaBarWrap { margin-bottom: 12px; }
+
+.udaBarTrack {
+  height: 10px;
+  background: var(--surface-container);
+  border-radius: 999px;
+  overflow: visible;
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.udaBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.udaBarMarker {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  background: var(--on-surface-variant);
+  border-radius: 1px;
+  transform: translateX(-50%);
+  opacity: 0.5;
+}
+
+.udaBarLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+}
+
+.udaStatus {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--radius-md);
+}
+
+/* ── GDC Table ───────────────────────────────────────────────────────────── */
+.gdcTable { display: flex; flex-direction: column; }
+
+.gdcTableHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+
+.gdcRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid var(--surface-container);
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+}
+.gdcRow:last-child { border-bottom: none; }
+.gdcRow:hover { background: var(--surface-lowest); }
+
+.gdcName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gdcRole {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+
+.gdcNum {
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--on-surface-variant);
+}
+
+.gdcExpiry {
+  font-size: 12px;
+  color: var(--on-surface);
+}
+
+.statusPill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Training Compliance ─────────────────────────────────────────────────── */
+.trainingTable { display: flex; flex-direction: column; margin-bottom: 10px; }
+
+.trainingHead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+
+.trainingRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--surface-container);
+}
+.trainingRow:last-child { border-bottom: none; }
+
+.trainingNameCol {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  width: 72px;
+  flex-shrink: 0;
+}
+
+.trainingCol {
+  flex: 1;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+}
+
+.trainingDot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.trainingNote {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+}
+
+/* ── CQC ─────────────────────────────────────────────────────────────────── */
+.cqcRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.cqcCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cqcCircleVal {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary);
+  font-family: var(--font-display);
+  line-height: 1;
+}
+
+.cqcCircleLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+  text-align: center;
+}
+
+.cqcDetail { flex: 1; }
+
+.cqcBarTrack {
+  height: 8px;
+  background: var(--surface-container);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.cqcBarFill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.cqcMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-bottom: 12px;
+}
+
+.cqcInspection { display: flex; align-items: center; gap: 10px; }
+
+.cqcInspLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+}
+
+.cqcInspInput {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-container);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cqcInspInput:focus { border-color: var(--primary); }
+
+/* ── Incident Register ───────────────────────────────────────────────────── */
+.incidentRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--surface-container);
+}
+.incidentRow:last-child { border-bottom: none; }
+
+.incidentMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.incidentType {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.incidentMeta {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+}
+
+/* ── Post Announcement ───────────────────────────────────────────────────── */
+.announceSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin-bottom: 14px;
+}
+
+.postForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.postInput {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--outline-variant);
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font-size: 13px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.postInput:focus { border-color: var(--primary); }
+
+.postTextarea {
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--outline-variant);
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  font-size: 13px;
+  font-family: var(--font-body);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+.postTextarea:focus { border-color: var(--primary); }
+
+.postSent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2e7d32;
+  background: rgba(46,125,50,0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}

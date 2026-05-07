@@ -1,72 +1,116 @@
+import { useState } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { BtnPrimary, BtnOutline } from "../components/ui/Buttons";
+import { BtnPrimary } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
 import styles from "./LoginPage.module.css";
 
-export const LoginPage = ({ onNav }) => (
-  <div className={styles.page}>
-    <div className={`${styles.blob} ${styles.blobTopRight}`} />
-    <div className={`${styles.blob} ${styles.blobBottomLeft}`} />
+export const LoginPage = ({ onLogin }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [remember, setRemember] = useState(false);
 
-    <div className={styles.shell}>
-      <div className={styles.brand}>
-        <div className={styles.brandLogo}>
-          <I name="tooth" size={32} color="var(--on-primary)" />
-        </div>
-        <h1 className={styles.brandTitle}>
-          <span className={styles.brandTitleEm}>Inspire</span> Dental Group
-        </h1>
-        <p className={styles.brandTagline}>The Clinical Sanctuary</p>
-        <div className={styles.brandRule} />
-      </div>
+  const handleSignIn = () => {
+    if (!username.trim() || !password.trim()) {
+      setError("Please enter your username and password.");
+      return;
+    }
+    const result = onLogin(username.trim(), password);
+    if (!result) setError("Username or password is incorrect.");
+  };
 
-      <Card hover={false} style={{ padding: "40px 36px" }}>
-        <Input label="Email" type="email" placeholder="dr.smith@dentalhub.co.uk" icon="@" />
-        <div className={styles.passwordHeader}>
-          <label className={styles.passwordLabel}>Password</label>
-          <a className={styles.forgotLink}>Forgot Password?</a>
-        </div>
-        <Input type="password" placeholder="••••••••••••" icon={<I name="eye" size={14} />} />
+  const handleKey = (e) => { if (e.key === "Enter") handleSignIn(); };
 
-        <label className={styles.rememberRow}>
-          <input type="checkbox" className={styles.rememberCheckbox} />
-          <span className={styles.rememberLabel}>Remember my session</span>
-        </label>
+  return (
+    <div className={styles.page}>
+      <div className={`${styles.blob} ${styles.blobTopRight}`} />
+      <div className={`${styles.blob} ${styles.blobBottomLeft}`} />
 
-        <BtnPrimary
-          onClick={() => onNav("dashboard")}
-          style={{ width: "100%", justifyContent: "center", padding: "16px 28px", fontSize: 15 }}
-        >
-          Sign In <I name="arrow" size={16} />
-        </BtnPrimary>
-
-        <div className={styles.divider}>
-          <p className={styles.dividerText}>New to the Hub?</p>
-          <BtnOutline
-            onClick={() => onNav("register")}
-            style={{ width: "100%", justifyContent: "center", padding: "14px 28px" }}
-          >
-            Register <I name="person" size={16} />
-          </BtnOutline>
-        </div>
-      </Card>
-
-      <div className={styles.footer}>
-        <p className={styles.footerHeading}>Authorised Personnel Only</p>
-        <div className={styles.staffOnDuty}>
-          <div style={{ display: "flex" }}>
-            <Avatar name="A" size={24} />
-            <Avatar name="B" size={24} bg="var(--secondary)" />
+      <div className={styles.shell}>
+        <div className={styles.brand}>
+          <div className={styles.brandLogo}>
+            <I name="tooth" size={32} color="var(--on-primary)" />
           </div>
-          <span className={styles.staffOnDutyLabel}>Join 120+ staff on duty</span>
+          <h1 className={styles.brandTitle}>
+            <span className={styles.brandTitleEm}>Inspire</span> Dental Group
+          </h1>
+          <p className={styles.brandTagline}>The Clinical Sanctuary</p>
+          <div className={styles.brandRule} />
         </div>
-        <div className={styles.statusPill}>
-          <div className={styles.statusDot} />
-          <span className={styles.statusLabel}>System Status: Fully Operational</span>
+
+        <Card hover={false} style={{ padding: "40px 36px" }}>
+          {/* Username */}
+          <label className={styles.fieldLabel}>Username</label>
+          <div className={`${styles.inputWrap} ${error ? styles.inputWrapErr : ""}`}>
+            <I name="person" size={15} />
+            <input
+              className={styles.input}
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError(""); }}
+              onKeyDown={handleKey}
+              placeholder="e.g. s.jenkins"
+              autoComplete="username"
+            />
+          </div>
+
+          {/* Password */}
+          <div className={styles.passwordHeader}>
+            <label className={styles.passwordLabel}>Password</label>
+          </div>
+          <div className={`${styles.inputWrap} ${error ? styles.inputWrapErr : ""}`}>
+            <I name="lock" size={15} />
+            <input
+              className={styles.input}
+              type="password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
+              onKeyDown={handleKey}
+              placeholder="••••••••••••"
+              autoComplete="current-password"
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className={styles.errorMsg}>
+              <I name="alert" size={13} /> {error}
+            </div>
+          )}
+
+          <label className={styles.rememberRow}>
+            <input
+              type="checkbox"
+              className={styles.rememberCheckbox}
+              checked={remember}
+              onChange={() => setRemember(!remember)}
+            />
+            <span className={styles.rememberLabel}>Remember my session</span>
+          </label>
+
+          <BtnPrimary
+            onClick={handleSignIn}
+            style={{ width: "100%", justifyContent: "center", padding: "16px 28px", fontSize: 15 }}
+          >
+            Sign In <I name="arrow" size={16} />
+          </BtnPrimary>
+
+          <div className={styles.divider}>
+            <p className={styles.dividerText}>
+              <I name="lock" size={13} /> New staff? Contact your Practice Manager to request access.
+            </p>
+          </div>
+        </Card>
+
+        <div className={styles.footer}>
+          <p className={styles.footerHeading}>Authorised Personnel Only</p>
+          <div className={styles.statusPill}>
+            <div className={styles.statusDot} />
+            <span className={styles.statusLabel}>System Status: Fully Operational</span>
+          </div>
+          <p className={styles.copyright}>© 2026 BrainPower Technologies Ltd. All rights reserved.</p>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

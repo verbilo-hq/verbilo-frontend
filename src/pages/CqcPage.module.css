@@ -1,0 +1,766 @@
+/* ── Page layout ─────────────────────────────────────────────────────────── */
+
+.page {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+/* ── Readiness Gauge ─────────────────────────────────────────────────────── */
+
+.gaugeCard {
+  background: var(--surface-lowest);
+  border: 1px solid var(--surface-high);
+  padding: 24px;
+}
+
+.gaugeLayout {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  flex-wrap: wrap;
+}
+
+.gaugeRingWrap {
+  flex-shrink: 0;
+}
+
+.gaugeRing {
+  width: 164px;
+  height: 164px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.6s ease;
+}
+
+.gaugeCenter {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--surface-lowest);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.gaugePct {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1;
+}
+
+.gaugeSubLabel {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.gaugeContent {
+  flex: 1;
+  min-width: 260px;
+}
+
+.gaugeName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 8px;
+}
+
+.gaugeDesc {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+  margin: 0 0 16px;
+}
+
+.gaugeBands {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.bandGreen,
+.bandAmber,
+.bandRed {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+}
+
+.bandDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gaugeStats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  padding: 14px 20px;
+  width: fit-content;
+}
+
+.gaugeStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 20px;
+}
+
+.gaugeStatVal {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1;
+}
+
+.gaugeStatLab {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.gaugeDivider {
+  width: 1px;
+  height: 32px;
+  background: var(--surface-high);
+}
+
+/* ── Category blocks ─────────────────────────────────────────────────────── */
+
+.catBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.catHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border-left: 4px solid transparent;
+  flex-wrap: wrap;
+}
+
+.catHeaderText {
+  flex: 1;
+}
+
+.catTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 2px;
+}
+
+.catSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+/* ── Audit card grid ─────────────────────────────────────────────────────── */
+
+.auditGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.auditCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  border: 1.5px solid var(--surface-high);
+}
+
+.auditCardDone {
+  border-color: rgba(76, 175, 80, 0.35);
+  background: rgba(76, 175, 80, 0.03);
+}
+
+.auditCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auditTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.auditDesc {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.auditAction {
+  margin-top: 4px;
+}
+
+.auditBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  transition: background 0.15s;
+}
+
+.auditBtnPending {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.auditBtnDone {
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+}
+
+/* ── Modal overlay ───────────────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 52, 53, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--surface-lowest);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(43, 52, 53, 0.22);
+  overflow: hidden;
+}
+
+/* ── Modal header ────────────────────────────────────────────────────────── */
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--surface-high);
+  flex-shrink: 0;
+}
+
+.modalHeaderText {
+  flex: 1;
+}
+
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+
+.modalSub {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.closeBtn:hover {
+  color: var(--on-surface);
+}
+
+/* ── Modal body ──────────────────────────────────────────────────────────── */
+
+.modalBody {
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+}
+
+.modalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--surface-high);
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.fieldRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+.req {
+  color: var(--error);
+}
+
+.fieldInput {
+  padding: 8px 10px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  background: var(--surface-lowest);
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.fieldInput:focus {
+  border-color: var(--primary);
+}
+
+.fieldInputErr {
+  border-color: var(--error);
+}
+
+.errMsg {
+  font-size: 11px;
+  color: var(--error);
+}
+
+/* ── Checklist ───────────────────────────────────────────────────────────── */
+
+.checkList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-low);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-body);
+}
+
+.checkRow:hover {
+  background: var(--surface-container);
+}
+
+.checkRowDone {
+  background: rgba(76, 175, 80, 0.08);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.checkBox {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--outline-variant);
+  background: var(--surface-lowest);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  color: var(--on-surface-variant);
+}
+
+.checkRowDone .checkBox {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.checkLabel {
+  font-size: 13px;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+
+/* ── Photo upload ────────────────────────────────────────────────────────── */
+
+.photoUpload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  border: 2px dashed var(--outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.photoUpload:hover {
+  border-color: var(--primary);
+  background: rgba(0, 105, 116, 0.04);
+  color: var(--primary);
+}
+
+.photoPreview {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.photoThumb {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--surface-high);
+}
+
+/* ── Signature pad ───────────────────────────────────────────────────────── */
+
+.sigWrap {
+  position: relative;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  background: #fafeff;
+  overflow: hidden;
+}
+
+.sigCanvas {
+  display: block;
+  width: 100%;
+  height: 100px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sigClear {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: var(--font-body);
+}
+
+.sigClear:hover {
+  background: var(--surface-high);
+}
+
+/* ── Modal footer ────────────────────────────────────────────────────────── */
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--surface-high);
+  flex-shrink: 0;
+}
+
+/* ── Success screen ──────────────────────────────────────────────────────── */
+
+.successScreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.successIcon {
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.successTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.successMsg {
+  font-size: 14px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 360px;
+}
+
+/* ── Incident Register ────────────────────────────────────────────────────── */
+
+.incidentSection {
+  margin-top: 32px;
+}
+
+.incidentSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.incidentSectionTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+
+.incidentSectionSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
+.reportIncidentBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  background: #a83836;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.reportIncidentBtn:hover { opacity: 0.88; }
+
+.incidentCard {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.incidentTableHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--surface-lowest);
+  border-bottom: 1px solid var(--outline-variant);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface-variant);
+}
+
+.incidentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--outline-variant);
+  transition: background 0.12s;
+}
+.incidentRow:last-child { border-bottom: none; }
+.incidentRow:hover { background: var(--surface-container-low); }
+
+.incidentType {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.incidentDate {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 3px;
+}
+
+.incidentDesc {
+  font-size: 12px;
+  color: var(--on-surface);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.incidentAction {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.incidentReporter {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
+}
+
+.incidentPill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ── Severity button group (in ReportIncidentModal) ──────────────────────── */
+
+.severityBtnGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.severityBtn {
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--outline-variant);
+  background: transparent;
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.severityBtn:hover { background: var(--surface-container-low); }
+.severityBtnActive { font-weight: 700; }

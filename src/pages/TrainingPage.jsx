@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
@@ -35,7 +35,7 @@ const moduleContent = {
       { title: "Budgeting & Financial Planning", dur: "25 min", type: "video", desc: "Creating annual budgets, forecasting revenue against costs, managing laboratory fees, materials costs, staff costs (typically 50-60% of turnover), premises costs, and equipment depreciation. Understanding profit and loss statements and balance sheets for dental practices." },
       { title: "NHS UDA Performance Monitoring", dur: "20 min", type: "video", desc: "Tracking UDA delivery against contract targets, understanding clawback mechanisms (where practices fail to deliver contracted UDAs), managing the year-end reconciliation process, and strategies for maintaining consistent UDA delivery throughout the contract year." },
       { title: "Cost Control & Efficiency", dur: "18 min", type: "interactive", desc: "Stock management and ordering optimisation, negotiating laboratory and supplier contracts, managing associate fee splits (typically 40-50% of gross), controlling consumables wastage, and energy efficiency measures." },
-      { title: "Financial Reporting & KPIs", dur: "15 min", type: "reading", desc: "Key financial metrics for dental practices: revenue per surgery hour, cost per UDA, average patient value, hygiene hourly rate, lab cost percentages, and benchmarking against industry averages. Using software reports (Dentally, SOE, R4) for financial analysis." },
+      { title: "Financial Reporting & KPIs", dur: "15 min", type: "reading", desc: "Key financial metrics for dental practices: revenue per surgery hour, cost per UDA, average patient value, hygiene hourly rate, lab cost percentages, and benchmarking against industry averages. Using your practice management software reports for financial analysis." },
     ],
     quiz: [
       { q: "What percentage of practice turnover do staff costs typically represent?", options: ["20-30%", "35-45%", "50-60%", "65-75%"], correct: 2 },
@@ -270,10 +270,45 @@ const modules = [
   { id: "h10", role: "hygienist", cat: "Restorative", title: "Direct Restorations (Therapists)", desc: "Class I-V composite restorations, ART technique, pulp protection decisions, and paediatric restorations.", cpd: 6, dur: "6 hrs", type: "Course", status: "optional", pct: 0 },
 ];
 
+/* ─── Internal Inspire Dental modules ──────────────────────────────────────── */
+const internalModules = [
+  { id: "i1", title: "Inspire Dental Group Induction",        cat: "Onboarding",  dur: "45 min", cpd: 0, desc: "Practice values, team structure, facilities walkthrough, key contacts, and what to expect in your first weeks at Inspire.", roles: "all",                      updatedAt: "Jan 2026" },
+  { id: "i2", title: "Practice Management System",   cat: "Systems",     dur: "30 min", cpd: 0, desc: "Full walkthrough of your practice management system — patient records, appointment scheduling, charting, NHS FP17 submission, and reporting dashboards.", roles: "all",              updatedAt: "Feb 2026" },
+  { id: "i3", title: "Patient Journey & Service Standards",   cat: "Patient Care",dur: "25 min", cpd: 0, desc: "Our 5-star patient journey from first contact to recall. Communication standards, greeting protocols, and the Inspire experience.", roles: "all",              updatedAt: "Jan 2026" },
+  { id: "i4", title: "Inspire Infection Control Protocol",    cat: "Compliance",  dur: "20 min", cpd: 1, desc: "Practice-specific decontamination workflows, zone maps, PPE station locations, and HTM 01-05 implementation at Inspire.", roles: "dentist,nurse,hygienist", isNew: true, updatedAt: "Mar 2026" },
+  { id: "i5", title: "Emergency Procedures at Inspire",       cat: "Safety",      dur: "15 min", cpd: 0, desc: "Emergency drug kit and AED locations, fire evacuation plan, first aid contacts, and incident escalation procedures for this practice.", roles: "all",          updatedAt: "Jan 2026" },
+  { id: "i6", title: "Complaint Handling at Inspire",         cat: "Operations",  dur: "20 min", cpd: 0, desc: "Our complaint procedure — intake, investigation, response timeline, and using patient feedback to drive service improvement.", roles: "all",                  updatedAt: "Feb 2026" },
+  { id: "i7", title: "NHS & Private Fee Collection",          cat: "Finance",     dur: "20 min", cpd: 0, desc: "Charging bands, exemption verification, card terminal operation, handling payment queries, and end-of-day reconciliation.", roles: "receptionist,manager",     updatedAt: "Jan 2026" },
+  { id: "i8", title: "Stock Control & Ordering at Inspire",   cat: "Operations",  dur: "15 min", cpd: 0, desc: "Inventory par levels, ordering from approved suppliers, expiry date checks, and the stock request process at Inspire.", roles: "nurse,manager",                updatedAt: "Jan 2026" },
+];
+
+/* ─── How To video series ─────────────────────────────────────────────────── */
+const GTV = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/";
+const howToVideos = [
+  { id: "ht1",  title: "How to Set Up a Dental Surgery",              dur: "3 min",  cat: "Clinical",              roles: "nurse,dentist",          color: "#006974", videoSrc: `${GTV}ForBiggerBlazes.mp4`              },
+  { id: "ht2",  title: "How to Process Instruments (HTM 01-05)",      dur: "5 min",  cat: "Decontamination",       roles: "nurse,dentist",          color: "#005c66", videoSrc: `${GTV}ForBiggerEscapes.mp4`             },
+  { id: "ht3",  title: "How to Take a BPE Score",                     dur: "2 min",  cat: "Clinical",              roles: "dentist,hygienist",      color: "#006974", videoSrc: `${GTV}ForBiggerFun.mp4`                 },
+  { id: "ht4",  title: "How to Book an NHS Appointment",               dur: "3 min",  cat: "Reception",             roles: "receptionist,manager",   color: "#6A1B9A", videoSrc: `${GTV}ForBiggerJoyrides.mp4`            },
+  { id: "ht5",  title: "How to Submit an FP17 Form",                   dur: "4 min",  cat: "NHS Admin",             roles: "receptionist,manager",   color: "#7B1FA2", videoSrc: `${GTV}ForBiggerMeltdowns.mp4`           },
+  { id: "ht6",  title: "How to Handle a Medical Emergency",            dur: "4 min",  cat: "Emergency",             roles: "all",                    color: "#C62828", videoSrc: `${GTV}BigBuckBunny.mp4`                 },
+  { id: "ht7",  title: "How to Maintain Dental Handpieces",            dur: "3 min",  cat: "Equipment",             roles: "nurse",                  color: "#1565C0", videoSrc: `${GTV}ElephantsDream.mp4`               },
+  { id: "ht8",  title: "How to Take an Alginate Impression",           dur: "4 min",  cat: "Clinical",              roles: "nurse,dentist",          color: "#00695C", videoSrc: `${GTV}SubaruOutbackOnStreetAndDirt.mp4` },
+  { id: "ht9",  title: "How to Conduct a Periapical Radiograph",       dur: "5 min",  cat: "Radiology",             roles: "nurse,dentist",          color: "#2E7D32", videoSrc: `${GTV}TearsOfSteel.mp4`                 },
+  { id: "ht10", title: "How to Give Oral Hygiene Instruction",         dur: "3 min",  cat: "Prevention",            roles: "hygienist,nurse",        color: "#1B5E20", videoSrc: `${GTV}VolkswagenGTIReview.mp4`          },
+  { id: "ht11", title: "How to Use the CQC Evidence Folder",           dur: "4 min",  cat: "Compliance",            roles: "manager",                color: "#E65100", videoSrc: `${GTV}WeAreGoingOnBullrun.mp4`          },
+  { id: "ht12", title: "How to Complete a Daily Autoclave Check",      dur: "2 min",  cat: "Decontamination",       roles: "nurse,dentist",          color: "#BF360C", videoSrc: `${GTV}WhatCarCanDo.mp4`                 },
+  { id: "ht13", title: "How to Recognise Signs of Abuse in Patients",  dur: "4 min",  cat: "Safeguarding",          roles: "all",                    color: "#AD1457", videoSrc: `${GTV}ForBiggerBlazes.mp4`              },
+  { id: "ht14", title: "How to Make a Safeguarding Referral",          dur: "3 min",  cat: "Safeguarding",          roles: "all",                    color: "#880E4F", videoSrc: `${GTV}ForBiggerEscapes.mp4`             },
+  { id: "ht15", title: "How to Handle a Patient Complaint",            dur: "4 min",  cat: "Patient Communication", roles: "all",                    color: "#1565C0", videoSrc: `${GTV}ForBiggerFun.mp4`                 },
+  { id: "ht16", title: "How to Obtain Valid Patient Consent",          dur: "3 min",  cat: "Patient Communication", roles: "dentist,hygienist,nurse", color: "#0D47A1", videoSrc: `${GTV}ForBiggerJoyrides.mp4`            },
+];
+
 const statusColors = {
   mandatory: "var(--error)",
   recommended: "var(--primary)",
   optional: "var(--outline)",
+  internal: "#9C27B0",
+  howto: "#E91E63",
 };
 
 const typeColors = {
@@ -633,31 +668,581 @@ const ModuleViewer = ({ activeModule, onClose }) => {
   );
 };
 
-/* ─── Main hub ─── */
-export const TrainingPage = () => {
-  const [activeRole, setActiveRole] = useState("all");
-  const [expandedModule, setExpandedModule] = useState(null);
-  const [showAllModules, setShowAllModules] = useState(false);
-  const [activeModule, setActiveModule] = useState(null);
-
-  const filteredModules =
-    activeRole === "all" ? modules : modules.filter((m) => m.role === activeRole);
-  const mandatory = filteredModules.filter((m) => m.status === "mandatory");
-  const expiring = mandatory.filter((m) => m.pct === 0);
-  const inProgress = mandatory.filter((m) => m.pct > 0 && m.pct < 100);
-  const completed = mandatory.filter((m) => m.pct === 100);
-
-  const totalCpd = filteredModules.reduce((sum, m) => sum + m.cpd, 0);
-  const earnedCpd = filteredModules.reduce(
-    (sum, m) => sum + Math.round((m.cpd * m.pct) / 100),
-    0
+/* ─── Internal module card ───────────────────────────────────────────────────── */
+const InternalCard = ({ module: m, onLaunch }) => {
+  const handleClick = () => {
+    if (m.url) window.open(m.url, "_blank", "noopener,noreferrer");
+    else onLaunch({ ...m, type: "Internal", status: "internal" });
+  };
+  return (
+    <div className={styles.internalCard} onClick={handleClick}>
+      <div className={styles.internalCardAccent} />
+      <div className={styles.internalCardBody}>
+        <div className={styles.internalCardTop}>
+          <Pill bg="rgba(156,39,176,0.09)" color="#9C27B0" small>{m.cat}</Pill>
+          {m.isNew && <Pill bg="rgba(0,105,116,0.09)" color="var(--primary)" small>New</Pill>}
+          {m.isUserAdded
+            ? <Pill bg="rgba(233,30,99,0.09)" color="#E91E63" small>Uploaded</Pill>
+            : <Pill bg="rgba(0,0,0,0.05)" color="var(--on-surface-variant)" small>Sample</Pill>
+          }
+        </div>
+        <h4 className={styles.internalCardTitle}>{m.title}</h4>
+        <p className={styles.internalCardDesc}>{m.desc}</p>
+        <div className={styles.internalCardFooter}>
+          <span className={styles.internalCardMeta}>
+            <I name="clock" size={12} color="var(--outline)" /> {m.dur}
+            {m.cpd > 0 && <> · <I name="award" size={12} color="var(--outline)" /> {m.cpd} CPD hr</>}
+          </span>
+          <span className={styles.internalCardUpdated}>Updated {m.updatedAt}</span>
+        </div>
+      </div>
+    </div>
   );
+};
 
-  const featured = filteredModules
-    .filter((m) => m.status !== "mandatory" && m.pct < 100)
-    .slice(0, 3);
+/* ─── How To video modal ───────────────────────────────────────────────────────── */
+const HowToVideoModal = ({ video: v, onClose }) => {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
-  const launchModule = (m) => setActiveModule(m);
+  const src = v.url || v.videoSrc;
+
+  return (
+    <div className={styles.htPlayerBackdrop} onClick={onClose}>
+      <div className={styles.htPlayerInner} onClick={e => e.stopPropagation()}>
+        <div className={styles.htPlayerHeader}>
+          <div>
+            <div className={styles.htPlayerMeta}>{v.cat} · {v.dur}</div>
+            <div className={styles.htPlayerTitle}>{v.title}</div>
+          </div>
+          <button className={styles.htPlayerClose} onClick={onClose}>
+            <I name="xcircle" size={22} color="var(--on-surface-variant)" />
+          </button>
+        </div>
+        <video className={styles.htPlayerVideo} src={src} controls autoPlay />
+      </div>
+    </div>
+  );
+};
+
+/* ─── How To card ─────────────────────────────────────────────────────────────── */
+const HowToCard = ({ video: v, onPlay }) => (
+  <div className={styles.howToCard} onClick={() => onPlay(v)}>
+    <div className={styles.howToThumb} style={{ background: v.color }}>
+      <div className={styles.howToPlay}>
+        <I name="play" size={16} color="white" />
+      </div>
+      {!v.isUserAdded && <span className={styles.howToSampleBadge}>Sample</span>}
+      <span className={styles.howToDur}>{v.dur}</span>
+    </div>
+    <div className={styles.howToBody}>
+      <span className={styles.howToCat}>{v.cat}</span>
+      <p className={styles.howToTitle}>{v.title}</p>
+    </div>
+  </div>
+);
+
+/* ─── Color palette for How To thumbnails ────────────────────────────────────── */
+const CAT_COLORS = {
+  Clinical: "#006974", Decontamination: "#005c66", Periodontics: "#007a88",
+  Reception: "#6A1B9A", "NHS Admin": "#7B1FA2", Emergency: "#C62828",
+  Equipment: "#1565C0", Radiology: "#2E7D32", Prevention: "#1B5E20",
+  Compliance: "#E65100", Operations: "#BF360C", Safeguarding: "#AD1457",
+  "Patient Communication": "#1565C0", Leadership: "#4527A0", Finance: "#00695C",
+};
+const FALLBACK_COLORS = ["#006974","#9C27B0","#1565C0","#2E7D32","#E65100","#C62828"];
+const pickColor = cat => CAT_COLORS[cat] || FALLBACK_COLORS[cat.length % FALLBACK_COLORS.length];
+
+/* ─── Upload Training Module modal ──────────────────────────────────────────── */
+const INTERNAL_CATS = ["Compliance", "Onboarding", "Operations", "Patient Care", "Safety", "Systems"];
+
+const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
+  const [title,     setTitle]     = useState("");
+  const [cat,       setCat]       = useState("");
+  const [customCat, setCustomCat] = useState("");
+  const [dur,       setDur]       = useState("");
+  const [desc,      setDesc]      = useState("");
+  const [cpd,       setCpd]       = useState("0");
+  const [audience,  setAudience]  = useState("all");
+  const [errors,    setErrors]    = useState({});
+  const [videoFile, setVideoFile] = useState(null);
+  const [dragOver,  setDragOver]  = useState(false);
+  const fileInputRef = useRef(null);
+
+  const allCats = [...new Set([...INTERNAL_CATS, ...existingCats])].sort();
+  const finalCat = cat === "__new__" ? customCat.trim() : cat;
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith("video/")) return;
+    setVideoFile(file);
+    setErrors(p => ({ ...p, file: "" }));
+    const vid = document.createElement("video");
+    vid.preload = "metadata";
+    const objUrl = URL.createObjectURL(file);
+    vid.src = objUrl;
+    vid.onloadedmetadata = () => {
+      const secs = Math.round(vid.duration);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      setDur(s > 0 ? `${m}:${String(s).padStart(2, "0")} min` : `${m} min`);
+      URL.revokeObjectURL(objUrl);
+    };
+    if (!title.trim()) {
+      const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      setTitle(name.charAt(0).toUpperCase() + name.slice(1));
+    }
+  };
+
+  const clearFile = (e) => {
+    e.stopPropagation();
+    setVideoFile(null);
+    setDur("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!title.trim()) e.title = "Required";
+    if (!finalCat)     e.cat   = "Select or enter a category";
+    if (!videoFile)    e.file  = "Please select a video file to upload";
+    return e;
+  };
+
+  const handleAdd = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    const objectUrl = URL.createObjectURL(videoFile);
+    const now = new Date();
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    onAdd({
+      id:          `int-user-${Date.now()}`,
+      title:       title.trim(),
+      cat:         finalCat,
+      dur:         dur.trim() || "—",
+      desc:        desc.trim() || "Uploaded training module.",
+      cpd:         parseFloat(cpd) || 0,
+      roles:       audience,
+      url:         objectUrl,
+      isUserAdded: true,
+      updatedAt:   `${months[now.getMonth()]} ${now.getFullYear()}`,
+      fileName:    videoFile.name,
+    });
+    onClose();
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.htModal} onClick={e => e.stopPropagation()}>
+        <div className={styles.htModalHeader}>
+          <div>
+            <h3 className={styles.htModalTitle}>Upload Training Module</h3>
+            <p className={styles.htModalSub}>Record your training content and upload it — it appears in the Inspire Dental Training grid immediately</p>
+          </div>
+          <button className={styles.htModalClose} onClick={onClose}>
+            <I name="xcircle" size={20} color="var(--on-surface-variant)" />
+          </button>
+        </div>
+
+        <div className={styles.htModalBody}>
+          <div className={styles.htFormGrid}>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Video File *</label>
+              <div
+                className={`${styles.uploadZone} ${dragOver ? styles.uploadZoneDrag : ""} ${errors.file ? styles.uploadZoneErr : ""} ${videoFile ? styles.uploadZoneFilled : ""}`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={e => handleFile(e.target.files[0])}
+                />
+                {videoFile ? (
+                  <div className={styles.uploadFilled}>
+                    <I name="checkcircle" size={22} color="#4CAF50" />
+                    <div className={styles.uploadFileInfo}>
+                      <div className={styles.uploadFileName}>{videoFile.name}</div>
+                      <div className={styles.uploadFileMeta}>
+                        {(videoFile.size / (1024 * 1024)).toFixed(1)} MB{dur ? ` · ${dur}` : ""}
+                      </div>
+                    </div>
+                    <button className={styles.uploadChangeBtn} onClick={clearFile}>Change</button>
+                  </div>
+                ) : (
+                  <div className={styles.uploadPrompt}>
+                    <div className={styles.uploadIconPurple}>
+                      <I name="upload" size={24} color="#9C27B0" />
+                    </div>
+                    <span className={styles.uploadPromptText}>Tap to select video or drag & drop</span>
+                    <span className={styles.uploadPromptSub}>MP4, MOV, AVI · Recorded on phone or any device</span>
+                  </div>
+                )}
+              </div>
+              {errors.file && <span className={styles.htFieldErr}>{errors.file}</span>}
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Module Title *</label>
+              <input
+                className={`${styles.htFieldInput} ${errors.title ? styles.htFieldInputErr : ""}`}
+                placeholder="e.g. New Patient Consultation Workflow"
+                value={title}
+                onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: "" })); }}
+              />
+              {errors.title && <span className={styles.htFieldErr}>{errors.title}</span>}
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Description</label>
+              <textarea
+                className={`${styles.htFieldInput} ${styles.htFieldTextarea}`}
+                placeholder="Briefly describe what this module covers…"
+                value={desc}
+                rows={3}
+                onChange={e => setDesc(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>Category *</label>
+              <select
+                className={`${styles.htFieldSelect} ${errors.cat ? styles.htFieldInputErr : ""}`}
+                value={cat}
+                onChange={e => { setCat(e.target.value); setErrors(p => ({ ...p, cat: "" })); }}
+              >
+                <option value="">Select category…</option>
+                {allCats.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="__new__">+ Add new category</option>
+              </select>
+              {cat === "__new__" && (
+                <input
+                  className={`${styles.htFieldInput} ${errors.cat ? styles.htFieldInputErr : ""}`}
+                  placeholder="New category name"
+                  value={customCat}
+                  onChange={e => { setCustomCat(e.target.value); setErrors(p => ({ ...p, cat: "" })); }}
+                  style={{ marginTop: 6 }}
+                />
+              )}
+              {errors.cat && <span className={styles.htFieldErr}>{errors.cat}</span>}
+            </div>
+
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>Duration</label>
+              <input
+                className={styles.htFieldInput}
+                placeholder="Auto-detected on upload"
+                value={dur}
+                onChange={e => setDur(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>CPD Hours</label>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                className={styles.htFieldInput}
+                placeholder="0"
+                value={cpd}
+                onChange={e => setCpd(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>Target Audience</label>
+              <select className={styles.htFieldSelect} value={audience} onChange={e => setAudience(e.target.value)}>
+                <option value="all">All Staff</option>
+                <option value="dentist">Dentists</option>
+                <option value="nurse">Dental Nurses</option>
+                <option value="hygienist">Hygienists</option>
+                <option value="manager">Practice Managers</option>
+                <option value="receptionist">Receptionists</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <div className={styles.htModalFooter}>
+          <BtnSecondary onClick={onClose} style={{ padding: "10px 20px", fontSize: 13 }}>Cancel</BtnSecondary>
+          <BtnPrimary onClick={handleAdd} style={{ padding: "10px 24px", fontSize: 13 }}>
+            <I name="upload" size={14} /> Upload Module
+          </BtnPrimary>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Add How To Video modal ─────────────────────────────────────────────────── */
+const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
+  const [title,     setTitle]     = useState("");
+  const [cat,       setCat]       = useState("");
+  const [customCat, setCustomCat] = useState("");
+  const [dur,       setDur]       = useState("");
+  const [audience,  setAudience]  = useState("all");
+  const [errors,    setErrors]    = useState({});
+  const [videoFile, setVideoFile] = useState(null);
+  const [dragOver,  setDragOver]  = useState(false);
+  const fileInputRef = useRef(null);
+
+  const finalCat = cat === "__new__" ? customCat.trim() : cat;
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith("video/")) return;
+    setVideoFile(file);
+    setErrors(p => ({ ...p, file: "" }));
+    // Auto-detect duration from video metadata
+    const vid = document.createElement("video");
+    vid.preload = "metadata";
+    const objUrl = URL.createObjectURL(file);
+    vid.src = objUrl;
+    vid.onloadedmetadata = () => {
+      const secs = Math.round(vid.duration);
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      setDur(s > 0 ? `${m}:${String(s).padStart(2, "0")} min` : `${m} min`);
+      URL.revokeObjectURL(objUrl);
+    };
+    // Auto-fill title from filename if still empty
+    if (!title.trim()) {
+      const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      setTitle(name.charAt(0).toUpperCase() + name.slice(1));
+    }
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!title.trim()) e.title = "Required";
+    if (!finalCat)     e.cat   = "Select or enter a category";
+    if (!videoFile)    e.file  = "Please select a video file to upload";
+    return e;
+  };
+
+  const handleAdd = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    const objectUrl = URL.createObjectURL(videoFile);
+    onAdd({
+      id:          `ht-user-${Date.now()}`,
+      title:       title.trim(),
+      cat:         finalCat,
+      dur:         dur.trim() || "—",
+      url:         objectUrl,
+      audience,
+      color:       pickColor(finalCat),
+      isUserAdded: true,
+      fileName:    videoFile.name,
+      fileSize:    videoFile.size,
+    });
+    onClose();
+  };
+
+  const clearFile = (e) => {
+    e.stopPropagation();
+    setVideoFile(null);
+    setDur("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.htModal} onClick={e => e.stopPropagation()}>
+        <div className={styles.htModalHeader}>
+          <div>
+            <h3 className={styles.htModalTitle}>Upload How To Video</h3>
+            <p className={styles.htModalSub}>Record on your phone and upload directly — it will appear in the grid and be searchable straight away</p>
+          </div>
+          <button className={styles.htModalClose} onClick={onClose}>
+            <I name="xcircle" size={20} color="var(--on-surface-variant)" />
+          </button>
+        </div>
+
+        <div className={styles.htModalBody}>
+          <div className={styles.htFormGrid}>
+
+            {/* Upload zone */}
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Video File *</label>
+              <div
+                className={`${styles.uploadZone} ${dragOver ? styles.uploadZoneDrag : ""} ${errors.file ? styles.uploadZoneErr : ""} ${videoFile ? styles.uploadZoneFilled : ""}`}
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={e => handleFile(e.target.files[0])}
+                />
+                {videoFile ? (
+                  <div className={styles.uploadFilled}>
+                    <I name="checkcircle" size={22} color="#4CAF50" />
+                    <div className={styles.uploadFileInfo}>
+                      <div className={styles.uploadFileName}>{videoFile.name}</div>
+                      <div className={styles.uploadFileMeta}>
+                        {(videoFile.size / (1024 * 1024)).toFixed(1)} MB{dur ? ` · ${dur}` : ""}
+                      </div>
+                    </div>
+                    <button className={styles.uploadChangeBtn} onClick={clearFile}>Change</button>
+                  </div>
+                ) : (
+                  <div className={styles.uploadPrompt}>
+                    <div className={styles.uploadIcon}>
+                      <I name="upload" size={24} color="#E91E63" />
+                    </div>
+                    <span className={styles.uploadPromptText}>Tap to select video or drag & drop</span>
+                    <span className={styles.uploadPromptSub}>MP4, MOV, AVI · Recorded on phone or any device</span>
+                  </div>
+                )}
+              </div>
+              {errors.file && <span className={styles.htFieldErr}>{errors.file}</span>}
+            </div>
+
+            {/* Title */}
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Video Title *</label>
+              <input
+                className={`${styles.htFieldInput} ${errors.title ? styles.htFieldInputErr : ""}`}
+                placeholder="e.g. How to set up the dental chair"
+                value={title}
+                onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: "" })); }}
+              />
+              {errors.title && <span className={styles.htFieldErr}>{errors.title}</span>}
+            </div>
+
+            {/* Category */}
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>Category *</label>
+              <select
+                className={`${styles.htFieldSelect} ${errors.cat ? styles.htFieldInputErr : ""}`}
+                value={cat}
+                onChange={e => { setCat(e.target.value); setErrors(p => ({ ...p, cat: "" })); }}
+              >
+                <option value="">Select category…</option>
+                {existingCats.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="__new__">+ Add new category</option>
+              </select>
+              {cat === "__new__" && (
+                <input
+                  className={`${styles.htFieldInput} ${errors.cat ? styles.htFieldInputErr : ""}`}
+                  placeholder="New category name"
+                  value={customCat}
+                  onChange={e => { setCustomCat(e.target.value); setErrors(p => ({ ...p, cat: "" })); }}
+                  style={{ marginTop: 6 }}
+                />
+              )}
+              {errors.cat && <span className={styles.htFieldErr}>{errors.cat}</span>}
+            </div>
+
+            {/* Duration (auto-filled but editable) */}
+            <div className={styles.htField}>
+              <label className={styles.htFieldLabel}>Duration</label>
+              <input
+                className={styles.htFieldInput}
+                placeholder="Auto-detected on upload"
+                value={dur}
+                onChange={e => setDur(e.target.value)}
+              />
+            </div>
+
+            {/* Audience */}
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Target Audience</label>
+              <select className={styles.htFieldSelect} value={audience} onChange={e => setAudience(e.target.value)}>
+                <option value="all">All Staff</option>
+                <option value="dentist">Dentists</option>
+                <option value="nurse">Dental Nurses</option>
+                <option value="hygienist">Hygienists</option>
+                <option value="manager">Practice Managers</option>
+                <option value="receptionist">Receptionists</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        <div className={styles.htModalFooter}>
+          <BtnSecondary onClick={onClose} style={{ padding: "10px 20px", fontSize: 13 }}>Cancel</BtnSecondary>
+          <BtnPrimary onClick={handleAdd} style={{ padding: "10px 24px", fontSize: 13 }}>
+            <I name="upload" size={14} /> Upload to Series
+          </BtnPrimary>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Main hub ─── */
+export const TrainingPage = ({ currentUser }) => {
+  const [searchQuery,    setSearchQuery]    = useState("");
+  const [activeModule,   setActiveModule]   = useState(null);
+  const [playingHowTo,   setPlayingHowTo]   = useState(null);
+  const [userInternalModules, setUserInternalModules] = useState([]);
+  const [showAddTraining,     setShowAddTraining]     = useState(false);
+  const [userHowTos,          setUserHowTos]          = useState([]);
+  const [showAddHowTo,        setShowAddHowTo]        = useState(false);
+  const [howToCategory,       setHowToCategory]       = useState("All");
+  const [howToSearch,         setHowToSearch]         = useState("");
+
+  const allInternalModules = useMemo(() => [...internalModules, ...userInternalModules], [userInternalModules]);
+  const allHowToVideos = useMemo(() => [...howToVideos, ...userHowTos], [userHowTos]);
+  const howToCats = useMemo(() => {
+    const cats = [...new Set(allHowToVideos.map(v => v.cat))].sort();
+    return ["All", ...cats];
+  }, [allHowToVideos]);
+  const visibleHowTos = useMemo(() => {
+    let vids = howToCategory === "All"
+      ? allHowToVideos
+      : allHowToVideos.filter(v => v.cat === howToCategory);
+    const q = howToSearch.trim().toLowerCase();
+    if (q) vids = vids.filter(v =>
+      v.title.toLowerCase().includes(q) ||
+      v.cat.toLowerCase().includes(q) ||
+      v.roles.toLowerCase().includes(q)
+    );
+    return vids;
+  }, [allHowToVideos, howToCategory, howToSearch]);
+
+  // All content flattened for search (internal modules + how-to videos only)
+  const allContent = useMemo(() => [
+    ...allInternalModules.map(m => ({ ...m, _type: "internal", type: "Internal", status: "internal" })),
+    ...allHowToVideos.map(m => ({ ...m, _type: "howto", type: "Video", status: "howto", cpd: 0 })),
+  ], [allInternalModules, allHowToVideos]);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allContent.filter(item =>
+      item.title.toLowerCase().includes(q) ||
+      item.cat.toLowerCase().includes(q) ||
+      (item.desc  && item.desc.toLowerCase().includes(q)) ||
+      (item.type  && item.type.toLowerCase().includes(q)) ||
+      (item.roles && item.roles.includes(q)) ||
+      (item.role  && item.role.includes(q))
+    );
+  }, [searchQuery, allContent]);
+
+  const launchModule = m => setActiveModule(m);
+
+  const typeMetaMap = {
+    internal: { label: "Inspire Training", bg: "rgba(156,39,176,0.09)", color: "#9C27B0" },
+    howto:    { label: "How To",           bg: "rgba(233,30,99,0.09)",  color: "#E91E63" },
+  };
 
   if (activeModule) {
     return <ModuleViewer activeModule={activeModule} onClose={() => setActiveModule(null)} />;
@@ -665,8 +1250,13 @@ export const TrainingPage = () => {
 
   return (
     <div>
-      <SearchBar placeholder="Search courses, compliance modules, or CPD records..." />
+      <SearchBar
+        placeholder="Search Inspire training modules and how-to guides..."
+        value={searchQuery}
+        onChange={setSearchQuery}
+      />
 
+      {/* ── Page header ── */}
       <div className={styles.header}>
         <div>
           <p className={styles.eyebrow}>Educational Excellence</p>
@@ -675,326 +1265,210 @@ export const TrainingPage = () => {
             Role-specific training, mandatory compliance, and clinical CPD — all mapped to GDC and CQC requirements.
           </p>
         </div>
-        <div className={styles.userBlock}>
-          <Avatar name="Sarah Jenkins" size={36} />
-          <div>
-            <div className={styles.userName}>Dr. Sarah Jenkins</div>
-            <div className={styles.userRole}>Lead Clinician</div>
+        {currentUser && (
+          <div className={styles.userBlock}>
+            <Avatar name={currentUser.displayName} size={36} />
+            <div>
+              <div className={styles.userName}>{currentUser.displayName}</div>
+              <div className={styles.userRole}>{currentUser.role}</div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className={styles.roleTabs}>
-        {roles.map((r) => {
-          const active = activeRole === r.id;
-          const count = r.id === "all" ? modules.length : modules.filter((m) => m.role === r.id).length;
-          return (
-            <button
-              key={r.id}
-              onClick={() => { setActiveRole(r.id); setExpandedModule(null); setShowAllModules(false); }}
-              className={active ? `${styles.roleTab} ${styles.roleTabActive}` : styles.roleTab}
-            >
-              <I name={r.icon} size={18} color={active ? "var(--primary)" : "rgba(255,255,255,0.7)"} />
-              <span>{r.label}</span>
-              <span className={styles.roleBadge}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className={styles.layout}>
+      {/* ── Search results view ── */}
+      {searchQuery.trim() ? (
         <div>
-          <Card hover={false} className={styles.tracker}>
-            <div className={styles.trackerHeader}>
-              <h3 className={styles.sectionHeading}>
-                <I name="shield" size={18} /> Mandatory Compliance Tracker
-              </h3>
-              <Pill bg="rgba(168,56,54,0.09)" color="var(--error)">
-                {expiring.length} Actions Required
-              </Pill>
+          <p className={styles.searchResultsMeta}>
+            {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} for{" "}
+            <strong>"{searchQuery}"</strong>
+          </p>
+          {searchResults.length === 0 ? (
+            <div className={styles.searchEmpty}>
+              <I name="search" size={36} color="var(--outline)" />
+              <p>No training found matching your search.</p>
             </div>
-            {mandatory.slice(0, 5).map((c) => {
-              const statusBg =
-                c.pct === 100
-                  ? "rgba(76, 175, 80, 0.07)"
-                  : c.pct > 0
-                  ? "rgba(255, 152, 0, 0.07)"
-                  : "rgba(150, 241, 255, 0.25)";
-              const statusIconColor =
-                c.pct === 100 ? "var(--success)" : c.pct > 0 ? "var(--warning)" : "var(--error)";
-              const statusIcon = c.pct === 100 ? "checkcircle" : c.pct > 0 ? "clock" : "alert";
-              const pillBg =
-                c.pct === 100
-                  ? "rgba(76,175,80,0.082)"
-                  : c.pct > 0
-                  ? "rgba(255,152,0,0.082)"
-                  : "rgba(168,56,54,0.082)";
-              const pillColor =
-                c.pct === 100 ? "var(--success)" : c.pct > 0 ? "var(--warning)" : "var(--error)";
-              const pillLabel = c.pct === 100 ? "Compliant" : c.pct > 0 ? "In Progress" : "Due";
-
-              return (
-                <div key={c.id} className={styles.trackerRow}>
-                  <div className={styles.trackerInfo}>
-                    <div className={styles.trackerStatus} style={{ background: statusBg }}>
-                      <I name={statusIcon} size={16} color={statusIconColor} />
-                    </div>
-                    <div>
-                      <div className={styles.trackerName}>{c.title}</div>
-                      <div className={styles.trackerMeta}>{c.cpd} CPD hrs • {c.type}</div>
-                    </div>
-                  </div>
-                  <div className={styles.trackerActions}>
-                    {c.pct > 0 && c.pct < 100 && (
-                      <div className={styles.trackerProgressWidth}>
-                        <ProgressBar pct={c.pct} color="var(--warning)" h={4} />
-                      </div>
-                    )}
-                    <Pill bg={pillBg} color={pillColor} small>{pillLabel}</Pill>
-                    <BtnSecondary
-                      onClick={() => { if (c.pct < 100) launchModule(c); }}
-                      style={{ padding: "6px 14px", fontSize: 11 }}
-                    >
-                      {c.pct === 100 ? "Certificate" : c.pct > 0 ? "Continue" : "Start"}
-                    </BtnSecondary>
-                  </div>
-                </div>
-              );
-            })}
-          </Card>
-
-          <div className={styles.skillsBlock}>
-            <div className={styles.sectionHead}>
-              <h3 className={styles.sectionHeading}>
-                <I name="play" size={18} /> Clinical Skills Academy
-              </h3>
-              <a
-                onClick={() => {
-                  setShowAllModules(true);
-                  setTimeout(() => document.getElementById("all-modules")?.scrollIntoView({ behavior: "smooth" }), 100);
-                }}
-                className={styles.sectionLink}
-              >
-                View all {filteredModules.length} modules →
-              </a>
-            </div>
-            <div className={styles.skillsGrid}>
-              {featured.map((c, i) => (
-                <Card key={c.id} className={styles.skillCard} onClick={() => launchModule(c)}>
-                  <div
-                    className={styles.skillMedia}
-                    style={{ background: skillCardGradients[i % 3] }}
-                  >
-                    <I name="tooth" size={40} color="rgba(255,255,255,0.15)" />
-                    <div className={styles.skillMediaDuration}>{c.dur}</div>
-                    <div className={styles.skillMediaPill}>
-                      <Pill
-                        bg={`color-mix(in srgb, ${typeColors[c.type] || "var(--primary)"} 56%, transparent)`}
-                        color="white"
-                        small
-                      >
-                        {c.type}
-                      </Pill>
-                    </div>
-                  </div>
-                  <div className={styles.skillBody}>
-                    <p className={styles.skillCategory}>{c.cat}</p>
-                    <h4 className={styles.skillTitle}>{c.title}</h4>
-                    <p className={styles.skillDesc}>{c.desc.slice(0, 80)}...</p>
-                    <div className={styles.skillCpd}>
-                      <I name="award" size={12} color="var(--primary)" />
-                      <span className={styles.skillCpdText}>{c.cpd} CPD Hours</span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          <Card hover={false} className={styles.allModulesCard} style={{ }}>
-            <div id="all-modules" />
-            <div className={styles.allModulesHeader}>
-              <h3 className={styles.sectionHeading}>
-                <I name="book" size={18} /> All Training Modules
-                <span className={styles.allModulesCount}>({filteredModules.length})</span>
-              </h3>
-              {filteredModules.length > 5 && (
-                <a
-                  onClick={() => setShowAllModules(!showAllModules)}
-                  className={styles.toggle}
-                >
-                  {showAllModules ? "Show less" : `Show all ${filteredModules.length}`}
-                  <span className={showAllModules ? `${styles.chevron} ${styles.chevronOpen}` : styles.chevron}>
-                    ▾
-                  </span>
-                </a>
-              )}
-            </div>
-            <div className={styles.moduleList}>
-              {(showAllModules ? filteredModules : filteredModules.slice(0, 5)).map((m) => {
-                const isExpanded = expandedModule === m.id;
-                const statusBg =
-                  m.pct === 100
-                    ? "rgba(76, 175, 80, 0.07)"
-                    : m.pct > 0
-                    ? "rgba(255, 152, 0, 0.07)"
-                    : "rgba(0, 105, 116, 0.03)";
-
+          ) : (
+            <div className={styles.searchResultsList}>
+              {searchResults.map(item => {
+                const meta = typeMetaMap[item._type];
                 return (
                   <div
-                    key={m.id}
-                    className={isExpanded ? `${styles.moduleItem} ${styles.moduleItemExpanded}` : styles.moduleItem}
+                    key={`${item._type}-${item.id}`}
+                    className={styles.searchResultItem}
+                    onClick={() => launchModule(item)}
                   >
-                    <div
-                      onClick={() => setExpandedModule(isExpanded ? null : m.id)}
-                      className={styles.moduleHead}
-                    >
-                      <div className={styles.moduleStatus} style={{ background: statusBg }}>
-                        {m.pct === 100 ? (
-                          <I name="checkcircle" size={15} color="var(--success)" />
-                        ) : m.pct > 0 ? (
-                          <span className={styles.modulePctText}>{m.pct}%</span>
-                        ) : (
-                          <I name="play" size={14} color="var(--outline)" />
-                        )}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className={styles.moduleTitle}>{m.title}</div>
-                        <div className={styles.moduleTags}>
-                          <Pill
-                            bg={`color-mix(in srgb, ${statusColors[m.status]} 11%, transparent)`}
-                            color={statusColors[m.status]}
-                            small
-                          >
-                            {m.status}
-                          </Pill>
-                          <Pill
-                            bg={`color-mix(in srgb, ${typeColors[m.type] || "var(--primary)"} 11%, transparent)`}
-                            color={typeColors[m.type] || "var(--primary)"}
-                            small
-                          >
-                            {m.type}
-                          </Pill>
-                          <span className={styles.moduleTagText}>
-                            {m.dur} • {m.cpd} CPD
-                          </span>
+                    <div className={styles.searchResultLeft}>
+                      <Pill bg={meta.bg} color={meta.color} small>{meta.label}</Pill>
+                      <div>
+                        <div className={styles.searchResultTitle}>{item.title}</div>
+                        <div className={styles.searchResultMeta}>
+                          {item.cat}{item.dur ? ` · ${item.dur}` : ""}{item.cpd > 0 ? ` · ${item.cpd} CPD hrs` : ""}
                         </div>
                       </div>
-                      {m.pct > 0 && m.pct < 100 && (
-                        <div className={styles.moduleProgressW}>
-                          <ProgressBar pct={m.pct} h={3} color="var(--warning)" />
-                        </div>
-                      )}
-                      <span
-                        className={isExpanded ? `${styles.chevron} ${styles.chevronOpen}` : styles.chevron}
-                        style={{ color: "var(--outline)" }}
-                      >
-                        ▾
-                      </span>
                     </div>
-                    {isExpanded && (
-                      <div className={styles.moduleBody}>
-                        <p className={styles.moduleBodyDesc}>{m.desc}</p>
-                        <div className={styles.moduleBodyActions}>
-                          {m.pct === 100 ? (
-                            <BtnSecondary style={{ padding: "8px 16px", fontSize: 11 }}>
-                              <I name="file" size={13} /> View Certificate
-                            </BtnSecondary>
-                          ) : (
-                            <BtnPrimary
-                              onClick={(e) => { e.stopPropagation(); launchModule(m); }}
-                              style={{ padding: "8px 16px", fontSize: 11 }}
-                            >
-                              <I name="play" size={13} /> {m.pct > 0 ? "Continue" : "Start Module"}
-                            </BtnPrimary>
-                          )}
-                          <BtnSecondary style={{ padding: "8px 14px", fontSize: 11 }}>
-                            <I name="download" size={13} /> Resources
-                          </BtnSecondary>
-                        </div>
-                      </div>
-                    )}
+                    <I name="arrow" size={14} color="var(--outline)" />
                   </div>
                 );
               })}
             </div>
-            {!showAllModules && filteredModules.length > 5 && (
-              <div onClick={() => setShowAllModules(true)} className={styles.moreLine}>
-                <span className={styles.moreLineLink}>
-                  Show all {filteredModules.length} modules <I name="arrow" size={14} color="var(--primary)" />
-                </span>
-                <p className={styles.moreLineSub}>
-                  {filteredModules.length - 5} more modules not shown
-                </p>
-              </div>
-            )}
-          </Card>
+          )}
         </div>
+      ) : (
+        <>
+        <div className={styles.layout}>
+          {/* ════ Main column ════ */}
+          <div>
 
-        <div>
-          <div className={styles.sidebarCpd}>
-            <h3 className={styles.sidebarCpdTitle}>CPD Cycle Snapshot</h3>
-            <p className={styles.sidebarCpdLead}>Current cycle progress</p>
-            <div className={styles.cpdMain}>
-              <span className={styles.cpdMainValue}>{earnedCpd}</span>
-              <span className={styles.cpdMainTotal}> / {totalCpd} hrs</span>
-            </div>
-            <ProgressBar
-              pct={totalCpd > 0 ? Math.round((earnedCpd / totalCpd) * 100) : 0}
-              color="var(--primary-container)"
-              bg="rgba(255,255,255,0.2)"
-              h={8}
-            />
-            <div className={styles.cpdMeta}>
-              {[
-                { label: "Completed", val: `${filteredModules.filter((m) => m.pct === 100).length} modules` },
-                { label: "In Progress", val: `${filteredModules.filter((m) => m.pct > 0 && m.pct < 100).length} modules` },
-                { label: "Not Started", val: `${filteredModules.filter((m) => m.pct === 0).length} modules` },
-              ].map((r) => (
-                <div key={r.label} className={styles.cpdMetaRow}>
-                  <span className={styles.cpdMetaLabel}>{r.label}</span>
-                  <span className={styles.cpdMetaValue}>{r.val}</span>
+            {/* ══ SECTION 1: Inspire Dental Training ══ */}
+            <div className={styles.sectionBlock}>
+              <div className={styles.sectionHeader}>
+                <div className={styles.sectionHeaderIcon} style={{ background: "rgba(156,39,176,0.1)" }}>
+                  <I name="building" size={15} color="#9C27B0" />
                 </div>
-              ))}
+                <div style={{ flex: 1 }}>
+                  <span className={styles.sectionHeaderTitle}>Inspire Dental Training</span>
+                  <span className={styles.sectionHeaderSub}>Internal modules created by the Inspire team · {allInternalModules.length} modules</span>
+                </div>
+                <button onClick={() => setShowAddTraining(true)} className={styles.uploadTrainingBtn}>
+                  <I name="upload" size={13} /> Upload Training
+                </button>
+              </div>
+              <div className={styles.internalGrid}>
+                {allInternalModules.map(m => (
+                  <InternalCard key={m.id} module={m} onLaunch={launchModule} />
+                ))}
+              </div>
             </div>
-            <BtnSecondary
-              style={{ width: "100%", justifyContent: "center", marginTop: 20, background: "rgba(255,255,255,0.15)", color: "white" }}
-            >
-              Update Log
-            </BtnSecondary>
+
           </div>
 
-          <Card hover={false} className={styles.summaryCard}>
-            <h4 className={styles.summaryTitle}>Compliance Summary</h4>
-            {[
-              { label: "Compliant", count: completed.length, color: "var(--success)", icon: "checkcircle" },
-              { label: "In Progress", count: inProgress.length, color: "var(--warning)", icon: "clock" },
-              { label: "Action Required", count: expiring.length, color: "var(--error)", icon: "alert" },
-            ].map((s) => (
-              <div key={s.label} className={styles.summaryRow}>
-                <div className={styles.summaryLeft}>
-                  <I name={s.icon} size={14} color={s.color} />
-                  <span className={styles.summaryLabel}>{s.label}</span>
+            {/* ════ Sidebar ════ */}
+            <div>
+              {/* Library overview */}
+              <div className={styles.sidebarCpd}>
+                <h3 className={styles.sidebarCpdTitle}>Training Library</h3>
+                <p className={styles.sidebarCpdLead}>Inspire Dental Group — London Flagship</p>
+                <div className={styles.cpdMeta} style={{ marginTop: 20 }}>
+                  {[
+                    { label: "Internal Modules",  val: `${allInternalModules.length} modules`  },
+                    { label: "How To Videos",     val: `${allHowToVideos.length} videos`        },
+                    { label: "Total Resources",   val: `${allInternalModules.length + allHowToVideos.length} items` },
+                  ].map(r => (
+                    <div key={r.label} className={styles.cpdMetaRow}>
+                      <span className={styles.cpdMetaLabel}>{r.label}</span>
+                      <span className={styles.cpdMetaValue}>{r.val}</span>
+                    </div>
+                  ))}
                 </div>
-                <span className={styles.summaryCount} style={{ color: s.color }}>{s.count}</span>
               </div>
-            ))}
-          </Card>
 
-          {[
-            { icon: "award", label: "View Certificates" },
-            { icon: "download", label: "Export CPD Log" },
-            { icon: "calendar", label: "Book Workshop" },
-          ].map((a) => (
-            <Card key={a.label} className={styles.quickAction}>
-              <div className={styles.quickActionIcon}>
-                <I name={a.icon} size={15} color="var(--primary)" />
-              </div>
-              <span className={styles.quickActionLabel}>{a.label}</span>
-            </Card>
-          ))}
+              {/* Upload shortcuts */}
+              <Card hover={false} className={styles.summaryCard}>
+                <h4 className={styles.summaryTitle}>Add Content</h4>
+                <div className={styles.summaryRow} style={{ cursor: "pointer" }} onClick={() => setShowAddTraining(true)}>
+                  <div className={styles.summaryLeft}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(156,39,176,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <I name="upload" size={13} color="#9C27B0" />
+                    </div>
+                    <span className={styles.summaryLabel}>Upload Training Module</span>
+                  </div>
+                  <I name="arrow" size={13} color="var(--outline)" />
+                </div>
+                <div className={styles.summaryRow} style={{ cursor: "pointer" }} onClick={() => setShowAddHowTo(true)}>
+                  <div className={styles.summaryLeft}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(233,30,99,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <I name="upload" size={13} color="#E91E63" />
+                    </div>
+                    <span className={styles.summaryLabel}>Upload How To Video</span>
+                  </div>
+                  <I name="arrow" size={13} color="var(--outline)" />
+                </div>
+              </Card>
+
+              {/* CPD redirect nudge */}
+              <Card hover={false} className={styles.summaryCard}>
+                <h4 className={styles.summaryTitle}>External CPD?</h4>
+                <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6, marginBottom: 14 }}>
+                  Attended a BDA course, GDC webinar, or external conference? Log it and track your hours in the CPD Tracker.
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--primary)", cursor: "pointer" }}>
+                  <I name="external" size={13} color="var(--primary)" /> Go to CPD Tracker
+                </div>
+              </Card>
+            </div>
+          </div>
+
+        {/* ══ SECTION 2: How To Series ══ */}
+        <div className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeaderIcon} style={{ background: "rgba(233,30,99,0.1)" }}>
+              <I name="play" size={15} color="#E91E63" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span className={styles.sectionHeaderTitle}>How To Series</span>
+              <span className={styles.sectionHeaderSub}>Short video guides for everyday tasks · {allHowToVideos.length} videos</span>
+            </div>
+            <button onClick={() => setShowAddHowTo(true)} className={styles.addVideoBtn}>
+              <I name="upload" size={13} /> Add Video
+            </button>
+          </div>
+
+          <div className={styles.howToCatBar}>
+            {howToCats.map(cat => (
+              <button
+                key={cat}
+                className={howToCategory === cat ? `${styles.howToCatBtn} ${styles.howToCatBtnActive}` : styles.howToCatBtn}
+                onClick={() => setHowToCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+            <div style={{ flex: 1 }} />
+            <div style={{ width: 220 }}>
+              <SearchBar
+                placeholder="Search How To videos…"
+                value={howToSearch}
+                onChange={setHowToSearch}
+              />
+            </div>
+          </div>
+
+          {visibleHowTos.length === 0 ? (
+            <div className={styles.searchEmpty}>
+              <I name="search" size={36} color="var(--outline)" />
+              <p>No videos matching your search.</p>
+            </div>
+          ) : (
+            <div className={styles.howToGrid}>
+              {visibleHowTos.map(v => (
+                <HowToCard key={v.id} video={v} onPlay={setPlayingHowTo} />
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+        </>
+      )}
+
+      {showAddTraining && (
+        <AddTrainingModal
+          onClose={() => setShowAddTraining(false)}
+          onAdd={mod => setUserInternalModules(prev => [...prev, mod])}
+          existingCats={[...new Set(allInternalModules.map(m => m.cat))]}
+        />
+      )}
+
+      {showAddHowTo && (
+        <AddHowToModal
+          onClose={() => setShowAddHowTo(false)}
+          onAdd={video => { setUserHowTos(prev => [...prev, video]); setHowToCategory("All"); }}
+          existingCats={howToCats.filter(c => c !== "All")}
+        />
+      )}
+
+      {playingHowTo && (
+        <HowToVideoModal video={playingHowTo} onClose={() => setPlayingHowTo(null)} />
+      )}
     </div>
   );
 };
