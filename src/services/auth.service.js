@@ -1,18 +1,13 @@
+import { AuthenticationDetails, CognitoUser } from "amazon-cognito-identity-js";
 import { accountsFixture } from "./fixtures/accounts.fixture";
 import { simulateLatency } from "./delay";
+import { userPool } from "./cognito.client";
 // import { fetchJson } from "./http";
 
 const SESSION_KEY = "inspire_session";
 
 let accountsStore = [...accountsFixture];
-
-function makeToken() {
-  // Browser-native UUID where available; falls back to a random 16-byte hex string.
-  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-  const buf = new Uint8Array(16);
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(buf);
-  return Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
-}
+const tempPasswordUsers = new Map();
 
 function persistSession(session) {
   try {
@@ -44,42 +39,79 @@ export function getSession() {
 }
 
 export async function login(username, password) {
-  await simulateLatency();
-  const account = accountsStore.find(
-    (a) => a.username === username && a.password === password
-  );
-  if (!account) {
-    const err = new Error("Invalid username or password");
-    err.code = "UNAUTHORIZED";
-    throw err;
-  }
-  const session = { token: makeToken(), user: publicUserOf(account) };
-  persistSession(session);
-  return session;
-  // return fetchJson("/auth/login", { method: "POST", body: { username, password } });
+  const authenticationDetails = new AuthenticationDetails({
+    Username: username,
+    Password: password,
+  });
+  const cognitoUser = new CognitoUser({
+    Username: username,
+    Pool: userPool,
+  });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.authenticateUser(authenticationDetails, {
+      onSuccess(session) {
+        const token = session.getIdToken().getJwtToken();
+        const next = {
+          token,
+          user: { username, isTempPassword: false },
+        };
+        persistSession(next);
+        resolve(next);
+      },
+      newPasswordRequired() {
+        tempPasswordUsers.set(username, cognitoUser);
+        const next = {
+          token: null,
+          user: { username, isTempPassword: true },
+        };
+        persistSession(next);
+        resolve(next);
+      },
+      onFailure(err) {
+        const next = new Error(err?.message ?? "Sign-in failed");
+        next.code =
+          err?.code === "NotAuthorizedException" ||
+          err?.code === "UserNotFoundException"
+            ? "UNAUTHORIZED"
+            : "REQUEST_FAILED";
+        reject(next);
+      },
+    });
+  });
 }
 
 export async function setPassword(username, newPassword) {
-  await simulateLatency();
-  accountsStore = accountsStore.map((a) =>
-    a.username === username
-      ? { ...a, password: newPassword, isTempPassword: false }
-      : a
-  );
-  const updated = accountsStore.find((a) => a.username === username);
-  if (!updated) {
-    const err = new Error("Account not found");
-    err.code = "NOT_FOUND";
+  const cognitoUser = tempPasswordUsers.get(username);
+  if (!cognitoUser) {
+    const err = new Error("Temporary password session expired");
+    err.code = "UNAUTHORIZED";
     throw err;
   }
-  const session = readSession();
-  if (session?.user?.username === username) {
-    const next = { ...session, user: publicUserOf(updated) };
-    persistSession(next);
-    return next;
-  }
-  return readSession();
-  // return fetchJson("/auth/password", { method: "POST", body: { newPassword } });
+
+  return new Promise((resolve, reject) => {
+    cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
+      onSuccess(session) {
+        const token = session.getIdToken().getJwtToken();
+        const next = {
+          token,
+          user: { username, isTempPassword: false },
+        };
+        tempPasswordUsers.delete(username);
+        persistSession(next);
+        resolve(next);
+      },
+      onFailure(err) {
+        const next = new Error(err?.message ?? "Password update failed");
+        next.code =
+          err?.code === "NotAuthorizedException" ||
+          err?.code === "UserNotFoundException"
+            ? "UNAUTHORIZED"
+            : "REQUEST_FAILED";
+        reject(next);
+      },
+    });
+  });
 }
 
 export async function registerAccount(account) {
@@ -95,6 +127,7 @@ export async function registerAccount(account) {
 }
 
 export function logout() {
+  userPool.getCurrentUser()?.signOut();
   try {
     sessionStorage.removeItem(SESSION_KEY);
   } catch {
