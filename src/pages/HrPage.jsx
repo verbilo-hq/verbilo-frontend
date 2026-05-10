@@ -1,44 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
 import { SearchBar } from "../components/ui/SearchBar";
+import {
+  listPolicies, addPolicy, listMandatoryTraining,
+  listNotices, listHrQuickLinks, submitLeaveRequest,
+} from "../services/hr.service";
 import styles from "./HrPage.module.css";
 
-const policies = [
-  { name: "Maternity & Paternity", updated: "Updated Aug 2023" },
-  { name: "Health & Safety", updated: "Updated Jan 2024" },
-  { name: "Clinical Standards", updated: "Updated May 2023" },
-  { name: "Disciplinary Code", updated: "Updated Dec 2023" },
-  { name: "Expenses Policy", updated: "Updated Feb 2024" },
-];
-
-const mandatoryTraining = [
-  { name: "Fire Safety & Evacuation", due: "Aug 2025", status: "done"    },
-  { name: "Infection Control (HCAI)", due: "Oct 2025", status: "done"    },
-  { name: "Safeguarding Adults",      due: "Mar 2025", status: "overdue" },
-  { name: "BLS / CPR",               due: "Jun 2025", status: "due"     },
-  { name: "GDPR Awareness",          due: "Dec 2025", status: "done"    },
-];
-
 const trainingStatus = {
-  done:    { label: (due) => "Complete",        bg: "rgba(76,175,80,0.12)",  color: "#2e7d32"         },
-  due:     { label: (due) => `Due ${due}`,      bg: "rgba(255,152,0,0.12)",  color: "#e65100"         },
-  overdue: { label: (due) => `Overdue ${due}`,  bg: "rgba(229,57,53,0.12)", color: "var(--error)"    },
+  done:    { label: ()    => "Complete",        bg: "rgba(76,175,80,0.12)",  color: "#2e7d32"      },
+  due:     { label: (due) => `Due ${due}`,      bg: "rgba(255,152,0,0.12)",  color: "#e65100"      },
+  overdue: { label: (due) => `Overdue ${due}`,  bg: "rgba(229,57,53,0.12)",  color: "var(--error)" },
 };
-
-const notices = [
-  { title: "2025 Pay Review",        date: "28 Apr", tag: "Payroll",     desc: "Individual letters have been sent. New rates effective from 1 May 2025." },
-  { title: "May Bank Holiday",       date: "22 Apr", tag: "Leave",       desc: "Practice closed Monday 5 May. All rotas have been adjusted." },
-  { title: "Welcome — James Hart",   date: "15 Apr", tag: "New Starter", desc: "James joins Birmingham as a Dental Therapist. Please make him feel welcome." },
-  { title: "Expenses Policy Update", date: "1 Apr",  tag: "Policy",      desc: "Revised mileage rates and receipt submission deadlines now in effect." },
-];
-
-const quickLinks = [
-  { icon: "file", title: "Request a Referral", desc: "Fast-track clinical referrals for specialized cases through our internal hub.", tint: "var(--primary)" },
-  { icon: "heart", title: "Mental Wellbeing", desc: "Confidential support and resources to help you maintain a healthy work-life balance.", tint: "var(--secondary)" },
-  { icon: "creditcard", title: "Payslip Portal", desc: "Securely view and download your monthly salary statements and tax documents.", tint: "var(--on-tertiary-container)" },
-];
 
 const LEAVE_TYPES = ["Annual Leave", "Compassionate Leave", "Sick Leave", "Study Leave"];
 
@@ -196,7 +171,38 @@ const LeaveModal = ({ balance, onClose, onSubmit }) => {
 export const HrPage = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(null);
+  const [policies, setPolicies] = useState([]);
+  const [mandatoryTraining, setMandatoryTraining] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [quickLinks, setQuickLinks] = useState([]);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef(null);
   const BALANCE = 12;
+
+  useEffect(() => {
+    listPolicies().then(setPolicies);
+    listMandatoryTraining().then(setMandatoryTraining);
+    listNotices().then(setNotices);
+    listHrQuickLinks().then(setQuickLinks);
+  }, []);
+
+  const handleUpload = async (e) => {
+    const file = e.target.value ? e.target.files[0] : null;
+    if (!file) return;
+    const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+    const now = new Date();
+    const updated = `Updated ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
+    const created = await addPolicy({ name, updated });
+    setPolicies((prev) => [created, ...prev]);
+    setUploadSuccess(true);
+    setTimeout(() => setUploadSuccess(false), 3000);
+    e.target.value = "";
+  };
+
+  const handleLeaveSubmit = async (req) => {
+    const saved = await submitLeaveRequest(req);
+    if (saved.leaveType === "Annual Leave") setPendingRequest(saved);
+  };
 
   return (
   <div>
@@ -263,7 +269,24 @@ export const HrPage = () => {
             <I name="shield" size={16} color="var(--primary)" />
             <span className={styles.eyebrowText}>HR Policy Library</span>
           </div>
-          <a className={styles.policySeeAll}>See All</a>
+          <div className={styles.policyActions}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              style={{ display: "none" }}
+              onChange={handleUpload}
+            />
+            <button
+              className={`${styles.uploadBtn} ${uploadSuccess ? styles.uploadBtnSuccess : ""}`}
+              onClick={() => fileInputRef.current?.click()}
+              title="Upload policy document"
+            >
+              <I name={uploadSuccess ? "checkcircle" : "upload"} size={13} color={uploadSuccess ? "var(--success)" : "var(--primary)"} />
+              <span>{uploadSuccess ? "Uploaded!" : "Upload"}</span>
+            </button>
+            <a className={styles.policySeeAll}>See All</a>
+          </div>
         </div>
         <div className={styles.policyList}>
           {policies.map((p) => (
@@ -335,7 +358,7 @@ export const HrPage = () => {
     </div>
 
     <div className={styles.footer}>
-      <span className={styles.footerCopy}>© 2024 Inspire Dental Group Ltd.</span>
+      <span className={styles.footerCopy}>© 2024 Dental Group Ltd.</span>
       <div className={styles.footerLinks}>
         {["Privacy Policy", "Terms of Employment", "Support Hub"].map((l) => (
           <a key={l} className={styles.footerLink}>{l}</a>
@@ -347,9 +370,7 @@ export const HrPage = () => {
       <LeaveModal
         balance={BALANCE}
         onClose={() => setShowLeaveModal(false)}
-        onSubmit={(req) => {
-          if (req.leaveType === "Annual Leave") setPendingRequest(req);
-        }}
+        onSubmit={handleLeaveSubmit}
       />
     )}
   </div>

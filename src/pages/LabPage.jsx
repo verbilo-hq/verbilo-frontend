@@ -1,26 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
 import { TopBar } from "../components/layout/TopBar";
+import { formatDate } from "../lib/formatDate";
+import {
+  listLabContacts, listDigitalGuides, listLabCases,
+  createLabCase, updateLabCase,
+} from "../services/lab.service";
 import styles from "./LabPage.module.css";
 
-/* ── Data ──────────────────────────────────────────────────────────────────── */
-
-const labContacts = [
-  { name: "Dental Arts Laboratory",        specialty: "Crowns, bridges, veneers",        phone: "020 7946 1234", turnaround: "5–7 working days"  },
-  { name: "OrthoLab London",               specialty: "Removable appliances, retainers",  phone: "020 7946 5678", turnaround: "7–10 working days" },
-  { name: "Align Technology (Invisalign)", specialty: "Clear aligners",                   phone: "0800 012 0200", turnaround: "3–4 weeks"         },
-  { name: "3M Oral Care Lab Services",     specialty: "Digital impressions, CEREC",       phone: "0800 626 578",  turnaround: "3–5 working days"  },
-];
-
-const digitalGuides = [
-  { name: "Lab Prescription & Docket Completion Guide",      reviewed: "Mar 2025" },
-  { name: "Intraoral Scanner — Daily Setup & Calibration",   reviewed: "Feb 2025" },
-  { name: "Digital Case Submission to Laboratory",           reviewed: "Jan 2025" },
-  { name: "Shade Selection & Clinical Photography Protocol", reviewed: "Jan 2025" },
-  { name: "Invisalign Case Submission Checklist",            reviewed: "Dec 2024" },
-];
+/* ── UI constants (not data — colour/status config kept page-local) ───────── */
 
 const WORK_TYPES = [
   "Crown (PFM)", "Crown (Zirconia)", "Crown (Gold)",
@@ -40,19 +30,7 @@ const labStatusCfg = {
   Overdue:  { bg: "rgba(229,57,53,0.12)",  color: "#e53935", next: "Returned", nextLabel: "Mark Returned" },
 };
 
-const initialLabCases = [
-  { id: 1, patient: "Mr. James Powell",  clinician: "Dr. Sarah Jenkins", lab: "Dental Arts Laboratory",    workType: "Crown (PFM) — UR4",         sentDate: "2026-04-28", dueDate: "2026-05-07", status: "At Lab",   notes: "Shade A2, standard occlusion"   },
-  { id: 2, patient: "Mrs. Clara Hughes", clinician: "Dr. Sarah Jenkins", lab: "Dental Arts Laboratory",    workType: "3-Unit Bridge — LL4–6",     sentDate: "2026-04-22", dueDate: "2026-04-29", status: "Returned", notes: "Check contacts carefully"        },
-  { id: 3, patient: "Mr. Tom Bradley",   clinician: "Leo Vance",          lab: "3M Oral Care Lab Services", workType: "Implant Crown — LR6",       sentDate: "2026-04-25", dueDate: "2026-04-30", status: "At Lab",   notes: "Abutment sent separately"        },
-  { id: 4, patient: "Miss Priya Shah",   clinician: "Dr. Sarah Jenkins", lab: "OrthoLab London",           workType: "Upper Hawley Retainer",     sentDate: "2026-05-01", dueDate: "2026-05-12", status: "Sent",     notes: ""                                },
-  { id: 5, patient: "Mr. David Moore",   clinician: "Leo Vance",          lab: "Dental Arts Laboratory",    workType: "Porcelain Veneers — UL1–2", sentDate: "2026-04-20", dueDate: "2026-04-27", status: "Fitted",   notes: "Fitted 29 Apr — patient happy"  },
-];
-
-const fmtDate = (d) => {
-  if (!d) return "—";
-  const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y}`;
-};
+const fmtDate = (d) => formatDate(d) || "—";
 
 /* ── Doc row ───────────────────────────────────────────────────────────────── */
 
@@ -74,9 +52,9 @@ const DocRow = ({ name, reviewed }) => (
 
 /* ── Log Case modal ────────────────────────────────────────────────────────── */
 
-const LogCaseModal = ({ onClose, onSave }) => {
+const LogCaseModal = ({ onClose, onSave, labContacts }) => {
   const [form, setForm] = useState({
-    patient: "", clinician: "", lab: labContacts[0].name,
+    patient: "", clinician: "", lab: labContacts[0]?.name ?? "",
     workType: "", sentDate: new Date().toISOString().slice(0, 10),
     dueDate: "", notes: "",
   });
@@ -91,10 +69,10 @@ const LogCaseModal = ({ onClose, onSave }) => {
     return e;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    onSave({ id: Date.now(), ...form, status: "Sent" });
+    await onSave({ ...form, status: "Sent" });
     onClose();
   };
 
@@ -166,17 +144,32 @@ const LogCaseModal = ({ onClose, onSave }) => {
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
 export const LabPage = () => {
-  const [labCases, setLabCases] = useState(initialLabCases);
+  const [labCases, setLabCases] = useState([]);
+  const [labContacts, setLabContacts] = useState([]);
+  const [digitalGuides, setDigitalGuides] = useState([]);
   const [showLogCase, setShowLogCase] = useState(false);
+
+  useEffect(() => {
+    listLabCases().then(setLabCases);
+    listLabContacts().then(setLabContacts);
+    listDigitalGuides().then(setDigitalGuides);
+  }, []);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const advanceStatus = (id) => setLabCases(prev => prev.map(c => {
-    if (c.id !== id) return c;
-    const next = labStatusCfg[c.status]?.next;
-    return next ? { ...c, status: next } : c;
-  }));
+  const advanceStatus = async (id) => {
+    const current = labCases.find((c) => c.id === id);
+    const next = current && labStatusCfg[current.status]?.next;
+    if (!next) return;
+    const updated = await updateLabCase(id, { status: next });
+    setLabCases((prev) => prev.map((c) => (c.id === id ? updated : c)));
+  };
+
+  const handleLogCase = async (data) => {
+    const created = await createLabCase(data);
+    setLabCases((prev) => [created, ...prev]);
+  };
 
   const overdueCount = labCases.filter(c => {
     const due = new Date(c.dueDate);
@@ -285,7 +278,8 @@ export const LabPage = () => {
       {showLogCase && (
         <LogCaseModal
           onClose={() => setShowLogCase(false)}
-          onSave={(newCase) => setLabCases(prev => [newCase, ...prev])}
+          onSave={handleLogCase}
+          labContacts={labContacts}
         />
       )}
     </div>

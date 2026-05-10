@@ -1,132 +1,28 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary, BtnOutline } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
 import { Pill } from "../components/ui/Pill";
+import { useClickOutside } from "../hooks/useClickOutside";
+import { listStaff, createStaff, updateStaff, deleteStaff } from "../services/staff.service";
+import { registerAccount } from "../services/auth.service";
+import { gdcAlertsFor } from "../services/logic/staff.logic";
 import styles from "./StaffPage.module.css";
 
 // ── Static data ───────────────────────────────────────────────────────────────
 
-const initialStaff = [
-  {
-    id: 1, name: "Dr. Sarah Jenkins", roleLabel: "Lead Orthodontist", roleType: "dentist",
-    practice: "London Flagship", gdc: "123456", gdcType: "Dentist", gdcRenewal: "",
-    email: "s.jenkins@inspiredental.co.uk", ext: "101", startDate: "March 2019",
-    dob: "", gender: "", online: true, featured: true,
-    bio: "Specialising in advanced Invisalign and digital dental transformations. Leading the clinical excellence programme at our London flagship practice.",
-    quals: ["BDS (Hons) King's College London", "MSc Orthodontics UCL", "MFDS RCS (Eng)"],
-    specialisms: ["Invisalign Platinum Provider", "Fixed Appliances", "Digital Smile Design", "Lingual Orthodontics"],
-    interests: ["Orthodontics", "Digital Dentistry", "Cosmetic"],
-    equipment: ["iTero Scanners", "3Shape TRIOS"],
-    surgeryDays: "Monday – Thursday", surgeries: ["Surgery 1", "Surgery 3"],
-    languages: ["English", "French"], indemnity: "MDDUS",
-    docs: { gdc: "gdc_cert_jenkins.pdf", indemnity: "indemnity_jenkins.pdf", dbs: "dbs_jenkins.pdf" },
-    cpdHours: 43, cpdRequired: 100,
-  },
-  {
-    id: 2, name: "Mark Thompson", roleLabel: "Practice Manager", roleType: "manager",
-    practice: "London Flagship", gdc: "", gdcType: "", gdcRenewal: "",
-    email: "m.thompson@inspiredental.co.uk", ext: "102", startDate: "June 2017",
-    dob: "", gender: "", online: false,
-    bio: "Overseeing day-to-day operations across the London flagship site, including HR, CQC compliance, and facilities management.",
-    quals: [], specialisms: [], interests: [], equipment: [],
-    responsibilities: ["HR & Recruitment", "CQC Compliance", "Finance & Invoicing", "Facilities & H&S"],
-    cqcRegistered: true, directReports: "14", emergencyContact: true,
-    docs: { gdc: "", indemnity: "", dbs: "dbs_thompson.pdf" },
-    cpdHours: 18, cpdRequired: 30,
-  },
-  {
-    id: 3, name: "Elena Rossi", roleLabel: "Senior Hygienist", roleType: "hygienist",
-    practice: "London Flagship", gdc: "234567", gdcType: "Dental Hygienist", gdcRenewal: "31 Jul 2026",
-    email: "e.rossi@inspiredental.co.uk", ext: "103", startDate: "January 2021",
-    dob: "", gender: "", online: true,
-    bio: "Dedicated to preventive care and patient education. Certified in airflow therapy and advanced periodontal treatments.",
-    quals: ["Diploma in Dental Hygiene (Eastman)", "Certificate in Airflow Therapy"],
-    specialisms: [], interests: ["Periodontics", "Preventive Care"], equipment: ["iTero Scanners"],
-    scopeOfPractice: "Dental Hygienist", lasCertified: true,
-    surgeryDays: "Tuesday, Wednesday, Friday", surgeries: ["Surgery 2"],
-    languages: ["English", "Italian"], indemnity: "",
-    docs: { gdc: "gdc_cert_rossi.pdf", indemnity: "", dbs: "dbs_rossi.pdf" },
-    cpdHours: 28, cpdRequired: 50,
-  },
-  {
-    id: 4, name: "Leo Vance", roleLabel: "Dental Surgeon", roleType: "dentist",
-    practice: "Manchester Central", gdc: "345678", gdcType: "Dentist", gdcRenewal: "",
-    email: "l.vance@inspiredental.co.uk", ext: "201", startDate: "September 2020",
-    dob: "", gender: "", online: true,
-    bio: "General dentist with a special interest in oral surgery and implantology. Trained at the Royal College of Surgeons.",
-    quals: ["BDS University of Manchester", "MJDF RCS (Eng)", "PG Cert Implantology"],
-    specialisms: ["Oral Surgery", "Dental Implants", "Composite Bonding"],
-    interests: ["Implantology", "Oral Surgery", "Endodontics"], equipment: ["CBCT Imaging", "CEREC Systems"],
-    surgeryDays: "Monday – Friday", surgeries: ["Surgery 1", "Surgery 2"],
-    languages: ["English", "Spanish"], indemnity: "BDA Indemnity",
-    docs: { gdc: "gdc_cert_vance.pdf", indemnity: "indemnity_vance.pdf", dbs: "dbs_vance.pdf" },
-    cpdHours: 55, cpdRequired: 100,
-  },
-  {
-    id: 5, name: "Jessica Wu", roleLabel: "Paediatric Dentist", roleType: "dentist",
-    practice: "London Flagship", gdc: "456789", gdcType: "Dentist", gdcRenewal: "",
-    email: "j.wu@inspiredental.co.uk", ext: "104", startDate: "February 2022",
-    dob: "", gender: "", online: false,
-    bio: "Specialist in paediatric dentistry with a gentle approach to anxiety management and early orthodontic assessment.",
-    quals: ["BDS (Hons) Bristol", "MClinDent Paediatric Dentistry KCL", "MOrth RCS (Ed)"],
-    specialisms: ["Paediatric Dentistry", "Anxiety Management", "Early Orthodontic Assessment", "Conscious Sedation"],
-    interests: ["Pediatric Care", "Orthodontics"], equipment: ["iTero Scanners"],
-    surgeryDays: "Monday, Wednesday, Thursday", surgeries: ["Surgery 4"],
-    languages: ["English", "Mandarin", "Cantonese"], indemnity: "MDDUS",
-    docs: { gdc: "gdc_cert_wu.pdf", indemnity: "indemnity_wu.pdf", dbs: "dbs_wu.pdf" },
-    cpdHours: 22, cpdRequired: 100,
-  },
-  {
-    id: 6, name: "Amy Clarke", roleLabel: "Senior Dental Nurse", roleType: "nurse",
-    practice: "London Flagship", gdc: "567890", gdcType: "Dental Nurse", gdcRenewal: "28 Feb 2026",
-    email: "a.clarke@inspiredental.co.uk", ext: "105", startDate: "August 2018",
-    dob: "", gender: "", online: true,
-    bio: "Experienced dental nurse supporting the surgical and orthodontic teams. Qualified in radiography and infection control.",
-    quals: ["NEBDN National Certificate in Dental Nursing", "Certificate in Dental Radiography"],
-    specialisms: [], interests: ["Radiography", "Decontamination"], equipment: [],
-    nurseStatus: "Qualified", radiographyCert: true, assignedSurgery: "Surgery 1 & 3",
-    languages: ["English"], indemnity: "",
-    docs: { gdc: "gdc_cert_clarke.pdf", indemnity: "", dbs: "dbs_clarke.pdf" },
-    cpdHours: 38, cpdRequired: 50,
-  },
-  {
-    id: 7, name: "James Hart", roleLabel: "Dental Therapist", roleType: "hygienist",
-    practice: "Birmingham", gdc: "678901", gdcType: "Dental Therapist / Hygienist", gdcRenewal: "30 Jun 2026",
-    email: "j.hart@inspiredental.co.uk", ext: "301", startDate: "May 2023",
-    dob: "", gender: "", online: false,
-    bio: "Dual-qualified dental therapist and hygienist providing restorative and preventive treatments across the Birmingham site.",
-    quals: ["BSc Dental Therapy & Hygiene Birmingham", "Certificate in Local Anaesthesia"],
-    specialisms: [], interests: ["Periodontics", "Restorative"], equipment: ["iTero Scanners"],
-    scopeOfPractice: "Dental Therapist & Hygienist", lasCertified: true,
-    surgeryDays: "Monday, Tuesday, Thursday, Friday", surgeries: ["Surgery 1"],
-    languages: ["English"], indemnity: "",
-    docs: { gdc: "gdc_cert_hart.pdf", indemnity: "", dbs: "dbs_hart.pdf" },
-    cpdHours: 12, cpdRequired: 50,
-  },
-  {
-    id: 8, name: "Sophie Brown", roleLabel: "Senior Receptionist", roleType: "receptionist",
-    practice: "London Flagship", gdc: "", gdcType: "", gdcRenewal: "",
-    email: "s.brown@inspiredental.co.uk", ext: "100", startDate: "November 2020",
-    dob: "", gender: "", online: true,
-    bio: "Front-of-house lead managing patient bookings, treatment coordination, and the daily appointment schedule for the London flagship.",
-    quals: [], specialisms: [], interests: [], equipment: [],
-    workingHours: "Mon–Fri, 08:00–17:00", firstAider: true, fireWarden: true,
-    responsibilities: ["Appointment Scheduling", "Patient Correspondence", "Treatment Coordination", "Cash Reconciliation"],
-    languages: ["English", "Mandarin"],
-    docs: { gdc: "", indemnity: "", dbs: "dbs_brown.pdf" },
-    cpdHours: 8, cpdRequired: 15,
-  },
-];
 
 const practices = ["London Flagship", "Manchester Central", "Birmingham", "Leeds North"];
 const roleFilters = ["Dentist", "Dental Nurse", "Hygienist", "Orthodontist", "Practice Manager", "Receptionist"];
-const locationStats = [
-  { val: "18", label: "Clinicians" },
-  { val: "06", label: "Support Staff" },
-  { val: "02", label: "Open Roles", highlight: true },
-];
+const practiceAddresses = {
+  "London Flagship":    "42 Harley Street, Marylebone",
+  "Manchester Central": "15 King Street, Manchester",
+  "Birmingham":         "25 Colmore Row, Birmingham",
+  "Leeds North":        "1 Park Row, Leeds",
+};
+const CLINICAL_ROLE_TYPES  = ["dentist", "nurse", "hygienist"];
+const SUPPORT_ROLE_TYPES   = ["manager", "receptionist", "support"];
 const cpdRequiredByType = { dentist: 100, nurse: 50, hygienist: 50, manager: 30, receptionist: 15 };
 const gdcTypesByRole = {
   dentist: ["Dentist", "Specialist"],
@@ -163,14 +59,6 @@ const ROLE_LABELS = {
 };
 
 // ── Compliance helpers ────────────────────────────────────────────────────────
-
-const MONTH_IDX = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
-const parseRenewalDate = (str) => {
-  if (!str) return null;
-  const [day, mon, year] = str.split(" ");
-  const m = MONTH_IDX[mon];
-  return m !== undefined ? new Date(parseInt(year), m, parseInt(day)) : null;
-};
 
 // ── Form helpers ──────────────────────────────────────────────────────────────
 
@@ -956,10 +844,49 @@ const ProfileModal = ({ person, onClose, onEdit, onDelete, isManager }) => {
   );
 };
 
+// ── Custom dropdown ───────────────────────────────────────────────────────────
+
+const CustomSelect = ({ value, onChange, options, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useClickOutside(() => setOpen(false));
+
+  return (
+    <div className={styles.customSelect} ref={ref}>
+      <button
+        type="button"
+        className={value ? `${styles.tabDropdown} ${styles.tabDropdownActive}` : styles.tabDropdown}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {value || placeholder}
+        <I name="chevrondown" size={13} />
+      </button>
+      {open && (
+        <div className={styles.dropPanel}>
+          <div
+            className={!value ? `${styles.dropOption} ${styles.dropOptionSelected}` : styles.dropOption}
+            onClick={() => { onChange(""); setOpen(false); }}
+          >
+            {placeholder}
+          </div>
+          {options.map((o) => (
+            <div
+              key={o}
+              className={value === o ? `${styles.dropOption} ${styles.dropOptionSelected}` : styles.dropOption}
+              onClick={() => { onChange(o); setOpen(false); }}
+            >
+              {o}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
-  const [staffList, setStaffList] = useState(initialStaff);
+export const StaffPage = ({ currentUser }) => {
+  const [staffList, setStaffList] = useState([]);
   const [search, setSearch] = useState("");
   const [practiceFilter, setPracticeFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -967,49 +894,55 @@ export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
   const [editingPerson, setEditingPerson] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
 
-  const featured = staffList.find((s) => s.featured);
+  useEffect(() => { listStaff().then(setStaffList); }, []);
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const gdcAlerts = staffList.flatMap(s => {
-    const d = parseRenewalDate(s.gdcRenewal);
-    if (!d) return [];
-    const daysLeft = Math.round((d - today) / 86400000);
-    if (daysLeft > 60) return [];
-    return [{ id: s.id, name: s.name, roleType: s.roleType, roleLabel: s.roleLabel, renewal: s.gdcRenewal, overdue: daysLeft < 0, daysLeft }];
-  });
+  const featured = useMemo(() => staffList.find((s) => s.featured), [staffList]);
 
-  const filtered = staffList.filter((s) => {
+  const gdcAlerts = useMemo(() => gdcAlertsFor(staffList), [staffList]);
+
+  const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return (
+    return staffList.filter((s) => (
       (s.name.toLowerCase().includes(q) || s.roleLabel.toLowerCase().includes(q)) &&
       (!practiceFilter || s.practice === practiceFilter) &&
       (!roleFilter || s.roleLabel.toLowerCase().includes(roleFilter.toLowerCase()) || s.roleType.toLowerCase().includes(roleFilter.toLowerCase()))
-    );
-  });
+    ));
+  }, [staffList, search, practiceFilter, roleFilter]);
 
-  const handleSave = (data, accountData) => {
+  const handleSave = async (data, accountData) => {
     const isNew = !staffList.some((s) => s.id === data.id);
-    setStaffList((prev) =>
-      isNew ? [...prev, data] : prev.map((s) => s.id === data.id ? data : s)
-    );
-    if (isNew && onAddAccount && accountData?.username) {
-      onAddAccount({
-        username: accountData.username,
-        password: accountData.tempPassword || "Welcome1",
-        role: data.roleType,
-        staffId: data.id,
-        isTempPassword: true,
-        displayName: data.name,
-      });
+    if (isNew) {
+      const created = await createStaff(data);
+      setStaffList((prev) => [...prev, created]);
+      if (accountData?.username) {
+        try {
+          await registerAccount({
+            username: accountData.username,
+            password: accountData.tempPassword || "Welcome1",
+            role: created.roleType,
+            staffId: created.id,
+            isTempPassword: true,
+            displayName: created.name,
+          });
+        } catch (e) {
+          // Username clash or similar — surface to UI later if needed.
+          if (e.code !== "VALIDATION") throw e;
+        }
+      }
+      if (selectedPerson?.id === created.id) setSelectedPerson(created);
+    } else {
+      const updated = await updateStaff(data.id, data);
+      setStaffList((prev) => prev.map((s) => (s.id === data.id ? updated : s)));
+      if (selectedPerson?.id === data.id) setSelectedPerson(updated);
     }
     setEditingPerson(null);
     setShowAdd(false);
-    if (selectedPerson?.id === data.id) setSelectedPerson(data);
   };
 
   const openEdit = (person) => { setSelectedPerson(null); setEditingPerson(person); };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
+    await deleteStaff(id);
     setStaffList((prev) => prev.filter((s) => s.id !== id));
     setSelectedPerson(null);
   };
@@ -1027,7 +960,7 @@ export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Staff Directory</h1>
-          <p className={styles.lead}>Connect with the Inspire Dental Group specialist team.</p>
+          <p className={styles.lead}>Connect with the Dental Group specialist team.</p>
         </div>
         {currentUser?.role === "manager" && (
           <BtnPrimary onClick={() => setShowAdd(true)}>
@@ -1037,27 +970,56 @@ export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
       </div>
 
       <div className={styles.tabs}>
-        <button onClick={() => { setPracticeFilter(""); setRoleFilter(""); }}
-          className={!practiceFilter && !roleFilter ? `${styles.tab} ${styles.active}` : styles.tab}>
+        <button
+          onClick={() => { setPracticeFilter(""); setRoleFilter(""); }}
+          className={!practiceFilter && !roleFilter ? `${styles.tab} ${styles.active}` : styles.tab}
+        >
+          <I name="staff" size={14} />
           All Staff
         </button>
-        <div className={styles.tabDropdownWrap}>
-          <select className={practiceFilter ? `${styles.tabDropdown} ${styles.tabDropdownActive}` : styles.tabDropdown}
-            value={practiceFilter} onChange={(e) => { setPracticeFilter(e.target.value); setRoleFilter(""); }}>
-            <option value="">By Practice</option>
-            {practices.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <I name="chevrondown" size={13} />
-        </div>
-        <div className={styles.tabDropdownWrap}>
-          <select className={roleFilter ? `${styles.tabDropdown} ${styles.tabDropdownActive}` : styles.tabDropdown}
-            value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPracticeFilter(""); }}>
-            <option value="">By Role</option>
-            {roleFilters.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <I name="chevrondown" size={13} />
-        </div>
+
+        <CustomSelect
+          value={practiceFilter}
+          onChange={(v) => { setPracticeFilter(v); setRoleFilter(""); }}
+          options={practices}
+          placeholder="By Practice"
+        />
+
+        <CustomSelect
+          value={roleFilter}
+          onChange={(v) => { setRoleFilter(v); setPracticeFilter(""); }}
+          options={roleFilters}
+          placeholder="By Role"
+        />
       </div>
+
+      {practiceFilter && (
+        <div className={styles.practiceBanner}>
+          <div className={styles.practiceBannerLeft}>
+            <div className={styles.practiceBannerIcon}>
+              <I name="building" size={20} color="var(--primary)" />
+            </div>
+            <div>
+              <div className={styles.practiceBannerName}>{practiceFilter}</div>
+              <div className={styles.practiceBannerAddress}>{practiceAddresses[practiceFilter]}</div>
+            </div>
+          </div>
+          <div className={styles.practiceBannerStats}>
+            <div className={styles.practiceStat}>
+              <span className={styles.practiceStatValue}>
+                {filtered.filter(s => CLINICAL_ROLE_TYPES.includes(s.roleType)).length.toString().padStart(2, "0")}
+              </span>
+              <span className={styles.practiceStatLabel}>Clinicians</span>
+            </div>
+            <div className={styles.practiceStat}>
+              <span className={styles.practiceStatValue}>
+                {filtered.filter(s => SUPPORT_ROLE_TYPES.includes(s.roleType)).length.toString().padStart(2, "0")}
+              </span>
+              <span className={styles.practiceStatLabel}>Support Staff</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {currentUser?.role === "manager" && gdcAlerts.length > 0 && (
         <div className={styles.complianceAlert}>
@@ -1090,19 +1052,19 @@ export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
         </div>
       )}
 
-      <div className={styles.layout}>
-        <div>
+      <div>
           {featured && !search && !practiceFilter && !roleFilter && (
             <Card hover={false} style={{ padding: 32, marginBottom: 28, display: "flex", gap: 32 }}>
               <div className={styles.featuredPhotoWrap}>
                 <div className={styles.featuredPhoto}><Avatar name={featured.name} size={100} bg={ROLE_COLORS[featured.roleType]} /></div>
                 <div className={styles.featuredBadge} style={ROLE_COLORS[featured.roleType] ? { background: ROLE_COLORS[featured.roleType], color: "#fff" } : undefined}>
-                  <span className={styles.featuredBadgeText}>{featured.roleLabel}</span>
+                  <span className={styles.featuredBadgeText}>FOUNDER</span>
                 </div>
               </div>
               <div className={styles.featuredBody}>
+                <p className={styles.featuredEyebrow}>{featured.roleLabel}</p>
                 <h2 className={styles.featuredName}>{featured.name}</h2>
-                <p className={styles.featuredQual}>{featured.quals?.[0]} · GDC: {featured.gdc}</p>
+                <p className={styles.featuredQual}>{featured.quals?.[0]}{featured.gdc ? ` · GDC: ${featured.gdc}` : ""}</p>
                 <p className={styles.featuredBio}>{featured.bio}</p>
                 <div className={styles.featuredActions}>
                   {currentUser?.role === "manager" && (
@@ -1143,25 +1105,6 @@ export const StaffPage = ({ currentUser, onAddAccount, accounts = [] }) => {
               </Card>
             ))}
           </div>
-        </div>
-
-        <div>
-          <Card hover={false} style={{ padding: 24, display: "flex", alignItems: "center", gap: 16 }}>
-            <div className={styles.locationIcon}><I name="building" size={22} /></div>
-            <div style={{ flex: 1 }}>
-              <div className={styles.locationName}>London Flagship</div>
-              <div className={styles.locationAddress}>42 Harley Street, Marylebone</div>
-            </div>
-          </Card>
-          <div className={styles.locationStats}>
-            {locationStats.map((s) => (
-              <div key={s.label} className={s.highlight ? `${styles.locationStat} ${styles.highlight}` : styles.locationStat}>
-                <div className={styles.locationStatValue}>{s.val}</div>
-                <div className={styles.locationStatLabel}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {selectedPerson && (

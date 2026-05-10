@@ -1,5 +1,6 @@
 import { I } from "../Icon";
 import { Avatar } from "../ui/Avatar";
+import { useAuth } from "../../auth/AuthContext";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -7,7 +8,7 @@ const navItems = [
   { id: "manager",   label: "Manager Hub",          icon: "layers",   roles: ["manager"] },
   { id: "clinical",  label: "Clinical Resources",   icon: "clinical"                     },
   { id: "staff",     label: "Staff Directory",      icon: "staff"                        },
-  { id: "marketing", label: "Marketing Hub",        icon: "marketing"                    },
+  { id: "marketing", label: "Brand Hub",             icon: "marketing"                    },
   { id: "hr",        label: "HR Hub",               icon: "building"                     },
   { id: "training",  label: "Training Hub",         icon: "training"                     },
   { id: "cpd",       label: "CPD Hub",              icon: "award"                        },
@@ -23,7 +24,9 @@ const roleLabel = {
   receptionist:"Receptionist",
 };
 
-export const Sidebar = ({ current, onNav, currentUser }) => (
+export const Sidebar = ({ current, onNav }) => {
+  const { user, logout } = useAuth();
+  return (
   <aside className={styles.sidebar}>
     <div className={styles.brand}>
       <div className={styles.brandRow}>
@@ -31,14 +34,14 @@ export const Sidebar = ({ current, onNav, currentUser }) => (
           <I name="tooth" size={20} />
         </div>
         <div>
-          <div className={styles.brandTitle}>Inspire Dental Group</div>
+          <div className={styles.brandTitle}>Dental Group</div>
           <div className={styles.brandSubtitle}>Clinical Sanctuary</div>
         </div>
       </div>
     </div>
 
     <nav className={styles.nav}>
-      {navItems.filter(item => !item.roles || item.roles.includes(currentUser?.role)).map((item) => {
+      {navItems.filter(item => !item.roles || item.roles.includes(user?.role)).map((item) => {
         const active = current === item.id;
         return (
           <a
@@ -55,19 +58,31 @@ export const Sidebar = ({ current, onNav, currentUser }) => (
 
     <div className={styles.footer}>
       {/* Logged-in user */}
-      {currentUser && (
+      {user && (
         <div className={styles.currentUser}>
-          <Avatar name={currentUser.displayName} size={32} />
+          <Avatar name={user.displayName} size={32} />
           <div className={styles.currentUserInfo}>
-            <span className={styles.currentUserName}>{currentUser.displayName}</span>
+            <span className={styles.currentUserName}>{user.displayName}</span>
             <span className={styles.currentUserRole}>
-              {roleLabel[currentUser.role] || currentUser.role}
+              {roleLabel[user.role] || user.role}
             </span>
           </div>
         </div>
       )}
 
-<a onClick={() => onNav("login")} className={styles.footerLink}>
+      <div className={styles.storageWrap}>
+        <div className={styles.storageHeader}>
+          <I name="cloud" size={12} color="var(--on-surface-variant)" />
+          <span className={styles.storageLabel}>Storage</span>
+          <span className={styles.storagePercent}>21%</span>
+        </div>
+        <div className={styles.storageTrack}>
+          <div className={styles.storageBar} />
+        </div>
+        <div className={styles.storageInfo}>213 GB of 1 TB used</div>
+      </div>
+
+      <a onClick={logout} className={styles.footerLink}>
         <I name="logout" size={16} /> Logout
       </a>
       <p className={styles.copyright}>
@@ -75,4 +90,5 @@ export const Sidebar = ({ current, onNav, currentUser }) => (
       </p>
     </div>
   </aside>
-);
+  );
+};

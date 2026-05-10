@@ -1,0 +1,39 @@
+import {
+  cpdRolesFixture,
+  cpdRoleProfilesFixture,
+  practiceStaffFixture,
+} from "./fixtures/cpd.fixture";
+import { simulateLatency } from "./delay";
+// import { fetchJson } from "./http";
+
+let profilesStore = JSON.parse(JSON.stringify(cpdRoleProfilesFixture));
+
+export async function listCpdRoles() {
+  await simulateLatency();
+  return [...cpdRolesFixture];
+  // return fetchJson("/cpd/roles");
+}
+
+export async function getCpdProfile(roleId) {
+  await simulateLatency();
+  return profilesStore[roleId] ? JSON.parse(JSON.stringify(profilesStore[roleId])) : null;
+  // return fetchJson(`/cpd/profile/${roleId}`);
+}
+
+export async function addCpdLogEntry(roleId, entry) {
+  await simulateLatency();
+  const profile = profilesStore[roleId];
+  if (!profile) throw Object.assign(new Error("Role not found"), { code: "NOT_FOUND" });
+  const id = Math.max(0, ...profile.log.map((l) => l.id ?? 0)) + 1;
+  const created = { ...entry, id };
+  profile.log = [created, ...profile.log];
+  profile.totalLogged = (profile.totalLogged ?? 0) + (entry.hrs ?? 0);
+  return created;
+  // return fetchJson(`/cpd/profile/${roleId}/log`, { method: "POST", body: entry });
+}
+
+export async function listPracticeStaffCpd() {
+  await simulateLatency();
+  return [...practiceStaffFixture];
+  // return fetchJson("/cpd/practice-staff");
+}

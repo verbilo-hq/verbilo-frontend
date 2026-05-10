@@ -1,200 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { ProgressBar } from "../components/ui/ProgressBar";
+import { formatDate } from "../lib/formatDate";
+import {
+  listCpdRoles, getCpdProfile, addCpdLogEntry, listPracticeStaffCpd,
+} from "../services/cpd.service";
 import styles from "./CpdPage.module.css";
 
-const roles = [
-  { id: "dentist",      label: "Dentist",           icon: "clinical"   },
-  { id: "nurse",        label: "Dental Nurse",       icon: "heart"      },
-  { id: "hygienist",    label: "Hygienist",          icon: "star"       },
-  { id: "manager",      label: "Practice Manager",   icon: "briefcase"  },
-  { id: "receptionist", label: "Receptionist",       icon: "person"     },
-];
-
-const roleProfiles = {
-  dentist: {
-    scheme: "GDC Enhanced CPD Scheme",
-    isGdc: true,
-    cyclePeriod: "2023 – 2028",
-    cycleYear: 3,
-    cycleTotalYears: 5,
-    totalRequired: 100,
-    totalLogged: 43,
-    note: "Under the GDC Enhanced CPD Scheme, dentists must complete 100 verifiable CPD hours per 5-year cycle. All hours must be evidenced with learning objectives and outcomes. Three mandatory topic areas apply across the cycle. A Personal Development Plan (PDP) must be maintained and submitted at GDC renewal.",
-    mandatoryTopics: [
-      { name: "Medical Emergencies",                 icon: "heart",    required: 10, logged: 6  },
-      { name: "Disinfection & Decontamination",      icon: "shield",   required: 5,  logged: 5  },
-      { name: "Radiography & Radiation Protection",  icon: "monitor",  required: 5,  logged: 3  },
-    ],
-    log: [
-      { id: 1, date: "14 Nov 2025", title: "BDA Annual Conference 2025",                      provider: "British Dental Association",  type: "Conference", hrs: 8, evidence: "Certificate"   },
-      { id: 2, date: "22 Oct 2025", title: "IRMER 2017 Online Update",                        provider: "FGDP UK",                    type: "E-Learning", hrs: 3, evidence: "Certificate"   },
-      { id: 3, date: "10 Sep 2025", title: "In-House Medical Emergencies Refresher",          provider: "Inspire Dental Group",       type: "Practical",  hrs: 2, evidence: "Attendance Log"},
-      { id: 4, date: "Aug 2025",    title: "Evidence-Based Review – Periodontology Updates",  provider: "Self-directed (documented)", type: "Reading",    hrs: 4, evidence: "Learning Record"},
-      { id: 5, date: "Jul 2025",    title: "Clinical Audit – Composite Failure Rates",        provider: "Inspire Dental Group",       type: "Audit",      hrs: 2, evidence: "Audit Record"  },
-      { id: 6, date: "14 Jun 2025", title: "Composite Restoration Hands-On Workshop",         provider: "Dental Update",              type: "Workshop",   hrs: 6, evidence: "Certificate"   },
-      { id: 7, date: "8 May 2025",  title: "GDC Standards for the Dental Team Webinar",      provider: "General Dental Council",     type: "Webinar",    hrs: 2, evidence: "Certificate"   },
-    ],
-    requirements: [
-      { label: "Scheme",               value: "Enhanced CPD (2018)"  },
-      { label: "Cycle deadline",       value: "31 Dec 2028"          },
-      { label: "Hours required",       value: "100 hrs (all verifiable)" },
-      { label: "Hours logged",         value: "43 hrs"               },
-      { label: "Hours remaining",      value: "57 hrs"               },
-      { label: "Mandatory topics",     value: "Medical, D&D, Radiology" },
-    ],
-  },
-
-  nurse: {
-    scheme: "GDC Enhanced CPD Scheme (DCP)",
-    isGdc: true,
-    cyclePeriod: "2023 – 2028",
-    cycleYear: 3,
-    cycleTotalYears: 5,
-    totalRequired: 50,
-    totalLogged: 22,
-    note: "Under the GDC Enhanced CPD Scheme, Dental Nurses (DCPs) must complete 50 verifiable CPD hours per 5-year cycle. All hours must be evidenced — the old non-verifiable category no longer exists. Three mandatory topic areas apply. A Personal Development Plan (PDP) must be maintained and submitted at GDC renewal.",
-    mandatoryTopics: [
-      { name: "Medical Emergencies",                 icon: "heart",    required: 10, logged: 4  },
-      { name: "Disinfection & Decontamination",      icon: "shield",   required: 5,  logged: 5  },
-      { name: "Radiography & Radiation Protection",  icon: "monitor",  required: 5,  logged: 2  },
-    ],
-    log: [
-      { id: 1, date: "18 Nov 2025", title: "NEBDN Enhanced CPD Study Day",          provider: "NEBDN",               type: "Study Day",  hrs: 6, evidence: "Certificate"   },
-      { id: 2, date: "5 Oct 2025",  title: "Cross-Infection Control Update",        provider: "BSDHT Online",        type: "E-Learning", hrs: 3, evidence: "Certificate"   },
-      { id: 3, date: "15 Sep 2025", title: "Fluoride Varnish Application Workshop", provider: "Inspire Dental Group",type: "Workshop",   hrs: 4, evidence: "Attendance Log"},
-      { id: 4, date: "22 Jul 2025", title: "Safeguarding Awareness E-Learning",     provider: "Skills for Care",     type: "E-Learning", hrs: 3, evidence: "Certificate"   },
-      { id: 5, date: "8 May 2025",  title: "Oral Health Education Study Day",       provider: "BSDHT",               type: "Study Day",  hrs: 4, evidence: "Certificate"   },
-      { id: 6, date: "Feb 2025",    title: "In-House Medical Emergencies Refresher",provider: "Inspire Dental Group",type: "Practical",  hrs: 2, evidence: "Attendance Log"},
-    ],
-    requirements: [
-      { label: "Scheme",             value: "Enhanced CPD (2018)"      },
-      { label: "Cycle deadline",     value: "31 Dec 2028"              },
-      { label: "Hours required",     value: "50 hrs (all verifiable)"  },
-      { label: "Hours logged",       value: "22 hrs"                   },
-      { label: "Hours remaining",    value: "28 hrs"                   },
-      { label: "Mandatory topics",   value: "Medical, D&D, Radiology"  },
-    ],
-  },
-
-  hygienist: {
-    scheme: "GDC Enhanced CPD Scheme (DCP)",
-    isGdc: true,
-    cyclePeriod: "2023 – 2028",
-    cycleYear: 3,
-    cycleTotalYears: 5,
-    totalRequired: 50,
-    totalLogged: 28,
-    note: "Under the GDC Enhanced CPD Scheme, Dental Hygienists and Therapists (DCPs) must complete 50 verifiable CPD hours per 5-year cycle. All hours must be evidenced with learning objectives and outcomes. Three mandatory topic areas apply. Your PDP must be maintained and submitted at GDC renewal.",
-    mandatoryTopics: [
-      { name: "Medical Emergencies",                 icon: "heart",    required: 10, logged: 6  },
-      { name: "Disinfection & Decontamination",      icon: "shield",   required: 5,  logged: 5  },
-      { name: "Radiography & Radiation Protection",  icon: "monitor",  required: 5,  logged: 5  },
-    ],
-    log: [
-      { id: 1, date: "20 Nov 2025", title: "BSP Periodontal Masterclass",                      provider: "British Society of Periodontology", type: "Masterclass", hrs: 6, evidence: "Certificate"   },
-      { id: 2, date: "8 Oct 2025",  title: "Behaviour Change & Motivational Interviewing",     provider: "BSDHT",                            type: "Study Day",   hrs: 4, evidence: "Certificate"   },
-      { id: 3, date: "3 Sep 2025",  title: "Advanced Ultrasonic Scaling Workshop",             provider: "Academy of Dental Hygiene",        type: "Workshop",    hrs: 6, evidence: "Certificate"   },
-      { id: 4, date: "Aug 2025",    title: "Peri-Implant Disease Webinar Series",              provider: "EFP Online",                       type: "Webinar",     hrs: 3, evidence: "Certificate"   },
-      { id: 5, date: "15 Jul 2025", title: "Smoking Cessation Counselling Certificate",        provider: "NCSCT",                            type: "Course",      hrs: 4, evidence: "Certificate"   },
-      { id: 6, date: "Apr 2025",    title: "Structured Review – LA Evidence & Updates",        provider: "Self-directed (documented)",       type: "Reading",     hrs: 3, evidence: "Learning Record"},
-      { id: 7, date: "Feb 2025",    title: "Peer Review – Periodontal Case Presentations",     provider: "Inspire Dental Group",             type: "Peer Review", hrs: 2, evidence: "CPD Record"    },
-    ],
-    requirements: [
-      { label: "Scheme",             value: "Enhanced CPD (2018)"      },
-      { label: "Cycle deadline",     value: "31 Dec 2028"              },
-      { label: "Hours required",     value: "50 hrs (all verifiable)"  },
-      { label: "Hours logged",       value: "28 hrs"                   },
-      { label: "Hours remaining",    value: "22 hrs"                   },
-      { label: "Mandatory topics",   value: "Medical, D&D, Radiology"  },
-    ],
-  },
-
-  manager: {
-    scheme: "Practice CPD Programme",
-    isGdc: false,
-    cyclePeriod: "Jan – Dec 2025",
-    cycleYear: null,
-    cycleTotalYears: null,
-    totalRequired: 30,
-    verifiableRequired: null,
-    nonVerRequired: null,
-    totalLogged: 18,
-    verifiableLogged: null,
-    nonVerLogged: null,
-    note: "Practice Managers are not required to hold GDC registration. Inspire Dental Group recommends a minimum of 30 CPD hours per year covering compliance, HR, operations, and leadership.",
-    mandatoryTopics: [
-      { name: "CQC Compliance Update",          icon: "shield",     required: 6, logged: 4 },
-      { name: "HR & Employment Law",            icon: "briefcase",  required: 6, logged: 6 },
-      { name: "Health & Safety",                icon: "shieldalert",required: 4, logged: 4 },
-      { name: "Data Protection (GDPR)",         icon: "lock",       required: 4, logged: 2 },
-      { name: "Financial Management",           icon: "barchart",   required: 4, logged: 2 },
-    ],
-    log: [
-      { id: 1, date: "12 Nov 2025", title: "ADAM Practice Management Conference 2025",    provider: "ADAM",                   type: "Conference", hrs: 7, verifiable: true,  evidence: "Certificate"   },
-      { id: 2, date: "14 Oct 2025", title: "Employment Law Update 2025 Webinar",          provider: "BDA Business Support",   type: "Webinar",    hrs: 3, verifiable: true,  evidence: "Certificate"   },
-      { id: 3, date: "2 Sep 2025",  title: "CQC Single Assessment Framework Training",   provider: "Care Quality Commission", type: "Training",   hrs: 4, verifiable: true,  evidence: "Certificate"   },
-      { id: 4, date: "Aug 2025",    title: "GDPR Refresher E-Learning",                  provider: "ICO Online Learning",    type: "E-Learning", hrs: 2, verifiable: true,  evidence: "Certificate"   },
-      { id: 5, date: "15 Jul 2025", title: "Fire Safety & H&S Annual Refresher",         provider: "In-House Training",      type: "Training",   hrs: 2, verifiable: false, evidence: "Attendance Log"},
-    ],
-    requirements: [
-      { label: "Annual target",     value: "30 hrs"               },
-      { label: "Hours logged",      value: "18 hrs"               },
-      { label: "Hours remaining",   value: "12 hrs"               },
-      { label: "Deadline",          value: "31 Dec 2025"          },
-      { label: "Renewal body",      value: "Practice policy"      },
-    ],
-  },
-
-  receptionist: {
-    scheme: "Practice CPD Programme",
-    isGdc: false,
-    cyclePeriod: "Jan – Dec 2025",
-    cycleYear: null,
-    cycleTotalYears: null,
-    totalRequired: 15,
-    verifiableRequired: null,
-    nonVerRequired: null,
-    totalLogged: 8,
-    verifiableLogged: null,
-    nonVerLogged: null,
-    note: "Receptionists are not required to hold GDC registration. Inspire Dental Group recommends a minimum of 15 CPD hours per year covering patient care, data protection, and practice operations.",
-    mandatoryTopics: [
-      { name: "Data Protection & GDPR",         icon: "lock",       required: 3, logged: 2 },
-      { name: "Medical Emergency Awareness",     icon: "heart",      required: 2, logged: 0 },
-      { name: "Customer Service Excellence",     icon: "handshake",  required: 4, logged: 4 },
-      { name: "NHS Processes & Forms",           icon: "file",       required: 3, logged: 2 },
-      { name: "Safeguarding Awareness",          icon: "shield",     required: 3, logged: 0 },
-    ],
-    log: [
-      { id: 1, date: "5 Nov 2025",  title: "NHS Reception Excellence Training Day",   provider: "Skills for Health",   type: "Training",   hrs: 4, verifiable: true,  evidence: "Certificate" },
-      { id: 2, date: "8 Sep 2025",  title: "GDPR for Reception Teams E-Learning",    provider: "ICO Online Learning",  type: "E-Learning", hrs: 2, verifiable: true,  evidence: "Certificate" },
-      { id: 3, date: "15 Jul 2025", title: "NHS FP17 Forms & Processes Webinar",     provider: "NHS BSA",              type: "Webinar",    hrs: 2, verifiable: true,  evidence: "Certificate" },
-    ],
-    requirements: [
-      { label: "Annual target",     value: "15 hrs"               },
-      { label: "Hours logged",      value: "8 hrs"                },
-      { label: "Hours remaining",   value: "7 hrs"                },
-      { label: "Deadline",          value: "31 Dec 2025"          },
-      { label: "Renewal body",      value: "Practice policy"      },
-    ],
-  },
-};
-
-/* ── Practice staff CPD summary (PM overview data) ───────────────────────── */
-const practiceStaff = [
-  { id: 1, name: "Dr. Sarah Jenkins", initials: "SJ", roleType: "dentist",      roleLabel: "Dentist",           logged: 43, required: 100, cycleType: "gdc",    topicsDone: 1, topicsTotal: 3 },
-  { id: 2, name: "Mark Thompson",     initials: "MT", roleType: "manager",      roleLabel: "Practice Manager",  logged: 18, required: 30,  cycleType: "annual", topicsDone: 2, topicsTotal: 5 },
-  { id: 3, name: "Elena Rossi",       initials: "ER", roleType: "hygienist",    roleLabel: "Hygienist",         logged: 28, required: 50,  cycleType: "gdc",    topicsDone: 2, topicsTotal: 3 },
-  { id: 4, name: "Leo Vance",         initials: "LV", roleType: "dentist",      roleLabel: "Dentist",           logged: 67, required: 100, cycleType: "gdc",    topicsDone: 3, topicsTotal: 3 },
-  { id: 5, name: "Jessica Wu",        initials: "JW", roleType: "dentist",      roleLabel: "Dentist",           logged: 18, required: 100, cycleType: "gdc",    topicsDone: 0, topicsTotal: 3 },
-  { id: 6, name: "Amy Clarke",        initials: "AC", roleType: "nurse",        roleLabel: "Dental Nurse",      logged: 22, required: 50,  cycleType: "gdc",    topicsDone: 1, topicsTotal: 3 },
-  { id: 7, name: "James Hart",        initials: "JH", roleType: "hygienist",    roleLabel: "Hygienist",         logged: 41, required: 50,  cycleType: "gdc",    topicsDone: 3, topicsTotal: 3 },
-  { id: 8, name: "Sophie Brown",      initials: "SB", roleType: "receptionist", roleLabel: "Receptionist",      logged: 8,  required: 15,  cycleType: "annual", topicsDone: 1, topicsTotal: 5 },
-];
 
 const getStaffStatus = (s) => {
   const pct = (s.logged / s.required) * 100;
@@ -237,14 +52,16 @@ const StaffCpdCard = ({ staff, onClick }) => {
 };
 
 /* ── Manager overview ─────────────────────────────────────────────────────── */
-const ManagerOverview = ({ onViewStaff, onViewOwn }) => {
+const ManagerOverview = ({ onViewStaff, onViewOwn, practiceStaff }) => {
   const [filter, setFilter] = useState("all");
 
   const statuses      = practiceStaff.map(getStaffStatus);
   const onTrackCount  = statuses.filter(s => s === "on-track").length;
   const needsCount    = statuses.filter(s => s === "needs-attention").length;
   const criticalCount = statuses.filter(s => s === "critical").length;
-  const avgPct        = Math.round(practiceStaff.reduce((sum, s) => sum + (s.logged / s.required) * 100, 0) / practiceStaff.length);
+  const avgPct        = practiceStaff.length > 0
+    ? Math.round(practiceStaff.reduce((sum, s) => sum + (s.logged / s.required) * 100, 0) / practiceStaff.length)
+    : 0;
 
   const visible = filter === "all" ? practiceStaff : practiceStaff.filter(s => getStaffStatus(s) === filter);
 
@@ -380,7 +197,7 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
     if (Object.keys(e).length) { setErrors(e); return; }
     onSubmit({
       id:                 Date.now(),
-      date:               new Date(form.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      date:               formatDate(form.date),
       title:              form.title,
       provider:           form.provider,
       type:               form.type,
@@ -592,17 +409,33 @@ const CertificatesModal = ({ entries, onClose }) => {
   );
 };
 
-export const CpdPage = ({ currentUser, accounts = [] }) => {
+export const CpdPage = ({ currentUser }) => {
   const isManager = currentUser?.role === "manager";
   const userRole  = currentUser?.role || "dentist";
 
   // pmView: "overview" | "own" | "drill"
-  const [pmView,       setPmView]       = useState("overview");
-  const [drillPerson,  setDrillPerson]  = useState(null);
-  const [activeRole,   setActiveRole]   = useState(isManager ? "manager" : userRole);
-  const [showModal,    setShowModal]    = useState(false);
-  const [showCerts,    setShowCerts]    = useState(false);
-  const [extraEntries, setExtraEntries] = useState({});
+  const [pmView,        setPmView]        = useState("overview");
+  const [drillPerson,   setDrillPerson]   = useState(null);
+  const [activeRole,    setActiveRole]    = useState(isManager ? "manager" : userRole);
+  const [showModal,     setShowModal]     = useState(false);
+  const [showCerts,     setShowCerts]     = useState(false);
+  const [extraEntries,  setExtraEntries]  = useState({});
+  const [roles,         setRoles]         = useState([]);
+  const [profileMap,    setProfileMap]    = useState({});
+  const [practiceStaff, setPracticeStaff] = useState([]);
+
+  useEffect(() => {
+    listCpdRoles().then(setRoles);
+    listPracticeStaffCpd().then(setPracticeStaff);
+  }, []);
+
+  useEffect(() => {
+    if (!profileMap[activeRole]) {
+      getCpdProfile(activeRole).then((p) => {
+        if (p) setProfileMap((prev) => ({ ...prev, [activeRole]: p }));
+      });
+    }
+  }, [activeRole, profileMap]);
 
   const handleViewStaff = (staffMember) => {
     setActiveRole(staffMember.roleType);
@@ -612,16 +445,23 @@ export const CpdPage = ({ currentUser, accounts = [] }) => {
   const handleViewOwn = () => { setActiveRole("manager"); setDrillPerson(null); setPmView("own"); };
   const handleBack    = () => { setPmView("overview"); setDrillPerson(null); };
 
-  const profile = roleProfiles[activeRole];
+  const profile = profileMap[activeRole];
   const role    = roles.find(r => r.id === activeRole);
-  const allLog  = [...(extraEntries[activeRole] || []), ...profile.log];
 
+  if (!profile || !role) {
+    return (
+      <div style={{ padding: 32, color: "var(--on-surface-variant)" }}>Loading CPD profile…</div>
+    );
+  }
+
+  const allLog  = [...(extraEntries[activeRole] || []), ...profile.log];
   const pct = Math.round((profile.totalLogged / profile.totalRequired) * 100);
 
-  const handleLogSubmit = entry => {
+  const handleLogSubmit = async (entry) => {
+    const saved = await addCpdLogEntry(activeRole, entry);
     setExtraEntries(prev => ({
       ...prev,
-      [activeRole]: [entry, ...(prev[activeRole] || [])],
+      [activeRole]: [saved, ...(prev[activeRole] || [])],
     }));
     setShowModal(false);
   };
@@ -652,7 +492,7 @@ export const CpdPage = ({ currentUser, accounts = [] }) => {
 
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>CPD Log – ${roleName} – Inspire Dental Group</title>
+      <title>CPD Log – ${roleName} – Dental Group</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #2b3435; margin: 40px; }
         h1   { font-size: 22px; color: #006974; margin-bottom: 4px; }
@@ -673,7 +513,7 @@ export const CpdPage = ({ currentUser, accounts = [] }) => {
       <h1>CPD Activity Log</h1>
       <div class="meta">
         <strong>${roleName}</strong> &nbsp;·&nbsp; ${profile.scheme} &nbsp;·&nbsp; ${profile.cyclePeriod}
-        &nbsp;·&nbsp; Inspire Dental Group &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
+        &nbsp;·&nbsp; Dental Group &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
       </div>
       <div class="stats">
         <div class="stat"><span class="val">${totalHrs}</span><span class="lbl">Hours Logged</span></div>
@@ -687,7 +527,7 @@ export const CpdPage = ({ currentUser, accounts = [] }) => {
       <h2>CPD Activity Log (${allLog.length} entries)</h2>
       <table><thead><tr><th>Date</th><th>Activity</th><th>Type</th><th style="text-align:center">Hrs</th><th>Evidence</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      <div class="footer">Inspire Dental Group &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
+      <div class="footer">Dental Group &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
     </body></html>`);
     win.document.close();
     win.focus();
@@ -696,7 +536,13 @@ export const CpdPage = ({ currentUser, accounts = [] }) => {
 
   // PM — show overview until they drill in or go to own CPD
   if (isManager && pmView === "overview") {
-    return <ManagerOverview onViewStaff={handleViewStaff} onViewOwn={handleViewOwn} />;
+    return (
+      <ManagerOverview
+        onViewStaff={handleViewStaff}
+        onViewOwn={handleViewOwn}
+        practiceStaff={practiceStaff}
+      />
+    );
   }
 
   return (

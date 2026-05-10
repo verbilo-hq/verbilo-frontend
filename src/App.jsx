@@ -1,34 +1,29 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
+import { useAuth } from "./auth/AuthContext";
 import { Sidebar } from "./components/layout/Sidebar";
+import { Card } from "./components/ui/Card";
 import { LoginPage } from "./pages/LoginPage";
 import { SetPasswordPage } from "./pages/SetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ClinicalPage } from "./pages/ClinicalPage";
-import { TrainingPage } from "./pages/TrainingPage";
-import { StaffPage } from "./pages/StaffPage";
 import { MarketingPage } from "./pages/MarketingPage";
 import { HrPage } from "./pages/HrPage";
 import { AdminPage } from "./pages/AdminPage";
-import { CpdPage } from "./pages/CpdPage";
-import { CqcPage } from "./pages/CqcPage";
 import { LabPage } from "./pages/LabPage";
 import { ManagerPage } from "./pages/ManagerPage";
 import styles from "./App.module.css";
 
-// ── Seed accounts ─────────────────────────────────────────────────────────────
-// admin account is pre-created (set up during deployment).
-// Staff accounts are created by the Practice Manager via Add Staff Member.
+// Code-split the four largest pages for a faster initial load.
+const TrainingPage = lazy(() => import("./pages/TrainingPage").then((m) => ({ default: m.TrainingPage })));
+const StaffPage    = lazy(() => import("./pages/StaffPage").then((m) => ({ default: m.StaffPage })));
+const CqcPage      = lazy(() => import("./pages/CqcPage").then((m) => ({ default: m.CqcPage })));
+const CpdPage      = lazy(() => import("./pages/CpdPage").then((m) => ({ default: m.CpdPage })));
 
-const seedAccounts = [
-  { username: "admin",     password: "Admin123!",  role: "manager",     staffId: 2, isTempPassword: false, displayName: "Mark Thompson" },
-  { username: "s.jenkins", password: "Welcome1",   role: "dentist",     staffId: 1, isTempPassword: true,  displayName: "Dr. Sarah Jenkins" },
-  { username: "e.rossi",   password: "Welcome1",   role: "hygienist",   staffId: 3, isTempPassword: true,  displayName: "Elena Rossi" },
-  { username: "l.vance",   password: "Welcome1",   role: "dentist",     staffId: 4, isTempPassword: true,  displayName: "Leo Vance" },
-  { username: "j.wu",      password: "Welcome1",   role: "dentist",     staffId: 5, isTempPassword: true,  displayName: "Jessica Wu" },
-  { username: "a.clarke",  password: "Welcome1",   role: "nurse",       staffId: 6, isTempPassword: true,  displayName: "Amy Clarke" },
-  { username: "j.hart",    password: "Welcome1",   role: "hygienist",   staffId: 7, isTempPassword: true,  displayName: "James Hart" },
-  { username: "s.brown",   password: "Welcome1",   role: "receptionist",staffId: 8, isTempPassword: true,  displayName: "Sophie Brown" },
-];
+const PageFallback = () => (
+  <Card hover={false} style={{ padding: 24, color: "var(--on-surface-variant)" }}>
+    Loading…
+  </Card>
+);
 
 const pageComponents = {
   dashboard: DashboardPage,
@@ -45,63 +40,32 @@ const pageComponents = {
 };
 
 export default function App() {
-  const [page, setPage] = useState("login");
-  const [accounts, setAccounts] = useState(seedAccounts);
-  const [currentUser, setCurrentUser] = useState(null);
-
-  // Called from LoginPage — returns the matched account or null
-  const handleLogin = (username, password) => {
-    const account = accounts.find(
-      (a) => a.username === username && a.password === password
-    );
-    if (!account) return null;
-    setCurrentUser(account);
-    setPage(account.isTempPassword ? "setpassword" : "dashboard");
-    return account;
-  };
-
-  // Called from SetPasswordPage after staff member sets their own password
-  const handleSetPassword = (newPassword) => {
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.username === currentUser.username
-          ? { ...a, password: newPassword, isTempPassword: false }
-          : a
-      )
-    );
-    setCurrentUser((prev) => ({ ...prev, password: newPassword, isTempPassword: false }));
-    setPage("dashboard");
-  };
-
-  // Called from StaffPage when PM creates a new staff member
-  const addAccount = (account) => {
-    setAccounts((prev) => [...prev, account]);
-  };
+  const { user, isAuthenticated } = useAuth();
+  const [page, setPage] = useState(user?.isTempPassword ? "setpassword" : "dashboard");
 
   // Standalone pages (no sidebar)
-  if (page === "login") return <LoginPage onLogin={handleLogin} />;
-  if (page === "setpassword") return (
-    <SetPasswordPage
-      displayName={currentUser?.displayName}
-      username={currentUser?.username}
-      onSet={handleSetPassword}
-    />
-  );
+  if (!isAuthenticated) return <LoginPage onLoggedIn={() => setPage("dashboard")} />;
+  if (user?.isTempPassword || page === "setpassword") {
+    return <SetPasswordPage onComplete={() => setPage("dashboard")} />;
+  }
 
   const ActivePage = pageComponents[page] || DashboardPage;
   const pageProps =
-    page === "dashboard" ? { currentUser, onNav: setPage } :
-    page === "staff"     ? { currentUser, onAddAccount: addAccount, accounts } :
-    page === "cpd"       ? { currentUser, accounts } :
-    page === "training"  ? { currentUser } :
-    page === "manager"   ? { currentUser } :
+    page === "dashboard" ? { currentUser: user, onNav: setPage } :
+    page === "staff"     ? { currentUser: user } :
+    page === "cpd"       ? { currentUser: user } :
+    page === "training"  ? { currentUser: user } :
+    page === "manager"   ? { currentUser: user } :
+    page === "marketing" ? { currentUser: user } :
     {};
 
   return (
     <div className={styles.shell}>
-      <Sidebar current={page} onNav={setPage} currentUser={currentUser} />
+      <Sidebar current={page} onNav={setPage} />
       <main className={styles.main}>
-        <ActivePage {...pageProps} />
+        <Suspense fallback={<PageFallback />}>
+          <ActivePage {...pageProps} />
+        </Suspense>
       </main>
     </div>
   );

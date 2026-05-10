@@ -2,14 +2,19 @@ import { useState } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
+import { useAuth } from "../auth/AuthContext";
 import styles from "./SetPasswordPage.module.css";
 
-export const SetPasswordPage = ({ displayName, username, onSet }) => {
+export const SetPasswordPage = ({ onComplete }) => {
+  const { user, setPassword } = useAuth();
+  const displayName = user?.displayName;
+  const username = user?.username;
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSet = () => {
+  const handleSet = async () => {
     if (pw.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -18,10 +23,18 @@ export const SetPasswordPage = ({ displayName, username, onSet }) => {
       setError("Passwords do not match.");
       return;
     }
-    onSet(pw);
+    setSubmitting(true);
+    try {
+      await setPassword(pw);
+      onComplete?.();
+    } catch {
+      setError("Could not set password. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleKey = (e) => { if (e.key === "Enter") handleSet(); };
+  const handleKey = (e) => { if (e.key === "Enter" && !submitting) handleSet(); };
 
   return (
     <div className={styles.page}>
@@ -34,7 +47,7 @@ export const SetPasswordPage = ({ displayName, username, onSet }) => {
             <I name="tooth" size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Inspire</span> Dental Group
+            <span className={styles.brandTitleEm}>Dental</span> Group
           </h1>
           <p className={styles.brandTagline}>The Clinical Sanctuary</p>
           <div className={styles.brandRule} />
@@ -99,9 +112,10 @@ export const SetPasswordPage = ({ displayName, username, onSet }) => {
 
           <BtnPrimary
             onClick={handleSet}
+            disabled={submitting}
             style={{ width: "100%", justifyContent: "center", padding: "16px 28px", fontSize: 15, marginTop: 8 }}
           >
-            Set Password & Continue <I name="arrow" size={16} />
+            {submitting ? "Saving…" : "Set Password & Continue"} <I name="arrow" size={16} />
           </BtnPrimary>
         </Card>
       </div>

@@ -2,25 +2,34 @@ import { useState } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
-import { Avatar } from "../components/ui/Avatar";
+import { useAuth } from "../auth/AuthContext";
 import styles from "./LoginPage.module.css";
 
-export const LoginPage = ({ onLogin }) => {
+export const LoginPage = ({ onLoggedIn }) => {
+  const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [remember, setRemember] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!username.trim() || !password.trim()) {
       setError("Please enter your username and password.");
       return;
     }
-    const result = onLogin(username.trim(), password);
-    if (!result) setError("Username or password is incorrect.");
+    setSubmitting(true);
+    try {
+      await login(username.trim(), password);
+      onLoggedIn?.();
+    } catch (e) {
+      setError(e.code === "UNAUTHORIZED" ? "Username or password is incorrect." : "Sign-in failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleKey = (e) => { if (e.key === "Enter") handleSignIn(); };
+  const handleKey = (e) => { if (e.key === "Enter" && !submitting) handleSignIn(); };
 
   return (
     <div className={styles.page}>
@@ -33,7 +42,7 @@ export const LoginPage = ({ onLogin }) => {
             <I name="tooth" size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Inspire</span> Dental Group
+            <span className={styles.brandTitleEm}>Dental</span> Group
           </h1>
           <p className={styles.brandTagline}>The Clinical Sanctuary</p>
           <div className={styles.brandRule} />
@@ -90,9 +99,10 @@ export const LoginPage = ({ onLogin }) => {
 
           <BtnPrimary
             onClick={handleSignIn}
+            disabled={submitting}
             style={{ width: "100%", justifyContent: "center", padding: "16px 28px", fontSize: 15 }}
           >
-            Sign In <I name="arrow" size={16} />
+            {submitting ? "Signing in…" : "Sign In"} <I name="arrow" size={16} />
           </BtnPrimary>
 
           <div className={styles.divider}>

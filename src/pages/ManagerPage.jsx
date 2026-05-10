@@ -1,52 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
-import { BtnPrimary } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
 import { TopBar } from "../components/layout/TopBar";
+import {
+  listSnapshotActions, listLeaveRequests, updateLeaveStatus,
+  listGdcRecords, listTrainingRecords, listManagerIncidents,
+  getCqcSummary, getUdaTotal, listUdaDentists,
+} from "../services/manager.service";
+import { udaPaceTarget, udaOnTrack, udaCompletePct } from "../services/logic/manager.logic";
+import { toRgba } from "../services/logic/shared.logic";
 import styles from "./ManagerPage.module.css";
-
-const INTERNAL_KEY = "inspire_internal_news";
-const todayStr = () =>
-  new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
-/* ── Data ──────────────────────────────────────────────────────────────────── */
-
-const SNAPSHOT_ACTIONS = [
-  { priority: "critical", icon: "shieldalert", category: "Registration", text: "Amy Clarke — GDC registration expired Feb 2026",     nav: "staff" },
-  { priority: "critical", icon: "alert",       category: "Incident",     text: "Needlestick incident — High severity, under review",  nav: "cqc"   },
-  { priority: "critical", icon: "alert",       category: "Training",     text: "Safeguarding Adults — Amy Clarke overdue",            nav: "hr"    },
-  { priority: "warning",  icon: "shieldalert", category: "Registration", text: "James Hart — GDC renewal due 30 Jun 2026 (56 days)",  nav: "staff" },
-  { priority: "warning",  icon: "calendar",    category: "Leave",        text: "Leo Vance — 5 days annual leave requested (1–5 Jun)", nav: null    },
-];
-
-const initialLeave = [
-  { id: 1, name: "Leo Vance",   role: "Dentist",      type: "Annual Leave",        dates: "1–5 Jun 2026",   days: 5, status: "pending"  },
-  { id: 2, name: "Amy Clarke",  role: "Dental Nurse", type: "Annual Leave",        dates: "16–17 Jun 2026", days: 2, status: "pending"  },
-  { id: 3, name: "Elena Rossi", role: "Hygienist",    type: "Annual Leave",        dates: "7–11 Jul 2026",  days: 5, status: "approved" },
-  { id: 4, name: "James Hart",  role: "Hygienist",    type: "Study Leave",         dates: "20 May 2026",    days: 1, status: "approved" },
-  { id: 5, name: "Jessica Wu",  role: "Dentist",      type: "Compassionate Leave", dates: "12 May 2026",    days: 1, status: "pending"  },
-];
-
-const gdcRecords = [
-  { name: "Dr. Sarah Jenkins", role: "Dentist",             gdc: "123456", expiry: "31 Dec 2026", status: "ok"      },
-  { name: "Leo Vance",         role: "Dentist",             gdc: "345678", expiry: "30 Jun 2026", status: "warning" },
-  { name: "Jessica Wu",        role: "Dentist",             gdc: "456789", expiry: "31 Dec 2026", status: "ok"      },
-  { name: "Elena Rossi",       role: "Hygienist/Therapist", gdc: "234567", expiry: "30 Sep 2026", status: "ok"      },
-  { name: "James Hart",        role: "Hygienist/Therapist", gdc: "678901", expiry: "30 Jun 2026", status: "warning" },
-  { name: "Amy Clarke",        role: "Dental Nurse",        gdc: "567890", expiry: "28 Feb 2026", status: "expired" },
-  { name: "Sophie Brown",      role: "Receptionist",        gdc: "—",      expiry: "—",           status: "na"      },
-];
-
-const trainingRecords = [
-  { name: "Dr. Sarah Jenkins", bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-  { name: "Leo Vance",         bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-  { name: "Jessica Wu",        bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-  { name: "Elena Rossi",       bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-  { name: "James Hart",        bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-  { name: "Amy Clarke",        bls: "ok", fire: "ok", ipc: "ok", safeguarding: "overdue", gdpr: "ok" },
-  { name: "Sophie Brown",      bls: "ok", fire: "ok", ipc: "ok", safeguarding: "ok",      gdpr: "ok" },
-];
 
 const TRAINING_COLS = [
   { key: "bls",          label: "BLS/CPR"      },
@@ -56,24 +20,8 @@ const TRAINING_COLS = [
   { key: "gdpr",         label: "GDPR"         },
 ];
 
-const incidents = [
-  { id: 1, type: "Needlestick / Sharps Injury", severity: "High",   date: "20 Apr 2026", status: "Under Review", staff: "Amy Clarke"     },
-  { id: 2, type: "Equipment Failure or Defect", severity: "Medium", date: "28 Apr 2026", status: "Open",         staff: "Mark Thompson"  },
-  { id: 3, type: "Near Miss",                   severity: "Low",    date: "15 Mar 2026", status: "Closed",       staff: "Dr. S. Jenkins" },
-];
-
-const cqcSummary = { complete: 4, total: 13, lastAudit: "2 May 2026" };
-
-const udaTotal = {
-  contracted: 4800, delivered: 2340,
-  period: "Apr 2025 – Mar 2026", monthsElapsed: 7, totalMonths: 12,
-};
-
-const udaDentists = [
-  { name: "Dr. Sarah Jenkins", contracted: 2400, delivered: 1180 },
-  { name: "Leo Vance",         contracted: 1400, delivered:  720 },
-  { name: "Jessica Wu",        contracted: 1000, delivered:  440 },
-];
+const UDA_TOTAL_DEFAULT = { contracted: 0, delivered: 0, period: "", monthsElapsed: 0, totalMonths: 1 };
+const CQC_SUMMARY_DEFAULT = { complete: 0, total: 0, lastAudit: "—" };
 
 /* ── Status configs ────────────────────────────────────────────────────────── */
 
@@ -110,13 +58,6 @@ const LEAVE_CFG = {
 
 /* ── Accordion helpers ─────────────────────────────────────────────────────── */
 
-const toRgba = (hex, a) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${a})`;
-};
-
 const Section = ({ id, icon, iconColor, accentColor, title, badge, badgeStyle, open, onToggle, children }) => {
   const acc = accentColor || "#006974";
   const sectionStyle = {
@@ -146,39 +87,44 @@ const Section = ({ id, icon, iconColor, accentColor, title, badge, badgeStyle, o
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
 export const ManagerPage = ({ currentUser }) => {
-  const [leave,          setLeave]          = useState(initialLeave);
-  const [inspectionDate, setInspectionDate] = useState("2026-05-08");
-  const [postTitle,      setPostTitle]      = useState("");
-  const [postDesc,       setPostDesc]       = useState("");
-  const [postSent,       setPostSent]       = useState(false);
-  const [open,           setOpen]           = useState({ snapshot: true });
+  const [snapshotActions, setSnapshotActions] = useState([]);
+  const [leave,            setLeave]           = useState([]);
+  const [gdcRecords,       setGdcRecords]      = useState([]);
+  const [trainingRecords,  setTrainingRecords] = useState([]);
+  const [incidents,        setIncidents]       = useState([]);
+  const [cqcSummary,       setCqcSummary]      = useState(CQC_SUMMARY_DEFAULT);
+  const [udaTotal,         setUdaTotal]        = useState(UDA_TOTAL_DEFAULT);
+  const [udaDentists,      setUdaDentists]     = useState([]);
+  const [inspectionDate,   setInspectionDate]  = useState("2026-05-08");
+  const [open,             setOpen]            = useState({ snapshot: true });
+
+  useEffect(() => {
+    listSnapshotActions().then(setSnapshotActions);
+    listLeaveRequests().then(setLeave);
+    listGdcRecords().then(setGdcRecords);
+    listTrainingRecords().then(setTrainingRecords);
+    listManagerIncidents().then(setIncidents);
+    getCqcSummary().then(setCqcSummary);
+    getUdaTotal().then(setUdaTotal);
+    listUdaDentists().then(setUdaDentists);
+  }, []);
 
   const toggle = (id) => setOpen(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const critical    = SNAPSHOT_ACTIONS.filter(a => a.priority === "critical");
-  const warning     = SNAPSHOT_ACTIONS.filter(a => a.priority === "warning");
-  const allClear    = SNAPSHOT_ACTIONS.length === 0;
+  const critical     = snapshotActions.filter(a => a.priority === "critical");
+  const warning      = snapshotActions.filter(a => a.priority === "warning");
+  const allClear     = snapshotActions.length === 0;
   const pendingLeave = leave.filter(r => r.status === "pending").length;
 
-  const udaExpected = Math.round((udaTotal.contracted / udaTotal.totalMonths) * udaTotal.monthsElapsed);
-  const udaPct      = Math.round((udaTotal.delivered / udaTotal.contracted) * 100);
-  const udaOnTrack  = udaTotal.delivered >= udaExpected * 0.95;
+  const udaExpected = udaPaceTarget(udaTotal.contracted, udaTotal.monthsElapsed, udaTotal.totalMonths);
+  const udaPct      = udaCompletePct(udaTotal.delivered, udaTotal.contracted);
+  const udaTrk      = udaOnTrack(udaTotal.delivered, udaExpected);
   const udaBarPct   = Math.min(udaPct, 100);
-  const udaExpPct   = Math.round((udaExpected / udaTotal.contracted) * 100);
+  const udaExpPct   = udaCompletePct(udaExpected, udaTotal.contracted);
 
-  const handleLeave = (id, action) =>
-    setLeave(prev => prev.map(r => r.id === id ? { ...r, status: action } : r));
-
-  const handlePost = () => {
-    if (!postTitle.trim()) return;
-    const post = {
-      id: Date.now(), title: postTitle.trim(), desc: postDesc.trim(),
-      date: todayStr(), author: currentUser?.displayName || "Management",
-    };
-    const existing = (() => { try { return JSON.parse(localStorage.getItem(INTERNAL_KEY)) || []; } catch { return []; } })();
-    localStorage.setItem(INTERNAL_KEY, JSON.stringify([post, ...existing]));
-    setPostTitle(""); setPostDesc(""); setPostSent(true);
-    setTimeout(() => setPostSent(false), 3500);
+  const handleLeave = async (id, action) => {
+    const updated = await updateLeaveStatus(id, action);
+    setLeave(prev => prev.map(r => r.id === id ? updated : r));
   };
 
   return (
@@ -200,11 +146,11 @@ export const ManagerPage = ({ currentUser }) => {
             <p className={styles.udaHeroPeriod}>{udaTotal.period} · Month {udaTotal.monthsElapsed} of {udaTotal.totalMonths}</p>
           </div>
           <div className={styles.udaStatus} style={{
-            background: udaOnTrack ? "rgba(46,125,50,0.08)" : "rgba(229,57,53,0.08)",
-            color: udaOnTrack ? "#2e7d32" : "#e53935",
+            background: udaTrk ? "rgba(46,125,50,0.08)" : "rgba(229,57,53,0.08)",
+            color: udaTrk ? "#2e7d32" : "#e53935",
           }}>
-            <I name={udaOnTrack ? "checkcircle" : "alert"} size={13} />
-            {udaOnTrack
+            <I name={udaTrk ? "checkcircle" : "alert"} size={13} />
+            {udaTrk
               ? `On track — ${(udaTotal.delivered - udaExpected).toLocaleString()} UDAs ahead`
               : `Behind — ${(udaExpected - udaTotal.delivered).toLocaleString()} UDAs below pace`}
           </div>
@@ -228,7 +174,7 @@ export const ManagerPage = ({ currentUser }) => {
           </div>
           <div className={styles.udaStatDivider} />
           <div className={styles.udaStat}>
-            <span className={styles.udaStatVal} style={{ color: udaOnTrack ? "#2e7d32" : "#e53935" }}>{udaPct}%</span>
+            <span className={styles.udaStatVal} style={{ color: udaTrk ? "#2e7d32" : "#e53935" }}>{udaPct}%</span>
             <span className={styles.udaStatLabel}>Complete</span>
           </div>
         </div>
@@ -236,7 +182,7 @@ export const ManagerPage = ({ currentUser }) => {
         {/* Group progress bar */}
         <div className={styles.udaBarWrap}>
           <div className={styles.udaBarTrack}>
-            <div className={styles.udaBarFill} style={{ width: `${udaBarPct}%`, background: udaOnTrack ? "#2e7d32" : "#e53935" }} />
+            <div className={styles.udaBarFill} style={{ width: `${udaBarPct}%`, background: udaTrk ? "#2e7d32" : "#e53935" }} />
             <div className={styles.udaBarMarker} style={{ left: `${Math.min(udaExpPct, 100)}%` }} title="Expected by now" />
           </div>
           <div className={styles.udaBarLabels}>
@@ -457,34 +403,6 @@ export const ManagerPage = ({ currentUser }) => {
         </p>
       </Section>
 
-      <Section id="announce" icon="send" accentColor="#9c27b0" title="Post Group Announcement" open={open.announce} onToggle={toggle}>
-        <p className={styles.announceSub}>Announcements appear in the Group section of the dashboard for all staff.</p>
-        {postSent ? (
-          <div className={styles.postSent}>
-            <I name="checkcircle" size={16} color="#2e7d32" />
-            <span>Announcement posted to the dashboard.</span>
-          </div>
-        ) : (
-          <div className={styles.postForm}>
-            <input
-              className={styles.postInput}
-              placeholder="Headline…"
-              value={postTitle}
-              onChange={e => setPostTitle(e.target.value)}
-            />
-            <textarea
-              className={styles.postTextarea}
-              placeholder="Details (optional)…"
-              rows={3}
-              value={postDesc}
-              onChange={e => setPostDesc(e.target.value)}
-            />
-            <BtnPrimary onClick={handlePost} style={{ alignSelf: "flex-start", fontSize: 13 }}>
-              <I name="send" size={13} /> Publish to Dashboard
-            </BtnPrimary>
-          </div>
-        )}
-      </Section>
     </div>
   );
 };

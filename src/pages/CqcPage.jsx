@@ -784,7 +784,7 @@ export const CqcPage = () => {
         <div className={styles.pageHeaderLeft}>
           <h1 className={styles.pageTitle}>CQC Compliance Hub</h1>
           <p className={styles.pageSubtitle}>
-            Inspire Dental Group — Audit &amp; Compliance Tracking
+            Dental Group — Audit &amp; Compliance Tracking
           </p>
         </div>
         <Pill bg="var(--tertiary-container)" color="var(--on-tertiary-container)">

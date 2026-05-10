@@ -1308,6 +1308,24 @@
   margin-bottom: 16px;
 }
 
+.howToCatBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.howToSearch {
+  width: 220px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.howToSearch > div {
+  margin-bottom: 0;
+}
+
 .howToCatBtn {
   padding: 5px 14px;
   border-radius: 99px;
