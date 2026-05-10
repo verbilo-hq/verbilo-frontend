@@ -1,0 +1,100 @@
+.shell {
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--on-surface);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--outline-variant, rgba(0, 0, 0, 0.08));
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand {
+  font-family: var(--font-display, var(--font-body));
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.brandPill {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-variant, rgba(0, 0, 0, 0.05));
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.userLabel {
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.btnGhost {
+  background: none;
+  border: none;
+  color: var(--on-surface);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btnGhost:hover {
+  color: var(--primary);
+}
+
+.btnSecondary {
+  border: 1px solid var(--outline, rgba(0, 0, 0, 0.16));
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.deniedCard {
+  margin: 64px auto;
+  max-width: 520px;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant, rgba(0, 0, 0, 0.1));
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
