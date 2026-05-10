@@ -2,6 +2,7 @@ import { AuthenticationDetails, CognitoUser } from "amazon-cognito-identity-js";
 import { accountsFixture } from "./fixtures/accounts.fixture";
 import { simulateLatency } from "./delay";
 import { userPool } from "./cognito.client";
+import { fetchMe } from "./me.service.js";
 // import { fetchJson } from "./http";
 
 const SESSION_KEY = "inspire_session";
@@ -38,6 +39,21 @@ export function getSession() {
   return readSession();
 }
 
+async function enrichSession(session) {
+  try {
+    const me = await fetchMe();
+    const next = {
+      token: session.token,
+      user: { ...session.user, ...me },
+    };
+    persistSession(next);
+    return next;
+  } catch (err) {
+    console.error("Failed to enrich session from /users/me", err);
+    return session;
+  }
+}
+
 export async function login(username, password) {
   const authenticationDetails = new AuthenticationDetails({
     Username: username,
@@ -50,14 +66,14 @@ export async function login(username, password) {
 
   return new Promise((resolve, reject) => {
     cognitoUser.authenticateUser(authenticationDetails, {
-      onSuccess(session) {
+      async onSuccess(session) {
         const token = session.getIdToken().getJwtToken();
         const next = {
           token,
           user: { username, isTempPassword: false },
         };
         persistSession(next);
-        resolve(next);
+        resolve(await enrichSession(next));
       },
       newPasswordRequired() {
         tempPasswordUsers.set(username, cognitoUser);
@@ -91,7 +107,7 @@ export async function setPassword(username, newPassword) {
 
   return new Promise((resolve, reject) => {
     cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
-      onSuccess(session) {
+      async onSuccess(session) {
         const token = session.getIdToken().getJwtToken();
         const next = {
           token,
@@ -99,7 +115,7 @@ export async function setPassword(username, newPassword) {
         };
         tempPasswordUsers.delete(username);
         persistSession(next);
-        resolve(next);
+        resolve(await enrichSession(next));
       },
       onFailure(err) {
         const next = new Error(err?.message ?? "Password update failed");
