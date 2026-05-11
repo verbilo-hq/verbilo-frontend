@@ -10,6 +10,7 @@ import {
   fetchNews, listInternalNews, saveInternalNews,
   getDashboardSummary,
 } from "../services/dashboard.service";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./DashboardPage.module.css";
 
 /* ─── Tip-of-the-day colour config (UI only, not data) ─── */
@@ -159,6 +160,8 @@ const IconSelect = ({ value, onChange, options }) => {
 
 
 export const DashboardPage = ({ currentUser, onNav }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
   const [activeIdx,    setActiveIdx]    = useState(0);
   const [suggestion,   setSuggestion]   = useState("");
   const [submitted,    setSubmitted]    = useState(false);
@@ -264,7 +267,7 @@ export const DashboardPage = ({ currentUser, onNav }) => {
       <div className={styles.welcome}>
         <div className={styles.welcomeText}>
           <h1 className={styles.welcomeTitle}>{greeting}, {currentUser?.displayName}.</h1>
-          <p className={styles.welcomeSub}>Here's what's happening at Dental Group today.</p>
+          <p className={styles.welcomeSub}>Here's what's happening at {tenantName} today.</p>
         </div>
         <div className={styles.welcomeDate}>
           <span className={styles.welcomeDateDay}>{dateDay}</span>

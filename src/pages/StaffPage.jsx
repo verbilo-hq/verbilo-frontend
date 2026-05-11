@@ -8,6 +8,7 @@ import { useClickOutside } from "../hooks/useClickOutside";
 import { listStaff, createStaff, updateStaff, deleteStaff } from "../services/staff.service";
 import { registerAccount } from "../services/auth.service";
 import { gdcAlertsFor } from "../services/logic/staff.logic";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./StaffPage.module.css";
 
 // ── Static data ───────────────────────────────────────────────────────────────
@@ -307,7 +308,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 <input className={`${styles.input} ${errors.name ? styles.inputErr : ""}`} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Dr. Jane Smith" />
               </Field>
               <Field label="Email Address" required error={errors.email}>
-                <input className={`${styles.input} ${errors.email ? styles.inputErr : ""}`} type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane.smith@inspiredental.co.uk" />
+                <input className={`${styles.input} ${errors.email ? styles.inputErr : ""}`} type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane.smith@yourpractice.co.uk" />
               </Field>
               <Field label="Gender">
                 <select className={styles.input} value={form.gender} onChange={(e) => set("gender", e.target.value)}>
@@ -886,6 +887,8 @@ const CustomSelect = ({ value, onChange, options, placeholder }) => {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export const StaffPage = ({ currentUser }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
   const [staffList, setStaffList] = useState([]);
   const [search, setSearch] = useState("");
   const [practiceFilter, setPracticeFilter] = useState("");
@@ -960,7 +963,7 @@ export const StaffPage = ({ currentUser }) => {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Staff Directory</h1>
-          <p className={styles.lead}>Connect with the Dental Group specialist team.</p>
+          <p className={styles.lead}>Connect with the {tenantName} team.</p>
         </div>
         {currentUser?.role === "manager" && (
           <BtnPrimary onClick={() => setShowAdd(true)}>
