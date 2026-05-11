@@ -44,11 +44,15 @@ export function TenantProvider({ children }) {
     () => ({
       surface: surface.surface,
       slug: surface.slug,
+      // Surface the resolved environment so consumers (e.g. AdminTenantsPage
+      // building tenant URLs) don't have to call resolveSurface again. One
+      // of "production" | "staging" | "development".
+      environment: surface.environment,
       tenant,
       status,
       error,
     }),
-    [surface.surface, surface.slug, tenant, status, error],
+    [surface.surface, surface.slug, surface.environment, tenant, status, error],
   );
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
