@@ -177,3 +177,198 @@
   font-size: 14px;
   cursor: pointer;
 }
+
+/* VER-50: Danger Zone — destructive actions live in a visually distinct
+   section so an operator can never confuse them with regular form fields.
+   Red-outlined panel below the main form. */
+.dangerZone {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--error, #b91c1c);
+  border-radius: 12px;
+  background: rgba(185, 28, 28, 0.03);
+}
+
+.dangerZoneTitle {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--error, #b91c1c);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dangerZoneBody {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.btnDanger {
+  background: var(--error, #b91c1c);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btnDanger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Modal overlay for the type-the-slug confirmation. */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--surface, white);
+  color: var(--on-surface);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 520px;
+  width: calc(100% - 32px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+}
+
+.modalTitle {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modalBody {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.modalBody ul {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.modalBody code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* VER-53: users-per-tenant table on the admin settings page. */
+.section {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--outline, rgba(0, 0, 0, 0.12));
+  border-radius: 12px;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--on-surface);
+}
+
+.sectionBody {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.usersTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.usersTable th,
+.usersTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--outline, rgba(0, 0, 0, 0.08));
+  text-align: left;
+  vertical-align: middle;
+}
+
+.usersTable th {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant, var(--on-surface));
+}
+
+.usersTable td.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.userRoleSelect {
+  border: 1px solid var(--outline, rgba(0, 0, 0, 0.2));
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--on-surface);
+}
+
+.btnRow {
+  border: 1px solid var(--outline, rgba(0, 0, 0, 0.2));
+  background: var(--surface);
+  color: var(--on-surface);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btnRow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnRowDanger {
+  border-color: var(--error, #b91c1c);
+  color: var(--error, #b91c1c);
+}
+
+.statusActive {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(4, 120, 87, 0.12);
+  color: var(--success, #047857);
+}
+
+.statusDisabled {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(120, 113, 108, 0.16);
+  color: var(--on-surface-variant, var(--on-surface));
+}

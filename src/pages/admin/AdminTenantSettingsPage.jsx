@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
-import { getTenant, updateTenant } from "../../services/tenants.service";
+import {
+  deleteTenant,
+  getTenant,
+  updateTenant,
+} from "../../services/tenants.service";
+import { SECTOR_OPTIONS } from "../../lib/sector";
 import { useTenant } from "../../auth/TenantContext";
+import { useAuth } from "../../auth/AuthContext";
+import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -19,7 +26,12 @@ const ALL_MODULES = [
 
 export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const { environment } = useTenant();
+  const { user: authUser } = useAuth();
   const baseDomain = environment === "staging" ? "staging.verbilo.co.uk" : "verbilo.co.uk";
+  // VER-53: super-admins get write controls in the Users section; support is
+  // read-only there (backend enforces this with 403 too, so this is just to
+  // hide controls a support user couldn't use anyway).
+  const canEditUsers = authUser?.role === "verbilo_super_admin";
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
   // Initial state — overwritten in the tenant-load effect below. Empty
@@ -30,6 +42,42 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const [status, setStatus] = useState("loading");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // VER-50 — delete-tenant confirmation flow.
+  //   `deleteOpen` toggles the modal (first click).
+  //   `slugConfirm` is what the operator has typed; the destructive button is
+  //   disabled until it exactly matches the tenant's real slug.
+  //   `deleting` is the in-flight flag; `deleteError` shows API errors inline.
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [slugConfirm, setSlugConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  const openDeleteModal = () => {
+    setSlugConfirm("");
+    setDeleteError(null);
+    setDeleteOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return; // don't let the user dismiss mid-request
+    setDeleteOpen(false);
+  };
+
+  const handleDelete = async () => {
+    if (slugConfirm !== tenant?.slug) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteTenant(tenantId);
+      // Same callback the save flow uses — caller navigates back to the
+      // tenant list and refreshes.
+      onSaved?.();
+    } catch (err) {
+      setDeleteError(err);
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +129,7 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   if (status === "error") return <p className={styles.error}>Couldn't load tenant ({error?.code}).</p>;
 
   return (
+  <>
     <form className={styles.form} onSubmit={handleSave}>
       <header className={styles.header}>
         <h1 className={styles.title}>Tenant settings</h1>
@@ -100,11 +149,27 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
 
       <div className={styles.field}>
         <label className={styles.label}>Sector</label>
-        <input
+        <select
           className={styles.input}
           value={sector}
           onChange={(e) => setSector(e.target.value)}
-        />
+        >
+          {/* Defensive: if the tenant row in the DB stores a sector that
+              isn't in the canonical SECTOR_OPTIONS list (e.g. legacy data
+              from before VER-47 normalised the enum, or a hand-edited row),
+              show that value as a disabled "Unknown" option at the top so
+              the operator can see what's currently stored before picking a
+              valid replacement. Picking a real option overrides it on
+              save. */}
+          {sector && !SECTOR_OPTIONS.some((s) => s.id === sector) && (
+            <option value={sector} disabled>
+              Unknown sector: {sector}
+            </option>
+          )}
+          {SECTOR_OPTIONS.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
       </div>
 
       <div className={styles.field}>
@@ -144,6 +209,107 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           {submitting ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      {/* VER-53: customer users of this tenant — drill-down view for
+          platform admins. Lives between Save and the Danger zone so
+          destructive actions still sit at the bottom of the page. */}
+      <AdminTenantUsersSection
+        tenantId={tenantId}
+        canEdit={canEditUsers}
+      />
+
+      {/* VER-50: Danger Zone — separated from the regular form so a
+          destructive action can't ever happen on a stray click. The actual
+          confirmation flow requires the operator to type the tenant slug
+          verbatim in the modal below. */}
+      <section className={styles.dangerZone}>
+        <p className={styles.dangerZoneTitle}>Danger zone</p>
+        <p className={styles.dangerZoneBody}>
+          Deleting this tenant permanently removes all of its sites, users,
+          patients, appointments, and staff records. The Vercel domain (on
+          production) is removed too. This action cannot be undone.
+        </p>
+        <button
+          type="button"
+          className={styles.btnDanger}
+          onClick={openDeleteModal}
+        >
+          Delete tenant…
+        </button>
+      </section>
     </form>
+
+    {/* VER-50 confirmation modal — rendered outside the form so submitting
+        the form (Save changes) can't accidentally trigger it. */}
+    {deleteOpen && tenant && (
+      <div
+        className={styles.modalBackdrop}
+        onClick={closeDeleteModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-tenant-title"
+      >
+        <div
+          className={styles.modal}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 id="delete-tenant-title" className={styles.modalTitle}>
+            Delete <strong>{tenant.name}</strong>?
+          </h2>
+          <div className={styles.modalBody}>
+            <p>
+              This will permanently delete the tenant and everything tied to
+              it:
+            </p>
+            <ul>
+              <li>Sites</li>
+              <li>Users (their Cognito accounts remain, but they lose access)</li>
+              <li>Patients, appointments, staff records</li>
+              <li>The <code>{tenant.slug}.{baseDomain}</code> Vercel domain (production only)</li>
+            </ul>
+            <p>
+              Audit-log entries are preserved for compliance. To confirm, type
+              the tenant slug <code>{tenant.slug}</code> below:
+            </p>
+          </div>
+          <input
+            className={styles.input}
+            value={slugConfirm}
+            onChange={(e) => setSlugConfirm(e.target.value)}
+            placeholder={tenant.slug}
+            autoFocus
+            disabled={deleting}
+          />
+          {deleteError && (
+            <p className={styles.submitError} style={{ marginTop: 12 }}>
+              {deleteError.code === "FORBIDDEN"
+                ? "You don't have permission to delete tenants."
+                : deleteError.code === "NOT_FOUND"
+                ? "Tenant not found (already deleted?)."
+                : `Couldn't delete tenant (${deleteError.status ?? deleteError.code ?? "error"}).`}
+            </p>
+          )}
+          <div className={styles.modalActions}>
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={closeDeleteModal}
+              disabled={deleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className={styles.btnDanger}
+              onClick={handleDelete}
+              disabled={deleting || slugConfirm !== tenant.slug}
+            >
+              {deleting ? "Deleting…" : "Delete tenant"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 };

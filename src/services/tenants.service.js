@@ -23,6 +23,17 @@ export async function updateTenant(id, patch) {
   });
 }
 
+// VER-50: hard-delete a tenant. Backend returns 204 No Content; fetchJson
+// resolves to null on 204. Cascade-wipes Sites/Users/Patients/Appointments/
+// StaffMembers; AuditLog rows survive (no FK relation to Tenant). On prod
+// the backend also removes the `{slug}.verbilo.co.uk` Vercel domain
+// best-effort. The admin UI must double-confirm before calling this.
+export async function deleteTenant(id) {
+  return fetchJson(`/admin/tenants/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 export async function checkTenantSlug(slug) {
   return fetchJson(
     `/admin/tenants/check-slug?slug=${encodeURIComponent(slug)}`,
