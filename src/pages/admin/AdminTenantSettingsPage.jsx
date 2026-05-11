@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTenant, updateTenant } from "../../services/tenants.service";
+import { useTenant } from "../../auth/TenantContext";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -17,6 +18,8 @@ const ALL_MODULES = [
 ];
 
 export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
+  const { environment } = useTenant();
+  const baseDomain = environment === "staging" ? "staging.verbilo.co.uk" : "verbilo.co.uk";
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
   // Initial state — overwritten in the tenant-load effect below. Empty
@@ -82,7 +85,7 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
       <header className={styles.header}>
         <h1 className={styles.title}>Tenant settings</h1>
         <p className={styles.subtitle}>
-          {tenant?.slug}.verbilo.co.uk · created {tenant?.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : "—"}
+          {tenant?.slug}.{baseDomain} · created {tenant?.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : "—"}
         </p>
       </header>
 

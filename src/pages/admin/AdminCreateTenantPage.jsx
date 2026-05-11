@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { isValidSlug, isReservedSubdomain } from "../../lib/host";
 import { checkTenantSlug, createTenant } from "../../services/tenants.service";
+import { useTenant } from "../../auth/TenantContext";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // VER-47: sector ids must match the backend enum
@@ -50,6 +51,8 @@ function autoSlug(name) {
 }
 
 export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
+  const { environment } = useTenant();
+  const baseDomain = environment === "staging" ? "staging.verbilo.co.uk" : "verbilo.co.uk";
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
@@ -179,7 +182,7 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
             }}
             placeholder="companyx"
           />
-          <span className={styles.slugSuffix}>.verbilo.co.uk</span>
+          <span className={styles.slugSuffix}>.{baseDomain}</span>
         </div>
         {slugMessage && (
           <p className={`${styles.helper} ${styles[slugMessage.tone]}`}>

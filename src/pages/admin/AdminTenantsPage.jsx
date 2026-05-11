@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 import { listTenants } from "../../services/tenants.service";
+import { useTenant } from "../../auth/TenantContext";
+import { tenantUrl } from "../../lib/host";
 import styles from "./AdminTenantsPage.module.css";
 
 export const AdminTenantsPage = ({ onCreate, onEdit }) => {
+  const { environment } = useTenant();
+  // Build tenant URLs from the active surface's environment so admin.staging
+  // shows e.g. `smileco.staging.verbilo.co.uk` and admin (prod) shows
+  // `smileco.verbilo.co.uk`. The backend's `t.url` field is hardcoded prod
+  // for legacy reasons — overriding client-side until the backend takes
+  // TENANT_BASE_DOMAIN from env (follow-up).
+  const isStaging = environment === "staging";
+  const baseDomain = isStaging ? "staging.verbilo.co.uk" : "verbilo.co.uk";
   const [tenants, setTenants] = useState([]);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
@@ -52,7 +62,7 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
           <h2>No tenants yet</h2>
           <p>
             Create your first tenant to provision a dedicated subdomain on
-            <code> verbilo.co.uk</code>.
+            <code> {baseDomain}</code>.
           </p>
         </div>
       )}
@@ -76,8 +86,13 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
                   {t.archivedAt && <span className={styles.archivedPill}>archived</span>}
                 </td>
                 <td>
-                  <a href={t.url} className={styles.subdomainLink} target="_blank" rel="noreferrer">
-                    {t.slug}.verbilo.co.uk
+                  <a
+                    href={tenantUrl(t.slug, isStaging ? "staging" : "production")}
+                    className={styles.subdomainLink}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t.slug}.{baseDomain}
                   </a>
                 </td>
                 <td>{t.sector}</td>
