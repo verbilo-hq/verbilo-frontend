@@ -3,29 +3,15 @@ import { accountsFixture } from "./fixtures/accounts.fixture";
 import { simulateLatency } from "./delay";
 import { userPool } from "./cognito.client";
 import { fetchMe } from "./me.service.js";
+import {
+  readSession,
+  persistSession,
+  clearSession,
+} from "./session.js";
 // import { fetchJson } from "./http";
-
-const SESSION_KEY = "inspire_session";
 
 let accountsStore = [...accountsFixture];
 const tempPasswordUsers = new Map();
-
-function persistSession(session) {
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  } catch {
-    /* sessionStorage unavailable — session lives in memory only this tab */
-  }
-}
-
-function readSession() {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
 
 function publicUserOf(account) {
   if (!account) return null;
@@ -144,11 +130,7 @@ export async function registerAccount(account) {
 
 export function logout() {
   userPool.getCurrentUser()?.signOut();
-  try {
-    sessionStorage.removeItem(SESSION_KEY);
-  } catch {
-    /* noop */
-  }
+  clearSession();
 }
 
 /** List accounts (manager-only call site today; backend will enforce). */
