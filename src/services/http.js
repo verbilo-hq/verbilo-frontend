@@ -1,7 +1,7 @@
 import { resolveSurface } from "../lib/host";
+import { getToken } from "./session.js";
 
 const BASE_URL = import.meta.env.VITE_API_BASE ?? "";
-const SESSION_KEY = "inspire_session";
 
 let cachedTenantSlug = null;
 
@@ -18,15 +18,6 @@ function detectTenantSlug() {
   });
   cachedTenantSlug = surface.surface === "tenant" && surface.slug ? surface.slug : "";
   return cachedTenantSlug;
-}
-
-function getToken() {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw).token : null;
-  } catch {
-    return null;
-  }
 }
 
 export async function fetchJson(path, { method = "GET", body, signal } = {}) {

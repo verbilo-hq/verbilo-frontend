@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { resolveSurface } from "../lib/host";
 import { getPublicTenant } from "../services/tenants.service";
+import { AuthContext } from "./AuthContext";
 
 const TenantContext = createContext(null);
 
@@ -55,8 +56,16 @@ export function TenantProvider({ children }) {
 
 export function useTenant() {
   const ctx = useContext(TenantContext);
+  // Pull in site state from AuthContext so consumers get a single
+  // { tenant, site, sites, setActiveSite } surface per VER-22.
+  const auth = useContext(AuthContext);
   if (!ctx) {
     throw new Error("useTenant must be used within a TenantProvider");
   }
-  return ctx;
+  return {
+    ...ctx,
+    site: auth?.site ?? null,
+    sites: auth?.sites ?? [],
+    setActiveSite: auth?.setActiveSite ?? (() => {}),
+  };
 }
