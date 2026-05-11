@@ -1,21 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { isValidSlug, isReservedSubdomain } from "../../lib/host";
+import { SECTOR_OPTIONS } from "../../lib/sector";
 import { checkTenantSlug, createTenant } from "../../services/tenants.service";
 import { useTenant } from "../../auth/TenantContext";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // VER-47: sector ids must match the backend enum
-// (`CreateTenantDto.sector` @IsIn list in verbilo-backend). Previous ids
-// "optician" / "veterinary" / "physiotherapy" were rejected by the API.
-const SECTORS = [
-  { id: "dental",    label: "Dental" },
-  { id: "optometry", label: "Optometry / Opticians" },
-  { id: "vets",      label: "Veterinary" },
-  { id: "physio",    label: "Physiotherapy" },
-  { id: "gp",        label: "GP / primary care" },
-  { id: "other",     label: "Other" },
-  { id: "healthcare", label: "Healthcare (sector-agnostic)" },
-];
+// (`CreateTenantDto.sector` @IsIn list in verbilo-backend). Canonical list
+// is `SECTOR_OPTIONS` in `src/lib/sector.js` — imported here and reused by
+// AdminTenantSettingsPage so the same dropdown shows on both flows
+// (VER-49). Previous ids "optician" / "veterinary" / "physiotherapy" were
+// rejected by the API; keep this comment as the historical note.
 
 const ALL_MODULES = [
   { id: "dashboard", label: "Dashboard", required: true },
@@ -198,7 +193,7 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
           value={sector}
           onChange={(e) => setSector(e.target.value)}
         >
-          {SECTORS.map((s) => (
+          {SECTOR_OPTIONS.map((s) => (
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>

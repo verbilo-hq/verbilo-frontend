@@ -2,7 +2,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sectorIcon, sectorLabel, roleLabel, SECTORS } from "./sector.js";
+import {
+  sectorIcon,
+  sectorLabel,
+  roleLabel,
+  SECTORS,
+  SECTOR_OPTIONS,
+} from "./sector.js";
 
 // ---------- SECTORS const ----------
 
@@ -16,6 +22,26 @@ test("SECTORS covers the canonical seven values", () => {
     "physio",
     "vets",
   ]);
+});
+
+// ---------- SECTOR_OPTIONS const ----------
+
+test("SECTOR_OPTIONS has one entry per canonical sector with id + label", () => {
+  assert.equal(SECTOR_OPTIONS.length, SECTORS.length);
+  for (const opt of SECTOR_OPTIONS) {
+    assert.ok(SECTORS.includes(opt.id), `unexpected sector id: ${opt.id}`);
+    assert.equal(typeof opt.label, "string");
+    assert.ok(opt.label.length > 0, `empty label for ${opt.id}`);
+  }
+  // Every canonical sector has a matching option (no missing ids).
+  const ids = new Set(SECTOR_OPTIONS.map((o) => o.id));
+  for (const s of SECTORS) {
+    assert.ok(ids.has(s), `missing option for canonical sector: ${s}`);
+  }
+});
+
+test("SECTOR_OPTIONS is frozen (immutable canonical list)", () => {
+  assert.equal(Object.isFrozen(SECTOR_OPTIONS), true);
 });
 
 // ---------- sectorIcon ----------

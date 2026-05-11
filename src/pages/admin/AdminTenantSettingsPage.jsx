@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getTenant, updateTenant } from "../../services/tenants.service";
+import { SECTOR_OPTIONS } from "../../lib/sector";
 import { useTenant } from "../../auth/TenantContext";
 import styles from "./AdminCreateTenantPage.module.css";
 
@@ -100,11 +101,27 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
 
       <div className={styles.field}>
         <label className={styles.label}>Sector</label>
-        <input
+        <select
           className={styles.input}
           value={sector}
           onChange={(e) => setSector(e.target.value)}
-        />
+        >
+          {/* Defensive: if the tenant row in the DB stores a sector that
+              isn't in the canonical SECTOR_OPTIONS list (e.g. legacy data
+              from before VER-47 normalised the enum, or a hand-edited row),
+              show that value as a disabled "Unknown" option at the top so
+              the operator can see what's currently stored before picking a
+              valid replacement. Picking a real option overrides it on
+              save. */}
+          {sector && !SECTOR_OPTIONS.some((s) => s.id === sector) && (
+            <option value={sector} disabled>
+              Unknown sector: {sector}
+            </option>
+          )}
+          {SECTOR_OPTIONS.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
       </div>
 
       <div className={styles.field}>
