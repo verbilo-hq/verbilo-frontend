@@ -135,10 +135,31 @@ const referralPathways = [
     { name: "Stage III / IV Referral Criteria",         type: "PDF",  updated: "Dec 2023" },
     { name: "Peri-Implantitis Specialist Pathway",      type: "PDF",  updated: "Oct 2023" },
   ]},
-  { label: "Restorative & Implants", icon: "award", docs: [
-    { name: "Implant Referral Form",                    type: "PDF",  updated: "Feb 2024" },
-    { name: "Complex Restorative Referral Form",        type: "PDF",  updated: "Jan 2024" },
-    { name: "Implant Pre-Assessment Criteria",          type: "PDF",  updated: "Nov 2023" },
+  // VER-46: nested-accordion shape — when a pathway has `sections` instead of
+  // `docs`, the panel renders each section as its own sub-accordion. Backward
+  // compatible with the flat `docs` shape used by the other entries above.
+  { label: "Restorative, Prosthodontics & Implants", icon: "award", sections: [
+    { label: "General Restorative Referrals", docs: [
+      { name: "Restorative Dentistry Referral Criteria",            type: "PDF",  updated: "Feb 2024" },
+      { name: "Restorative Referral Form",                          type: "PDF",  updated: "Jan 2024" },
+      { name: "Restorative Treatment Planning Advice Request Form", type: "DOCX", updated: "Nov 2023" },
+    ]},
+    { label: "Prosthodontics & Dentures", docs: [
+      { name: "Prosthodontics Referral Criteria",        type: "PDF",  updated: "Feb 2024" },
+      { name: "Complex Denture Referral Guidance",       type: "PDF",  updated: "Jan 2024" },
+    ]},
+    { label: "Tooth Wear, Trauma & Developmental Anomalies", docs: [
+      { name: "Tooth Wear / Tooth Surface Loss Referral Pathway",     type: "PDF",  updated: "Feb 2024" },
+      { name: "Dental Trauma Restorative Referral Pathway",           type: "PDF",  updated: "Jan 2024" },
+      { name: "Developmental Dental Anomalies Referral Criteria",     type: "PDF",  updated: "Nov 2023" },
+    ]},
+    { label: "Implants", docs: [
+      { name: "Implant Referral Criteria",                  type: "PDF",  updated: "Feb 2024" },
+      { name: "NHS Implant Funding / Eligibility Guidance", type: "PDF",  updated: "Jan 2024" },
+    ]},
+    // Supporting Records / Requirements — intentionally left empty for now;
+    // structure kept so we can wire materials in later without re-shaping the data.
+    { label: "Supporting Records / Requirements", placeholder: true, docs: [] },
   ]},
 ];
 
@@ -266,6 +287,9 @@ export const ClinicalPage = () => {
   const [activeProtoCat,    setActiveProtoCat]    = useState("emergency");
   const [activeGuideline,   setActiveGuideline]   = useState(null);
   const [activeReferral,    setActiveReferral]    = useState(null);
+  // VER-46: tracks which sub-accordion is open within a `sections`-shaped referral
+  // (currently only "Restorative, Prosthodontics & Implants"). Keyed by section label.
+  const [activeReferralSection, setActiveReferralSection] = useState(null);
   const [activeConsentCat,  setActiveConsentCat]  = useState(null);
   const [emergencyModal,    setEmergencyModal]    = useState(null);
   const [laWeight,          setLaWeight]          = useState(70);
@@ -311,10 +335,25 @@ export const ClinicalPage = () => {
       section: "Guidelines", label: g.org, name: item.name, desc: item.summary,
       action: () => { setActiveTab("guidelines"); setSearchQuery(""); },
     }))),
-    ...referralPathways.flatMap(r => r.docs.map(d => ({
-      section: "Referrals", label: r.label, name: d.name, desc: `${d.type} · Updated ${d.updated}`,
-      action: () => { setActiveTab("referrals"); setActiveReferral(r.label); setSearchQuery(""); },
-    }))),
+    // VER-46: flatten both shapes — flat `docs` and nested `sections.docs`.
+    ...referralPathways.flatMap((r) => {
+      const flatDocs = r.docs ?? [];
+      const nested = (r.sections ?? []).flatMap((s) =>
+        (s.docs ?? []).map((d) => ({ ...d, _section: s.label })),
+      );
+      return [...flatDocs, ...nested].map((d) => ({
+        section: "Referrals",
+        label: d._section ? `${r.label} → ${d._section}` : r.label,
+        name: d.name,
+        desc: `${d.type} · Updated ${d.updated}`,
+        action: () => {
+          setActiveTab("referrals");
+          setActiveReferral(r.label);
+          if (d._section) setActiveReferralSection(`${r.label}::${d._section}`);
+          setSearchQuery("");
+        },
+      }));
+    }),
     ...safeguardingDocs.map(d => ({
       section: "Safeguarding", label: "Policy Document", name: d.name, desc: `Reviewed ${d.reviewed}`,
       action: () => { setActiveTab("safeguarding"); setSearchQuery(""); },
@@ -605,19 +644,88 @@ export const ClinicalPage = () => {
                   </button>
                   {isOpen && (
                     <div className={styles.referralPanel}>
-                      {r.docs.map(d => (
-                        <div key={d.name} className={styles.referralDocRow}>
-                          <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
-                          <div className={styles.docInfo}>
-                            <span className={styles.docName}>{d.name}</span>
-                            <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                      {/* VER-46: nested sub-accordions when the pathway has `sections`. */}
+                      {r.sections ? (
+                        r.sections.map((sec) => {
+                          const secKey = `${r.label}::${sec.label}`;
+                          const secOpen = activeReferralSection === secKey;
+                          const isEmpty = sec.placeholder || !sec.docs?.length;
+                          return (
+                            <div key={sec.label} style={{ marginBottom: 6 }}>
+                              <button
+                                type="button"
+                                onClick={() => setActiveReferralSection(secOpen ? null : secKey)}
+                                style={{
+                                  width: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  background: "var(--surface-lowest)",
+                                  border: "1px solid var(--outline-variant)",
+                                  borderRadius: "var(--radius-md)",
+                                  padding: "10px 12px",
+                                  cursor: "pointer",
+                                  fontFamily: "var(--font-body)",
+                                  fontSize: 14,
+                                  color: "var(--on-surface)",
+                                }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <I name="chevronright" size={12}
+                                    color="var(--on-surface-variant)"
+                                    style={{ transform: secOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+                                  {sec.label}
+                                </span>
+                                {isEmpty && (
+                                  <span style={{ fontSize: 11, color: "var(--on-surface-variant)" }}>Coming soon</span>
+                                )}
+                              </button>
+                              {secOpen && !isEmpty && (
+                                <div style={{ marginTop: 6 }}>
+                                  {sec.docs.map((d) => (
+                                    <div key={d.name} className={styles.referralDocRow}>
+                                      <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
+                                      <div className={styles.docInfo}>
+                                        <span className={styles.docName}>{d.name}</span>
+                                        <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                                      </div>
+                                      <div className={styles.docActions}>
+                                        <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
+                                        <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {secOpen && isEmpty && (
+                                <p style={{
+                                  margin: "6px 0 0",
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  color: "var(--on-surface-variant)",
+                                  fontFamily: "var(--font-body)",
+                                }}>
+                                  Materials for this section will be added here — radiograph + photo requirements, periodontal charting, consent information, and referral rejection criteria.
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        r.docs.map(d => (
+                          <div key={d.name} className={styles.referralDocRow}>
+                            <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
+                            <div className={styles.docInfo}>
+                              <span className={styles.docName}>{d.name}</span>
+                              <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                            </div>
+                            <div className={styles.docActions}>
+                              <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
+                              <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
+                            </div>
                           </div>
-                          <div className={styles.docActions}>
-                            <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
-                            <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   )}
                 </div>
