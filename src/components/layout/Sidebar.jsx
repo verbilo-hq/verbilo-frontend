@@ -104,7 +104,7 @@ export const Sidebar = ({ current, onNav }) => {
         <I name="logout" size={16} /> Logout
       </a>
       <p className={styles.copyright}>
-        © 2026 BrainPower Technologies Ltd. All rights reserved.
+        © {new Date().getFullYear()} Verbilo Ltd. All rights reserved.
       </p>
     </div>
   </aside>
