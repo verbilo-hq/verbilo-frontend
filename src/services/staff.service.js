@@ -17,21 +17,17 @@
 import { practicesFixture, practiceAddressesFixture } from "./fixtures/staff.fixture";
 import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
+import { roleLabel } from "../lib/sector";
 
 const STAFF_ROOT = "/staff";
-
-const ROLE_LABEL = {
-  admin: "Administrator",
-  manager: "Practice Manager",
-  dentist: "Dentist",
-  hygienist: "Hygienist / Therapist",
-  nurse: "Dental Nurse",
-  receptionist: "Receptionist",
-};
 
 function toUi(record) {
   if (!record) return null;
   const fullName = `${record.firstName ?? ""} ${record.surname ?? ""}`.trim();
+  // Sector isn't known here (the service doesn't see TenantContext); fall back
+  // to the generic role taxonomy. Consumers that do know the sector can
+  // re-render with `roleLabel(roleType, sector, clinicalSpecialty)`.
+  const defaultLabel = roleLabel(record.role, undefined, record.clinicalSpecialty);
   return {
     id: record.id,
     name: fullName,
@@ -40,16 +36,14 @@ function toUi(record) {
     email: record.email ?? "",
     phone: record.phone ?? "",
     roleType: record.role ?? "",
-    roleLabel: ROLE_LABEL[record.role] ?? record.role ?? "",
+    roleLabel: defaultLabel,
+    clinicalSpecialty: record.clinicalSpecialty ?? "",
     practice: record.siteId ?? "",
     siteId: record.siteId ?? null,
     gdc: record.gdcNumber ?? "",
-    gdcType:
-      record.role === "dentist"
-        ? "Dentist"
-        : record.role === "hygienist"
-          ? "Dental Hygienist"
-          : "",
+    // GDC registration is specific to dental; keep the field for backward
+    // compat with the form. For other sectors this column is just empty.
+    gdcType: record.clinicalSpecialty ?? "",
     startDate: record.startedAt ?? "",
     archivedAt: record.archivedAt ?? null,
     // UI-only fields the backend doesn't track yet — defaulted so StaffPage
@@ -96,6 +90,9 @@ function toApi(data) {
   if (data.phone) out.phone = data.phone;
   if (data.gdc || data.gdcNumber) out.gdcNumber = data.gdc ?? data.gdcNumber;
   if (data.siteId) out.siteId = data.siteId;
+  if (data.clinicalSpecialty || data.gdcType) {
+    out.clinicalSpecialty = data.clinicalSpecialty ?? data.gdcType;
+  }
   if (data.startDate) {
     // Best-effort: accept either an ISO string or a "March 2019"-style label.
     const d = new Date(data.startDate);

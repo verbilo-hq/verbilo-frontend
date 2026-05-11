@@ -4,6 +4,7 @@ import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TopBar } from "../components/layout/TopBar";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./MarketingPage.module.css";
 
 /* ── Data ──────────────────────────────────────────────────────────────────── */
@@ -186,7 +187,7 @@ const DeleteConfirmModal = ({ template, onConfirm, onClose }) => (
 );
 
 /* ── Brand book print ──────────────────────────────────────────────────────── */
-const openBrandBook = (palette) => {
+const openBrandBook = (palette, tenantName = "Verbilo") => {
   const win = window.open("", "_blank");
   if (!win) return;
 
@@ -214,7 +215,7 @@ const openBrandBook = (palette) => {
 
   win.document.write(`<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
-    <title>Dental Group — Brand Book</title>
+    <title>${tenantName} — Brand Book</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -249,10 +250,10 @@ const openBrandBook = (palette) => {
     <div class="cover">
       <div>
         <div class="cover-title">Brand Book</div>
-        <div class="cover-sub">Dental Group · Colour, Typography &amp; Guidelines</div>
+        <div class="cover-sub">${tenantName} · Colour, Typography &amp; Guidelines</div>
         <div style="margin-top:16px;font-size:11px;opacity:0.6">Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}</div>
       </div>
-      <div class="cover-logo">DENTAL\nGROUP</div>
+      <div class="cover-logo">${tenantName.toUpperCase().replace(/\s+/g, "\n")}</div>
     </div>
 
     <section>
@@ -272,7 +273,7 @@ const openBrandBook = (palette) => {
 
     <section>
       <h2>Typography</h2>
-      <p class="section-sub">Approved typefaces for all Dental Group communications.</p>
+      <p class="section-sub">Approved typefaces for all ${tenantName} communications.</p>
       <table>
         <thead><tr>
           <th>Sample</th>
@@ -298,7 +299,7 @@ const openBrandBook = (palette) => {
         </div>`).join("")}
     </section>
 
-    <div class="footer">© ${new Date().getFullYear()} Dental Group · Confidential — Internal Use Only</div>
+    <div class="footer">© ${new Date().getFullYear()} ${tenantName} · Confidential — Internal Use Only</div>
     <script>window.onload = () => { window.print(); }</script>
   </body></html>`);
   win.document.close();
@@ -306,6 +307,8 @@ const openBrandBook = (palette) => {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 export const MarketingPage = ({ currentUser }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Verbilo";
   const logoUploadRef     = useRef();
   const templateUploadRef = useRef();
   const [templateList, setTemplateList]   = useState(seedTemplates);
@@ -327,7 +330,7 @@ export const MarketingPage = ({ currentUser }) => {
   <>
   <div>
     <SearchBar placeholder="Search brand assets, templates, or colour codes..." />
-    <TopBar title="Brand Hub" subtitle="Official Dental Group brand assets, templates, and guidelines." />
+    <TopBar title="Brand Hub" subtitle={`Official ${tenantName} brand assets, templates, and guidelines.`} />
 
     {/* Hidden file inputs */}
     <input ref={logoUploadRef}     type="file" accept=".svg,.png,.pdf,.ai,.eps" style={{ display: "none" }} />
@@ -338,7 +341,7 @@ export const MarketingPage = ({ currentUser }) => {
       <div className={styles.cardHeader}>
         <div>
           <h3 className={styles.heading}>Logo Assets</h3>
-          <p className={styles.helpText}>Download official Dental Group logos in all formats.</p>
+          <p className={styles.helpText}>Download official {tenantName} logos in all formats.</p>
         </div>
         <div className={styles.headerBtns}>
           <BtnSecondary style={{ padding: "11px 18px", fontSize: 12 }} onClick={triggerLogoUpload}>
@@ -467,7 +470,7 @@ export const MarketingPage = ({ currentUser }) => {
               </div>
             </div>
           ))}
-          <button className={styles.brandBookBtn} onClick={() => openBrandBook(palette)}>
+          <button className={styles.brandBookBtn} onClick={() => openBrandBook(palette, tenantName)}>
             <I name="download" size={13} /> Download Brand Book PDF
           </button>
         </div>

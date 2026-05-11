@@ -6,6 +6,7 @@ import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
 import { ProgressBar } from "../components/ui/ProgressBar";
 import { SearchBar } from "../components/ui/SearchBar";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./TrainingPage.module.css";
 
 /* ─── Static module data ───
@@ -270,9 +271,9 @@ const modules = [
   { id: "h10", role: "hygienist", cat: "Restorative", title: "Direct Restorations (Therapists)", desc: "Class I-V composite restorations, ART technique, pulp protection decisions, and paediatric restorations.", cpd: 6, dur: "6 hrs", type: "Course", status: "optional", pct: 0 },
 ];
 
-/* ─── Internal Dental Group modules ──────────────────────────────────────── */
+/* ─── Internal (tenant-authored) training modules ──────────────────────────── */
 const internalModules = [
-  { id: "i1", title: "Dental Group Induction",        cat: "Onboarding",  dur: "45 min", cpd: 0, desc: "Practice values, team structure, facilities walkthrough, key contacts, and what to expect in your first weeks at Dental Group.", roles: "all",                      updatedAt: "Jan 2026" },
+  { id: "i1", title: "Practice Induction",            cat: "Onboarding",  dur: "45 min", cpd: 0, desc: "Practice values, team structure, facilities walkthrough, key contacts, and what to expect in your first weeks.", roles: "all",                      updatedAt: "Jan 2026" },
   { id: "i2", title: "Practice Management System",   cat: "Systems",     dur: "30 min", cpd: 0, desc: "Full walkthrough of your practice management system — patient records, appointment scheduling, charting, NHS FP17 submission, and reporting dashboards.", roles: "all",              updatedAt: "Feb 2026" },
   { id: "i3", title: "Patient Journey & Service Standards",   cat: "Patient Care",dur: "25 min", cpd: 0, desc: "Our 5-star patient journey from first contact to recall. Communication standards, greeting protocols, and the Inspire experience.", roles: "all",              updatedAt: "Jan 2026" },
   { id: "i4", title: "Inspire Infection Control Protocol",    cat: "Compliance",  dur: "20 min", cpd: 1, desc: "Practice-specific decontamination workflows, zone maps, PPE station locations, and HTM 01-05 implementation at Inspire.", roles: "dentist,nurse,hygienist", isNew: true, updatedAt: "Mar 2026" },
@@ -839,7 +840,7 @@ const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
         <div className={styles.htModalHeader}>
           <div>
             <h3 className={styles.htModalTitle}>Upload Training Module</h3>
-            <p className={styles.htModalSub}>Record your training content and upload it — it appears in the Dental Group Training grid immediately</p>
+            <p className={styles.htModalSub}>Record your training content and upload it — it appears in your practice's training grid immediately</p>
           </div>
           <button className={styles.htModalClose} onClick={onClose}>
             <I name="xcircle" size={20} color="var(--on-surface-variant)" />
@@ -1189,6 +1190,8 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
 
 /* ─── Main hub ─── */
 export const TrainingPage = ({ currentUser }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Practice";
   const [searchQuery,    setSearchQuery]    = useState("");
   const [activeModule,   setActiveModule]   = useState(null);
   const [playingHowTo,   setPlayingHowTo]   = useState(null);
@@ -1320,15 +1323,15 @@ export const TrainingPage = ({ currentUser }) => {
           {/* ════ Main column ════ */}
           <div>
 
-            {/* ══ SECTION 1: Dental Group Training ══ */}
+            {/* ══ SECTION 1: Internal practice training ══ */}
             <div className={styles.sectionBlock}>
               <div className={styles.sectionHeader}>
                 <div className={styles.sectionHeaderIcon} style={{ background: "rgba(156,39,176,0.1)" }}>
                   <I name="building" size={15} color="#9C27B0" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <span className={styles.sectionHeaderTitle}>Dental Group Training</span>
-                  <span className={styles.sectionHeaderSub}>Internal modules created by the Dental Group team · {allInternalModules.length} modules</span>
+                  <span className={styles.sectionHeaderTitle}>{tenantName} Training</span>
+                  <span className={styles.sectionHeaderSub}>Internal modules created by the {tenantName} team · {allInternalModules.length} modules</span>
                 </div>
                 <button onClick={() => setShowAddTraining(true)} className={styles.uploadTrainingBtn}>
                   <I name="upload" size={13} /> Upload Training
@@ -1348,7 +1351,7 @@ export const TrainingPage = ({ currentUser }) => {
               {/* Library overview */}
               <div className={styles.sidebarCpd}>
                 <h3 className={styles.sidebarCpdTitle}>Training Library</h3>
-                <p className={styles.sidebarCpdLead}>Dental Group — London Flagship</p>
+                <p className={styles.sidebarCpdLead}>{tenantName}</p>
                 <div className={styles.cpdMeta} style={{ marginTop: 20 }}>
                   {[
                     { label: "Internal Modules",  val: `${allInternalModules.length} modules`  },

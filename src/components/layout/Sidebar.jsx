@@ -2,6 +2,7 @@ import { I } from "../Icon";
 import { Avatar } from "../ui/Avatar";
 import { useAuth } from "../../auth/AuthContext";
 import { useTenant } from "../../auth/TenantContext";
+import { sectorIcon, sectorLabel, roleLabel } from "../../lib/sector";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -17,14 +18,6 @@ const navItems = [
   { id: "lab",       label: "Lab Work Hub",         icon: "clipboard"                    },
 ];
 
-const roleLabel = {
-  manager:     "Practice Manager",
-  dentist:     "Dentist",
-  nurse:       "Dental Nurse",
-  hygienist:   "Hygienist / Therapist",
-  receptionist:"Receptionist",
-};
-
 export const Sidebar = ({ current, onNav }) => {
   const { user, logout } = useAuth();
   const { tenant } = useTenant();
@@ -32,7 +25,8 @@ export const Sidebar = ({ current, onNav }) => {
   // Tenant config from public lookup overrides anything in /users/me — backend
   // is the source of truth for which modules are enabled.
   const tenantName  = tenant?.name ?? user?.tenant?.name ?? "Verbilo";
-  const sectorLabel = tenant?.sector ?? user?.tenant?.sector ?? "";
+  const sector      = tenant?.sector ?? user?.tenant?.sector ?? "";
+  const subtitle    = sector ? sectorLabel(sector) : "";
   const enabledModules = tenant?.enabledModules ?? user?.tenant?.enabledModules ?? null;
 
   return (
@@ -40,14 +34,12 @@ export const Sidebar = ({ current, onNav }) => {
     <div className={styles.brand}>
       <div className={styles.brandRow}>
         <div className={styles.logo}>
-          <I name="tooth" size={20} />
+          <I name={sectorIcon(sector)} size={20} />
         </div>
         <div>
           <div className={styles.brandTitle}>{tenantName}</div>
-          {sectorLabel && (
-            <div className={styles.brandSubtitle}>
-              {sectorLabel.charAt(0).toUpperCase() + sectorLabel.slice(1)}
-            </div>
+          {subtitle && (
+            <div className={styles.brandSubtitle}>{subtitle}</div>
           )}
         </div>
       </div>
@@ -82,7 +74,7 @@ export const Sidebar = ({ current, onNav }) => {
           <div className={styles.currentUserInfo}>
             <span className={styles.currentUserName}>{user.displayName}</span>
             <span className={styles.currentUserRole}>
-              {roleLabel[user.role] || user.role}
+              {roleLabel(user.role, sector, user.clinicalSpecialty)}
             </span>
           </div>
         </div>

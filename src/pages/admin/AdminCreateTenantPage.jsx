@@ -154,7 +154,7 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
           className={styles.input}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. SmileCo Dental Group"
+          placeholder="e.g. SmileCo Dental Group, Riverside Vets, BrightSight Opticians"
           autoFocus
           required
         />
