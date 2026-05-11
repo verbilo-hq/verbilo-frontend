@@ -19,7 +19,7 @@ const features = [
   },
   {
     title: "Username login — no email required",
-    body: "Designed for dental teams where nurses and receptionists don't have work email. Managers reset passwords. MFA when you want it.",
+    body: "Designed for healthcare teams where nurses, receptionists and clinical support staff don't all have work email. Managers reset passwords. MFA when you want it.",
   },
   {
     title: "Multi-site from day one",
@@ -164,12 +164,12 @@ export const PublicLandingPage = () => {
               Built for multi-site healthcare operators
             </span>
             <h1 className={styles.heroTitle}>
-              The intranet your <em>dental group</em> was meant to have.
+              The intranet your <em>healthcare group</em> was meant to have.
             </h1>
             <p className={styles.heroLead}>
               Verbilo replaces WhatsApp groups, shared Drives and paper trails with one
-              secure platform — purpose-built for dental, optician and veterinary groups
-              running 5 to 100+ sites.
+              secure platform — purpose-built for dental, GP, vet, optical and
+              physiotherapy groups running 5 to 100+ sites.
             </p>
             <div className={styles.heroCtas}>
               <a href="mailto:hello@verbilo.co.uk" className={styles.btnPrimary}>
@@ -209,11 +209,11 @@ export const PublicLandingPage = () => {
         <section id="product" className={styles.section}>
           <div className={styles.sectionIntro}>
             <h2 className={styles.sectionTitle}>
-              Everything a dental group needs.<br />
+              Everything a multi-site healthcare group needs.<br />
               <span className={styles.sectionTitleMuted}>Nothing it doesn't.</span>
             </h2>
             <p className={styles.sectionLead}>
-              We didn't bolt a dental layer onto a generic intranet. Verbilo was built
+              We didn't bolt a sector layer onto a generic intranet. Verbilo was built
               from scratch for healthcare hierarchy, compliance and the day-to-day chaos
               of running multiple sites.
             </p>
@@ -235,7 +235,7 @@ export const PublicLandingPage = () => {
               <h2 className={styles.sectionTitle}>From signup to live in a week.</h2>
               <p className={styles.sectionLead}>
                 We onboard you. You don't configure permission matrices in a spreadsheet
-                — we sit with you for an hour and your dental group is live.
+                — we sit with you for an hour and your group is live.
               </p>
             </div>
             <ol className={styles.steps}>
@@ -308,7 +308,7 @@ export const PublicLandingPage = () => {
               <h2 className={styles.ctaTitle}>Ready to retire the WhatsApp group?</h2>
               <p className={styles.ctaLead}>
                 Book a 20-minute call. We'll show you a real tenant configured for a
-                23-site dental group and answer anything CQC, GDPR or technical.
+                multi-site healthcare group and answer anything CQC, GDPR or technical.
               </p>
             </div>
             <div className={styles.ctaActions}>
