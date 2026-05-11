@@ -3,10 +3,14 @@ import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
 import { useAuth } from "../auth/AuthContext";
+import { useTenant } from "../auth/TenantContext";
+import { sectorIcon } from "../lib/sector";
 import styles from "./LoginPage.module.css";
 
 export const LoginPage = ({ onLoggedIn }) => {
   const { login } = useAuth();
+  const { tenant } = useTenant();
+  const sector = tenant?.sector ?? "";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -39,12 +43,12 @@ export const LoginPage = ({ onLoggedIn }) => {
       <div className={styles.shell}>
         <div className={styles.brand}>
           <div className={styles.brandLogo}>
-            <I name="tooth" size={32} color="var(--on-primary)" />
+            <I name={sectorIcon(sector)} size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Dental</span> Group
+            <span className={styles.brandTitleEm}>Ver</span>bilo
           </h1>
-          <p className={styles.brandTagline}>The Clinical Sanctuary</p>
+          <p className={styles.brandTagline}>Built for multi-site healthcare operators</p>
           <div className={styles.brandRule} />
         </div>
 
@@ -58,7 +62,7 @@ export const LoginPage = ({ onLoggedIn }) => {
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError(""); }}
               onKeyDown={handleKey}
-              placeholder="e.g. s.jenkins"
+              placeholder="e.g. j.smith"
               autoComplete="username"
             />
           </div>
@@ -118,7 +122,7 @@ export const LoginPage = ({ onLoggedIn }) => {
             <div className={styles.statusDot} />
             <span className={styles.statusLabel}>System Status: Fully Operational</span>
           </div>
-          <p className={styles.copyright}>© 2026 BrainPower Technologies Ltd. All rights reserved.</p>
+          <p className={styles.copyright}>© {new Date().getFullYear()} Verbilo Ltd. All rights reserved.</p>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { formatDate } from "../lib/formatDate";
 import {
   listCpdRoles, getCpdProfile, addCpdLogEntry, listPracticeStaffCpd,
 } from "../services/cpd.service";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./CpdPage.module.css";
 
 
@@ -410,8 +411,13 @@ const CertificatesModal = ({ entries, onClose }) => {
 };
 
 export const CpdPage = ({ currentUser }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Verbilo";
   const isManager = currentUser?.role === "manager";
-  const userRole  = currentUser?.role || "dentist";
+  // Fallback when the user object has no role yet (e.g. first paint before
+  // /users/me enrichment). Uses the generic clinician role so the page
+  // doesn't assume a dental tenant.
+  const userRole  = currentUser?.role || "clinician";
 
   // pmView: "overview" | "own" | "drill"
   const [pmView,        setPmView]        = useState("overview");
@@ -492,7 +498,7 @@ export const CpdPage = ({ currentUser }) => {
 
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>CPD Log – ${roleName} – Dental Group</title>
+      <title>CPD Log – ${roleName} – ${tenantName}</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #2b3435; margin: 40px; }
         h1   { font-size: 22px; color: #006974; margin-bottom: 4px; }
@@ -513,7 +519,7 @@ export const CpdPage = ({ currentUser }) => {
       <h1>CPD Activity Log</h1>
       <div class="meta">
         <strong>${roleName}</strong> &nbsp;·&nbsp; ${profile.scheme} &nbsp;·&nbsp; ${profile.cyclePeriod}
-        &nbsp;·&nbsp; Dental Group &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
+        &nbsp;·&nbsp; ${tenantName} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
       </div>
       <div class="stats">
         <div class="stat"><span class="val">${totalHrs}</span><span class="lbl">Hours Logged</span></div>
@@ -527,7 +533,7 @@ export const CpdPage = ({ currentUser }) => {
       <h2>CPD Activity Log (${allLog.length} entries)</h2>
       <table><thead><tr><th>Date</th><th>Activity</th><th>Type</th><th style="text-align:center">Hrs</th><th>Evidence</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      <div class="footer">Dental Group &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
+      <div class="footer">${tenantName} &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
     </body></html>`);
     win.document.close();
     win.focus();

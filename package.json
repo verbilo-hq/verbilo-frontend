@@ -1,14 +1,16 @@
 {
-  "name": "inspire-dental",
+  "name": "verbilo-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "find src -name '*.test.js' -exec node --test {} +"
   },
   "dependencies": {
+    "@sentry/react": "^10.52.0",
     "amazon-cognito-identity-js": "^6.3.16",
     "lucide-react": "^0.383.0",
     "react": "^18.2.0",

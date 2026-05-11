@@ -1,3 +1,8 @@
+/* VER-47: the `uda*` classes relate to NHS UDA (Units of Dental Activity)
+   contract tracking — UK dental-sector only. Shown to dental tenants and
+   gated upstream via `Tenant.enabledModules`. Non-dental sectors will get
+   their own contract / activity tracking blocks. */
+
 /* ── UDA Hero ────────────────────────────────────────────────────────────── */
 .udaHero { padding: 24px; margin-bottom: 16px; }
 

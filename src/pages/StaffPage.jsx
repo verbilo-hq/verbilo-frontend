@@ -8,27 +8,47 @@ import { useClickOutside } from "../hooks/useClickOutside";
 import { listStaff, createStaff, updateStaff, deleteStaff } from "../services/staff.service";
 import { registerAccount } from "../services/auth.service";
 import { gdcAlertsFor } from "../services/logic/staff.logic";
+import { useTenant } from "../auth/TenantContext";
+import { roleLabel as sectorRoleLabel } from "../lib/sector";
 import styles from "./StaffPage.module.css";
 
 // ── Static data ───────────────────────────────────────────────────────────────
 
 
 const practices = ["London Flagship", "Manchester Central", "Birmingham", "Leeds North"];
-const roleFilters = ["Dentist", "Dental Nurse", "Hygienist", "Orthodontist", "Practice Manager", "Receptionist"];
 const practiceAddresses = {
   "London Flagship":    "42 Harley Street, Marylebone",
   "Manchester Central": "15 King Street, Manchester",
   "Birmingham":         "25 Colmore Row, Birmingham",
   "Leeds North":        "1 Park Row, Leeds",
 };
-const CLINICAL_ROLE_TYPES  = ["dentist", "nurse", "hygienist"];
-const SUPPORT_ROLE_TYPES   = ["manager", "receptionist", "support"];
-const cpdRequiredByType = { dentist: 100, nurse: 50, hygienist: 50, manager: 30, receptionist: 15 };
-const gdcTypesByRole = {
-  dentist: ["Dentist", "Specialist"],
-  nurse: ["Dental Nurse"],
-  hygienist: ["Dental Hygienist", "Dental Therapist", "Dental Therapist / Hygienist"],
+
+// VER-47: keyed on the generic StaffRole enum (admin / manager / clinician
+// / clinical_support / reception / admin_support). Sector-specific labels
+// are resolved via roleLabel(role, sector, clinicalSpecialty) from
+// src/lib/sector.js — the constants below are the structural taxonomy.
+const CLINICAL_ROLE_TYPES = ["clinician", "clinical_support"];
+const SUPPORT_ROLE_TYPES  = ["manager", "reception", "admin_support", "admin"];
+const ALL_ROLE_TYPES      = [...CLINICAL_ROLE_TYPES, ...SUPPORT_ROLE_TYPES];
+
+const cpdRequiredByType = {
+  clinician:        100,
+  clinical_support: 50,
+  manager:          30,
+  reception:        15,
+  admin_support:    15,
+  admin:            15,
 };
+
+// Dental sector — clinical specialty options surfaced in the form when
+// tenant.sector === "dental". Other sectors render the specialty as a
+// free-text field. The "Dental Nurse" option overlaps with the
+// clinical_support role default but the user can refine.
+const DENTAL_SPECIALTIES = {
+  clinician:        ["Dentist", "Specialist", "Orthodontist", "Endodontist", "Periodontist"],
+  clinical_support: ["Dental Nurse", "Dental Hygienist", "Dental Therapist", "Dental Therapist / Hygienist"],
+};
+
 const CLINICAL_INTERESTS = [
   "Implantology", "Orthodontics", "Cosmetic", "Endodontics",
   "Periodontics", "Oral Surgery", "Pediatric Care", "Digital Dentistry",
@@ -40,22 +60,14 @@ const EQUIPMENT_OPTIONS = [
 ];
 const STEPS = ["Personal Details", "Role & Registration", "Clinical Profile", "Documents & Access"];
 
+// Colour palette keyed on the generic enum. Used for the role badge pill.
 const ROLE_COLORS = {
-  manager:      "#006974",
-  dentist:      "#1565c0",
-  nurse:        "#2e7d32",
-  hygienist:    "#00838f",
-  receptionist: "#f57c00",
-  support:      "#6a1b9a",
-};
-
-const ROLE_LABELS = {
-  manager:      "Practice Manager",
-  dentist:      "Dentist",
-  nurse:        "Dental Nurse",
-  hygienist:    "Hygienist / Therapist",
-  receptionist: "Receptionist",
-  support:      "Support Staff",
+  admin:            "#6a1b9a",
+  manager:          "#006974",
+  clinician:        "#1565c0",
+  clinical_support: "#2e7d32",
+  reception:        "#f57c00",
+  admin_support:    "#455a64",
 };
 
 // ── Compliance helpers ────────────────────────────────────────────────────────
@@ -176,6 +188,9 @@ const FileUploadField = ({ label, value, onChange, accept = ".pdf,.jpg,.png", re
 // ── Add / Edit modal (4-step) ─────────────────────────────────────────────────
 
 const AddEditModal = ({ person, onClose, onSave }) => {
+  const { tenant } = useTenant();
+  const sector = tenant?.sector ?? "";
+  const isDental = sector === "dental";
   const isEdit = !!person;
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(isEdit ? personToForm(person) : emptyForm);
@@ -190,8 +205,15 @@ const AddEditModal = ({ person, onClose, onSave }) => {
       [key]: p[key].includes(val) ? p[key].filter((v) => v !== val) : [...p[key], val],
     }));
 
-  const isGdcRole = ["dentist", "nurse", "hygienist"].includes(form.roleType);
-  const isClinical = ["dentist", "nurse", "hygienist"].includes(form.roleType);
+  const isClinical = CLINICAL_ROLE_TYPES.includes(form.roleType);
+  // GDC = UK General Dental Council. Only dental clinicians + clinical
+  // support need GDC registration. Other sectors have different regulators
+  // (GMC for GPs, RCVS for vets, GOC for opticians, HCPC for physio) —
+  // surfacing those is a follow-up.
+  const isGdcRole = isClinical && isDental;
+  // Convenience flags for the sector-specific sub-fields.
+  const isDentalNurseRole       = isDental && form.roleType === "clinical_support";
+  const isDentalHygienistByLabel = isDentalNurseRole && /hygienist|therapist/i.test(form.gdcType ?? "");
 
   const validateStep = () => {
     const e = {};
@@ -219,7 +241,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
 
   const generatePassword = () => {
     const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let pw = "Inspire@";
+    let pw = "Verbilo@";
     for (let i = 0; i < 4; i++) pw += chars[Math.floor(Math.random() * chars.length)];
     set("tempPassword", pw);
   };
@@ -307,7 +329,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 <input className={`${styles.input} ${errors.name ? styles.inputErr : ""}`} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Dr. Jane Smith" />
               </Field>
               <Field label="Email Address" required error={errors.email}>
-                <input className={`${styles.input} ${errors.email ? styles.inputErr : ""}`} type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane.smith@inspiredental.co.uk" />
+                <input className={`${styles.input} ${errors.email ? styles.inputErr : ""}`} type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="jane.smith@yourpractice.co.uk" />
               </Field>
               <Field label="Gender">
                 <select className={styles.input} value={form.gender} onChange={(e) => set("gender", e.target.value)}>
@@ -342,17 +364,19 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 <select className={`${styles.input} ${errors.roleType ? styles.inputErr : ""}`} value={form.roleType}
                   onChange={(e) => { set("roleType", e.target.value); set("gdcType", ""); }}>
                   <option value="">Select role type…</option>
-                  <option value="dentist">Dentist / Specialist</option>
-                  <option value="nurse">Dental Nurse</option>
-                  <option value="hygienist">Hygienist / Therapist</option>
-                  <option value="manager">Practice Manager</option>
-                  <option value="receptionist">Receptionist / Front of House</option>
+                  {/* Generic StaffRole enum — labels are sector-aware via the
+                       lib/sector helper (e.g. clinician → "Dentist" for dental,
+                       "GP" for GP, "Veterinarian" for vets, etc.). */}
+                  {ALL_ROLE_TYPES.map((rt) => (
+                    <option key={rt} value={rt}>{sectorRoleLabel(rt, sector)}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="Job Title" required error={errors.roleLabel}>
-                <input className={`${styles.input} ${errors.roleLabel ? styles.inputErr : ""}`} value={form.roleLabel} onChange={(e) => set("roleLabel", e.target.value)} placeholder="e.g. Senior Dental Nurse" />
+                <input className={`${styles.input} ${errors.roleLabel ? styles.inputErr : ""}`} value={form.roleLabel} onChange={(e) => set("roleLabel", e.target.value)} placeholder={isDental ? "e.g. Senior Dental Nurse" : "e.g. Senior Clinician"} />
               </Field>
 
+              {/* GDC = UK General Dental Council; only dental clinical staff are GDC-registered. */}
               {isGdcRole && (<>
                 <Field label="GDC Number" required error={errors.gdc}>
                   <input className={`${styles.input} ${errors.gdc ? styles.inputErr : ""}`} value={form.gdc} onChange={(e) => set("gdc", e.target.value)} placeholder="e.g. 123456" />
@@ -360,17 +384,35 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 <Field label="GDC Registration Type">
                   <select className={styles.input} value={form.gdcType} onChange={(e) => set("gdcType", e.target.value)}>
                     <option value="">Select type…</option>
-                    {(gdcTypesByRole[form.roleType] || []).map((t) => <option key={t} value={t}>{t}</option>)}
+                    {(DENTAL_SPECIALTIES[form.roleType] || []).map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </Field>
-                {["nurse", "hygienist"].includes(form.roleType) && (
+                {form.roleType === "clinical_support" && (
                   <Field label="GDC Renewal Date" span>
                     <input className={styles.input} value={form.gdcRenewal} onChange={(e) => set("gdcRenewal", e.target.value)} placeholder="e.g. 31 Jul 2026" />
                   </Field>
                 )}
               </>)}
 
-              {isClinical && (<>
+              {/* For non-dental sectors, capture clinicalSpecialty as free-text. */}
+              {isClinical && !isDental && (
+                <Field label="Clinical Specialty" span>
+                  <input
+                    className={styles.input}
+                    value={form.gdcType}
+                    onChange={(e) => set("gdcType", e.target.value)}
+                    placeholder={
+                      sector === "vets"     ? "e.g. Veterinarian / Veterinary Nurse" :
+                      sector === "gp"       ? "e.g. GP / Practice Nurse" :
+                      sector === "optometry" ? "e.g. Optometrist / Optical Assistant" :
+                      sector === "physio"   ? "e.g. Physiotherapist / Physiotherapy Assistant" :
+                      "e.g. Clinician / Clinical Support"
+                    }
+                  />
+                </Field>
+              )}
+
+              {isClinical && isDental && (<>
                 <Field label="Surgery Days">
                   <input className={styles.input} value={form.surgeryDays} onChange={(e) => set("surgeryDays", e.target.value)} placeholder="e.g. Monday – Thursday" />
                 </Field>
@@ -379,13 +421,16 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 </Field>
               </>)}
 
-              {form.roleType === "dentist" && (
+              {/* Dental clinician (the "Dentist" specialty) — indemnity insurance. */}
+              {isDental && form.roleType === "clinician" && (
                 <Field label="Indemnity Provider">
                   <input className={styles.input} value={form.indemnity} onChange={(e) => set("indemnity", e.target.value)} placeholder="e.g. MDDUS" />
                 </Field>
               )}
 
-              {form.roleType === "nurse" && (<>
+              {/* Dental clinical_support sub-types — fields differ by the GDC type
+                   (Dental Nurse vs. Hygienist / Therapist). */}
+              {isDentalNurseRole && !isDentalHygienistByLabel && (<>
                 <Field label="Qualification Status">
                   <select className={styles.input} value={form.nurseStatus} onChange={(e) => set("nurseStatus", e.target.value)}>
                     <option value="Qualified">Qualified</option>
@@ -400,7 +445,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 </Field>
               </>)}
 
-              {form.roleType === "hygienist" && (<>
+              {isDentalHygienistByLabel && (<>
                 <Field label="Scope of Practice">
                   <select className={styles.input} value={form.scopeOfPractice} onChange={(e) => set("scopeOfPractice", e.target.value)}>
                     <option value="">Select…</option>
@@ -415,9 +460,11 @@ const AddEditModal = ({ person, onClose, onSave }) => {
               </>)}
 
               {form.roleType === "manager" && (<>
-                <Field label="CQC Registered Manager">
-                  <CheckToggle checked={form.cqcRegistered} onChange={() => toggle("cqcRegistered")} label="CQC Registered Manager" />
-                </Field>
+                {isDental && (
+                  <Field label="CQC Registered Manager">
+                    <CheckToggle checked={form.cqcRegistered} onChange={() => toggle("cqcRegistered")} label="CQC Registered Manager" />
+                  </Field>
+                )}
                 <Field label="Direct Reports">
                   <input className={styles.input} type="number" value={form.directReports} onChange={(e) => set("directReports", e.target.value)} placeholder="e.g. 12" />
                 </Field>
@@ -429,7 +476,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 </Field>
               </>)}
 
-              {form.roleType === "receptionist" && (<>
+              {form.roleType === "reception" && (<>
                 <Field label="Working Hours">
                   <input className={styles.input} value={form.workingHours} onChange={(e) => set("workingHours", e.target.value)} placeholder="e.g. Mon–Fri, 08:00–17:00" />
                 </Field>
@@ -468,9 +515,9 @@ const AddEditModal = ({ person, onClose, onSave }) => {
               <Field label="Qualifications (one per line)" span>
                 <textarea className={styles.textarea} value={form.quals} onChange={(e) => set("quals", e.target.value)} placeholder={"BDS King's College London\nMSc Orthodontics UCL"} rows={3} />
               </Field>
-              {form.roleType === "dentist" && (
+              {form.roleType === "clinician" && (
                 <Field label="Specialisms (one per line)" span>
-                  <textarea className={styles.textarea} value={form.specialisms} onChange={(e) => set("specialisms", e.target.value)} placeholder={"Invisalign\nComposite Bonding"} rows={3} />
+                  <textarea className={styles.textarea} value={form.specialisms} onChange={(e) => set("specialisms", e.target.value)} placeholder={isDental ? "Invisalign\nComposite Bonding" : "Specialty 1\nSpecialty 2"} rows={3} />
                 </Field>
               )}
               <Field label="Professional Bio" span>
@@ -498,7 +545,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                 </Field>
               )}
 
-              {form.roleType === "dentist" && (
+              {isDental && form.roleType === "clinician" && (
                 <Field label="Indemnity Insurance" span>
                   <FileUploadField
                     label="Indemnity Certificate"
@@ -544,7 +591,7 @@ const AddEditModal = ({ person, onClose, onSave }) => {
                           className={styles.input}
                           value={form.tempPassword}
                           onChange={(e) => set("tempPassword", e.target.value)}
-                          placeholder="e.g. Inspire@Ab12"
+                          placeholder="e.g. Verbilo@Ab12"
                         />
                         <button type="button" className={styles.generateBtn} onClick={generatePassword}>
                           Generate
@@ -660,9 +707,9 @@ const ProfileModal = ({ person, onClose, onEdit, onDelete, isManager }) => {
                 <h2 className={styles.profileName}>{person.name}</h2>
                 <p className={styles.profileRoleLabel} style={ROLE_COLORS[person.roleType] ? { color: ROLE_COLORS[person.roleType] } : undefined}>
                   {person.roleLabel}
-                  {ROLE_LABELS[person.roleType] && (
+                  {person.roleType && (
                     <span className={styles.roleTypePill} style={{ background: ROLE_COLORS[person.roleType] }}>
-                      {ROLE_LABELS[person.roleType]}
+                      {sectorRoleLabel(person.roleType, sector, person.clinicalSpecialty)}
                     </span>
                   )}
                 </p>
@@ -788,7 +835,7 @@ const ProfileModal = ({ person, onClose, onEdit, onDelete, isManager }) => {
                   <Row label="LAS Certified" value={person.lasCertified ? "Yes" : "No"} />
                 </Section>
               )}
-              {person.roleType === "nurse" && (
+              {person.roleType === "clinical_support" && person.nurseStatus && (
                 <Section icon="usercheck" title="Nursing Details" locked>
                   <Row label="Status" value={person.nurseStatus} />
                   <Row label="Radiography Cert" value={person.radiographyCert ? "Yes" : "No"} />
@@ -802,7 +849,7 @@ const ProfileModal = ({ person, onClose, onEdit, onDelete, isManager }) => {
                   <Row label="Emergency Contact" value={person.emergencyContact ? "Yes" : "No"} />
                 </Section>
               )}
-              {person.roleType === "receptionist" && (
+              {person.roleType === "reception" && (
                 <Section icon="clock" title="Role Details" locked>
                   <Row label="Working Hours" value={person.workingHours} />
                   <Row label="First Aider" value={person.firstAider ? "Yes" : "No"} />
@@ -886,6 +933,15 @@ const CustomSelect = ({ value, onChange, options, placeholder }) => {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export const StaffPage = ({ currentUser }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
+  const sector = tenant?.sector ?? "";
+  // Sector-aware role filter list — derived from the generic enum + the
+  // sector's specialty vocabulary. Falls back to the generic labels when
+  // tenant.sector isn't set yet.
+  const roleFilters = useMemo(() => (
+    ALL_ROLE_TYPES.map((rt) => sectorRoleLabel(rt, sector))
+  ), [sector]);
   const [staffList, setStaffList] = useState([]);
   const [search, setSearch] = useState("");
   const [practiceFilter, setPracticeFilter] = useState("");
@@ -960,7 +1016,7 @@ export const StaffPage = ({ currentUser }) => {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Staff Directory</h1>
-          <p className={styles.lead}>Connect with the Dental Group specialist team.</p>
+          <p className={styles.lead}>Connect with the {tenantName} team.</p>
         </div>
         {currentUser?.role === "manager" && (
           <BtnPrimary onClick={() => setShowAdd(true)}>
@@ -1087,9 +1143,9 @@ export const StaffPage = ({ currentUser }) => {
                 </div>
                 <h4 className={styles.staffName}>{s.name}</h4>
                 <p className={styles.staffRole} style={ROLE_COLORS[s.roleType] ? { color: ROLE_COLORS[s.roleType] } : undefined}>{s.roleLabel}</p>
-                {ROLE_LABELS[s.roleType] && (
+                {s.roleType && (
                   <span className={styles.roleTypePill} style={{ background: ROLE_COLORS[s.roleType] }}>
-                    {ROLE_LABELS[s.roleType]}
+                    {sectorRoleLabel(s.roleType, sector, s.clinicalSpecialty)}
                   </span>
                 )}
                 {s.gdc && <p className={styles.staffGdc}>GDC {s.gdc}</p>}

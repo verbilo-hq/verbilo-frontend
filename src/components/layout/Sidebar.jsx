@@ -1,6 +1,8 @@
 import { I } from "../Icon";
 import { Avatar } from "../ui/Avatar";
 import { useAuth } from "../../auth/AuthContext";
+import { useTenant } from "../../auth/TenantContext";
+import { sectorIcon, sectorLabel, roleLabel } from "../../lib/sector";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
@@ -16,32 +18,40 @@ const navItems = [
   { id: "lab",       label: "Lab Work Hub",         icon: "clipboard"                    },
 ];
 
-const roleLabel = {
-  manager:     "Practice Manager",
-  dentist:     "Dentist",
-  nurse:       "Dental Nurse",
-  hygienist:   "Hygienist / Therapist",
-  receptionist:"Receptionist",
-};
-
 export const Sidebar = ({ current, onNav }) => {
   const { user, logout } = useAuth();
+  const { tenant } = useTenant();
+
+  // Tenant config from public lookup overrides anything in /users/me — backend
+  // is the source of truth for which modules are enabled.
+  const tenantName  = tenant?.name ?? user?.tenant?.name ?? "Verbilo";
+  const sector      = tenant?.sector ?? user?.tenant?.sector ?? "";
+  const subtitle    = sector ? sectorLabel(sector) : "";
+  const enabledModules = tenant?.enabledModules ?? user?.tenant?.enabledModules ?? null;
+
   return (
   <aside className={styles.sidebar}>
     <div className={styles.brand}>
       <div className={styles.brandRow}>
         <div className={styles.logo}>
-          <I name="tooth" size={20} />
+          <I name={sectorIcon(sector)} size={20} />
         </div>
         <div>
-          <div className={styles.brandTitle}>Dental Group</div>
-          <div className={styles.brandSubtitle}>Clinical Sanctuary</div>
+          <div className={styles.brandTitle}>{tenantName}</div>
+          {subtitle && (
+            <div className={styles.brandSubtitle}>{subtitle}</div>
+          )}
         </div>
       </div>
     </div>
 
     <nav className={styles.nav}>
-      {navItems.filter(item => !item.roles || item.roles.includes(user?.role)).map((item) => {
+      {navItems
+        .filter((item) => {
+          if (!enabledModules || enabledModules.length === 0) return true;
+          return enabledModules.includes(item.id);
+        })
+        .filter((item) => !item.roles || item.roles.includes(user?.role)).map((item) => {
         const active = current === item.id;
         return (
           <a
@@ -64,7 +74,7 @@ export const Sidebar = ({ current, onNav }) => {
           <div className={styles.currentUserInfo}>
             <span className={styles.currentUserName}>{user.displayName}</span>
             <span className={styles.currentUserRole}>
-              {roleLabel[user.role] || user.role}
+              {roleLabel(user.role, sector, user.clinicalSpecialty)}
             </span>
           </div>
         </div>
@@ -86,7 +96,7 @@ export const Sidebar = ({ current, onNav }) => {
         <I name="logout" size={16} /> Logout
       </a>
       <p className={styles.copyright}>
-        © 2026 BrainPower Technologies Ltd. All rights reserved.
+        © {new Date().getFullYear()} Verbilo Ltd. All rights reserved.
       </p>
     </div>
   </aside>

@@ -8,7 +8,9 @@ import { useClickOutside } from "../hooks/useClickOutside";
 import {
   listGroupUpdates, listTips, listLinkIcons, listQuickLinks,
   fetchNews, listInternalNews, saveInternalNews,
+  getDashboardSummary,
 } from "../services/dashboard.service";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./DashboardPage.module.css";
 
 /* ─── Tip-of-the-day colour config (UI only, not data) ─── */
@@ -19,6 +21,106 @@ const TIP_CFG = {
   "CPD":          { color: "#1565c0", bg: "rgba(21,101,192,0.08)" },
   "Team":         { color: "#6a1b9a", bg: "rgba(106,27,154,0.08)" },
 };
+
+/* ─── Summary stat tile (VER-25 live endpoint) ─── */
+function StatTile({ icon, label, value }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "16px 18px",
+        background: "var(--surface-lowest)",
+        border: "1px solid var(--outline-variant)",
+        borderRadius: "var(--radius-lg)",
+        flex: "1 1 0",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          display: "grid",
+          placeItems: "center",
+          background: "color-mix(in srgb, var(--primary) 12%, transparent)",
+          borderRadius: "var(--radius-md)",
+          flexShrink: 0,
+        }}
+      >
+        <I name={icon} size={18} color="var(--primary)" />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1, color: "var(--on-surface)" }}>
+          {value}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--on-surface-variant)", marginTop: 4 }}>
+          {label}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStats({ summary, loading, hasError }) {
+  if (loading) {
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          color: "var(--on-surface-variant)",
+          fontSize: 13,
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        Loading practice summary…
+      </div>
+    );
+  }
+  if (hasError) {
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          color: "var(--on-surface-variant)",
+          fontSize: 13,
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        Couldn't load the live summary. Refresh to try again.
+      </div>
+    );
+  }
+  if (!summary) return null;
+  const allZero =
+    !summary.patientCount &&
+    !summary.todaysAppointments &&
+    !summary.openTasks &&
+    (summary.recentActivity?.length ?? 0) === 0;
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <StatTile icon="staff"    label="Patients on record"  value={summary.patientCount} />
+        <StatTile icon="calendar" label="Today's appointments" value={summary.todaysAppointments} />
+        <StatTile icon="clipboard" label="Open tasks"           value={summary.openTasks} />
+      </div>
+      {allZero && (
+        <p
+          style={{
+            marginTop: 12,
+            fontSize: 12,
+            color: "var(--on-surface-variant)",
+            fontFamily: "var(--font-body)",
+          }}
+        >
+          No activity yet — once patients and appointments are added they'll appear here.
+        </p>
+      )}
+    </div>
+  );
+}
 
 /* ─── Icon picker dropdown ─── */
 const IconSelect = ({ value, onChange, options }) => {
@@ -58,6 +160,8 @@ const IconSelect = ({ value, onChange, options }) => {
 
 
 export const DashboardPage = ({ currentUser, onNav }) => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
   const [activeIdx,    setActiveIdx]    = useState(0);
   const [suggestion,   setSuggestion]   = useState("");
   const [submitted,    setSubmitted]    = useState(false);
@@ -75,6 +179,8 @@ export const DashboardPage = ({ currentUser, onNav }) => {
   const [groupUpdates,  setGroupUpdates]  = useState([]);
   const [tips,          setTips]          = useState([]);
   const [linkIcons,     setLinkIcons]     = useState([]);
+  const [summary,       setSummary]       = useState(null);
+  const [summaryError,  setSummaryError]  = useState(false);
 
   const isAdmin = currentUser?.role === "manager";
 
@@ -88,6 +194,9 @@ export const DashboardPage = ({ currentUser, onNav }) => {
     listTips().then(setTips);
     listQuickLinks().then(setLinks);
     listLinkIcons().then(setLinkIcons);
+    getDashboardSummary()
+      .then((data) => { setSummary(data); setSummaryError(false); })
+      .catch(() => { setSummary(null); setSummaryError(true); });
   }, []);
 
   useEffect(() => {
@@ -158,13 +267,16 @@ export const DashboardPage = ({ currentUser, onNav }) => {
       <div className={styles.welcome}>
         <div className={styles.welcomeText}>
           <h1 className={styles.welcomeTitle}>{greeting}, {currentUser?.displayName}.</h1>
-          <p className={styles.welcomeSub}>Here's what's happening at Dental Group today.</p>
+          <p className={styles.welcomeSub}>Here's what's happening at {tenantName} today.</p>
         </div>
         <div className={styles.welcomeDate}>
           <span className={styles.welcomeDateDay}>{dateDay}</span>
           <span className={styles.welcomeDateFull}>{dateFull}</span>
         </div>
       </div>
+
+      {/* ══ 0a. Summary stats (VER-25 live endpoint) ══ */}
+      <SummaryStats summary={summary} loading={summary === null && !summaryError} hasError={summaryError} />
 
       {/* ══ 1. Group Update Hero ══ */}
       {update && (

@@ -7,6 +7,7 @@ import {
   listPolicies, addPolicy, listMandatoryTraining,
   listNotices, listHrQuickLinks, submitLeaveRequest,
 } from "../services/hr.service";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./HrPage.module.css";
 
 const trainingStatus = {
@@ -169,6 +170,8 @@ const LeaveModal = ({ balance, onClose, onSubmit }) => {
 };
 
 export const HrPage = () => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Verbilo";
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [policies, setPolicies] = useState([]);
@@ -358,7 +361,7 @@ export const HrPage = () => {
     </div>
 
     <div className={styles.footer}>
-      <span className={styles.footerCopy}>© 2024 Dental Group Ltd.</span>
+      <span className={styles.footerCopy}>© {new Date().getFullYear()} {tenantName}.</span>
       <div className={styles.footerLinks}>
         {["Privacy Policy", "Terms of Employment", "Support Hub"].map((l) => (
           <a key={l} className={styles.footerLink}>{l}</a>

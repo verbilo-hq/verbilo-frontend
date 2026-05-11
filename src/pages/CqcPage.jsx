@@ -3,6 +3,7 @@ import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnOutline } from "../components/ui/Buttons";
 import { Pill } from "../components/ui/Pill";
 import { I } from "../components/Icon";
+import { useTenant } from "../auth/TenantContext";
 import styles from "./CqcPage.module.css";
 
 // ── Audit definitions ─────────────────────────────────────────────────────────
@@ -758,6 +759,8 @@ const ReportIncidentModal = ({ onClose, onSave }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export const CqcPage = () => {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Practice";
   const [completed, setCompleted] = useState(new Set());
   const [openAudit, setOpenAudit] = useState(null);
   const [incidents, setIncidents] = useState(initialIncidents);
@@ -784,7 +787,7 @@ export const CqcPage = () => {
         <div className={styles.pageHeaderLeft}>
           <h1 className={styles.pageTitle}>CQC Compliance Hub</h1>
           <p className={styles.pageSubtitle}>
-            Dental Group — Audit &amp; Compliance Tracking
+            {tenantName} — Audit &amp; Compliance Tracking
           </p>
         </div>
         <Pill bg="var(--tertiary-container)" color="var(--on-tertiary-container)">
