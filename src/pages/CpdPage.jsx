@@ -414,7 +414,10 @@ export const CpdPage = ({ currentUser }) => {
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "Verbilo";
   const isManager = currentUser?.role === "manager";
-  const userRole  = currentUser?.role || "dentist";
+  // Fallback when the user object has no role yet (e.g. first paint before
+  // /users/me enrichment). Uses the generic clinician role so the page
+  // doesn't assume a dental tenant.
+  const userRole  = currentUser?.role || "clinician";
 
   // pmView: "overview" | "own" | "drill"
   const [pmView,        setPmView]        = useState("overview");

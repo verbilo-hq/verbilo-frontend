@@ -19,7 +19,10 @@ const ALL_MODULES = [
 export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
-  const [sector, setSector] = useState("dental");
+  // Initial state — overwritten in the tenant-load effect below. Empty
+  // string means "not yet loaded"; once the tenant is fetched the real
+  // sector replaces this.
+  const [sector, setSector] = useState("");
   const [modules, setModules] = useState([]);
   const [status, setStatus] = useState("loading");
   const [submitting, setSubmitting] = useState(false);

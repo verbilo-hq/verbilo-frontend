@@ -12,6 +12,12 @@ import styles from "./TrainingPage.module.css";
 /* ─── Static module data ───
  * Lesson + quiz content for hand-authored modules. Modules without an entry
  * here fall back to a generic outline (see getModuleContent below).
+ *
+ * Note (VER-47): the modules below are UK dental-sector training (CQC, NHS
+ * UDA contract economics, COSHH, GDC standards, etc.). They're shown to
+ * tenants with `sector === "dental"`. Other sectors will get parallel
+ * sector-specific modules gated via `Tenant.enabledModules` — tracked as a
+ * follow-up once we onboard a non-dental tenant.
  */
 const moduleContent = {
   m1: {
