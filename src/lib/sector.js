@@ -21,6 +21,24 @@ export const SECTORS = Object.freeze([
 ]);
 
 /**
+ * Labelled sector options for form `<select>` controls in the admin portal.
+ * Order is the operator-facing order shown to admins picking a sector when
+ * creating/editing a tenant — `healthcare` (the sector-agnostic fallback)
+ * sits last because it should rarely be the deliberate choice. The `id`
+ * matches the backend `Tenant.sector` enum value exactly; keep this list and
+ * the backend `@IsIn(...)` in `CreateTenantDto` in sync.
+ */
+export const SECTOR_OPTIONS = Object.freeze([
+  { id: "dental",     label: "Dental" },
+  { id: "optometry",  label: "Optometry / Opticians" },
+  { id: "vets",       label: "Veterinary" },
+  { id: "physio",     label: "Physiotherapy" },
+  { id: "gp",         label: "GP / primary care" },
+  { id: "other",      label: "Other" },
+  { id: "healthcare", label: "Healthcare (sector-agnostic)" },
+]);
+
+/**
  * Brand glyph for the tenant sidebar / login / set-password screens.
  * Falls back to `heart` (generic medical) when sector is unknown or absent.
  */
