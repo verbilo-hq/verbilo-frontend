@@ -3,10 +3,36 @@ import {
   linkIconsFixture, rssFeedsFixture, fallbackNewsFixture,
 } from "./fixtures/dashboard.fixture";
 import { simulateLatency } from "./delay";
-// import { fetchJson } from "./http";
+import { fetchJson } from "./http";
 
 const RSS2JSON = "https://api.rss2json.com/v1/api.json?count=3&rss_url=";
-const INTERNAL_NEWS_KEY = "inspire_internal_news";
+const INTERNAL_NEWS_KEY = "verbilo_internal_news";
+
+const EMPTY_SUMMARY = {
+  patientCount: 0,
+  todaysAppointments: 0,
+  openTasks: 0,
+  recentActivity: [],
+};
+
+/**
+ * Tenant + site-scoped summary for the DashboardPage header.
+ * Shape mirrors the VER-25 backend DTO:
+ *   { patientCount, todaysAppointments, openTasks, recentActivity[] }
+ *
+ * On 401/403 returns an empty-state shape so the page renders rather
+ * than crashing — the auth layer will redirect to /login separately.
+ */
+export async function getDashboardSummary() {
+  try {
+    return await fetchJson("/dashboard/summary");
+  } catch (err) {
+    if (err?.code === "UNAUTHORIZED" || err?.code === "FORBIDDEN") {
+      return { ...EMPTY_SUMMARY };
+    }
+    throw err;
+  }
+}
 
 const stripHtml = (html) =>
   (html ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);

@@ -1,6 +1,4 @@
 import { AuthenticationDetails, CognitoUser } from "amazon-cognito-identity-js";
-import { accountsFixture } from "./fixtures/accounts.fixture";
-import { simulateLatency } from "./delay";
 import { userPool } from "./cognito.client";
 import { fetchMe } from "./me.service.js";
 import {
@@ -8,18 +6,8 @@ import {
   persistSession,
   clearSession,
 } from "./session.js";
-// import { fetchJson } from "./http";
 
-let accountsStore = [...accountsFixture];
 const tempPasswordUsers = new Map();
-
-function publicUserOf(account) {
-  if (!account) return null;
-  // Never return password to the client surface beyond the auth boundary.
-  const { password, ...safe } = account;
-  void password;
-  return safe;
-}
 
 export function getSession() {
   return readSession();
@@ -116,26 +104,15 @@ export async function setPassword(username, newPassword) {
   });
 }
 
-export async function registerAccount(account) {
-  await simulateLatency();
-  if (accountsStore.some((a) => a.username === account.username)) {
-    const err = new Error("Username already exists");
-    err.code = "VALIDATION";
-    throw err;
-  }
-  accountsStore = [...accountsStore, { ...account }];
-  return publicUserOf(account);
-  // return fetchJson("/auth/accounts", { method: "POST", body: account });
+// Account provisioning (Cognito user + StaffMember link) lives behind a
+// dedicated backend endpoint that isn't built yet — tracked separately.
+// Until then this is a no-op so the StaffPage "Add staff" flow doesn't
+// blow up; the staff record is still created via createStaff().
+export async function registerAccount(_account) {
+  return null;
 }
 
 export function logout() {
   userPool.getCurrentUser()?.signOut();
   clearSession();
-}
-
-/** List accounts (manager-only call site today; backend will enforce). */
-export async function listAccounts() {
-  await simulateLatency();
-  return accountsStore.map(publicUserOf);
-  // return fetchJson("/auth/accounts");
 }
