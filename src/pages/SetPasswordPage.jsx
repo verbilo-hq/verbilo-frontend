@@ -47,9 +47,9 @@ export const SetPasswordPage = ({ onComplete }) => {
             <I name="tooth" size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Dental</span> Group
+            <span className={styles.brandTitleEm}>Ver</span>bilo
           </h1>
-          <p className={styles.brandTagline}>The Clinical Sanctuary</p>
+          <p className={styles.brandTagline}>Built for multi-site healthcare operators</p>
           <div className={styles.brandRule} />
         </div>
 

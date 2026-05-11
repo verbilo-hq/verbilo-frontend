@@ -1,5 +1,5 @@
 import "./instrument";
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import "./theme/tokens.css";
 import "./index.css";
@@ -8,6 +8,23 @@ import { TenantProvider, useTenant } from "./auth/TenantContext.jsx";
 import { PublicLandingPage } from "./pages/PublicLandingPage.jsx";
 import { TenantNotFoundPage } from "./pages/TenantNotFoundPage.jsx";
 import { SentryErrorBoundary } from "./instrument.js";
+
+// Keep `document.title` in sync with the current surface so the browser tab
+// (and any bookmark / unfurl preview) reads e.g. "Verbilo · SmileCo" while
+// on a tenant subdomain. Static title in index.html is the pre-mount default.
+function useDocumentTitle() {
+  const { surface, slug, tenant, status } = useTenant();
+  useEffect(() => {
+    let title = "Verbilo";
+    if (surface === "admin") title = "Verbilo · Admin";
+    else if (surface === "tenant") {
+      if (tenant?.name) title = `Verbilo · ${tenant.name}`;
+      else if (status === "not_found") title = "Verbilo · Tenant not found";
+      else if (slug) title = `Verbilo · ${slug}`;
+    }
+    document.title = title;
+  }, [surface, slug, tenant?.name, status]);
+}
 
 const TenantApp = lazy(() => import("./App.jsx"));
 const AdminPortalApp = lazy(() => import("./pages/admin/AdminPortalApp.jsx"));
@@ -79,6 +96,7 @@ function CrashCard({ error, resetError }) {
 
 function SurfaceRoot() {
   const { surface, slug, status } = useTenant();
+  useDocumentTitle();
 
   if (surface === "public") return <PublicLandingPage />;
   if (surface === "admin") {
