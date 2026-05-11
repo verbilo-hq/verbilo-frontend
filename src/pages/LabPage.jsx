@@ -10,6 +10,10 @@ import {
 } from "../services/lab.service";
 import styles from "./LabPage.module.css";
 
+// VER-47: this page is UK dental-sector — dental lab case tracking (crowns,
+// dentures, etc.). Surfaced to tenants with `sector === "dental"` and gated
+// via `Tenant.enabledModules.includes("lab")`. Other sectors don't use it.
+
 /* ── UI constants (not data — colour/status config kept page-local) ───────── */
 
 const WORK_TYPES = [

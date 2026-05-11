@@ -3,13 +3,17 @@ import { isValidSlug, isReservedSubdomain } from "../../lib/host";
 import { checkTenantSlug, createTenant } from "../../services/tenants.service";
 import styles from "./AdminCreateTenantPage.module.css";
 
+// VER-47: sector ids must match the backend enum
+// (`CreateTenantDto.sector` @IsIn list in verbilo-backend). Previous ids
+// "optician" / "veterinary" / "physiotherapy" were rejected by the API.
 const SECTORS = [
-  { id: "dental", label: "Dental" },
-  { id: "optician", label: "Optician" },
-  { id: "veterinary", label: "Veterinary" },
-  { id: "physiotherapy", label: "Physiotherapy" },
-  { id: "gp", label: "GP / primary care" },
-  { id: "other", label: "Other" },
+  { id: "dental",    label: "Dental" },
+  { id: "optometry", label: "Optometry / Opticians" },
+  { id: "vets",      label: "Veterinary" },
+  { id: "physio",    label: "Physiotherapy" },
+  { id: "gp",        label: "GP / primary care" },
+  { id: "other",     label: "Other" },
+  { id: "healthcare", label: "Healthcare (sector-agnostic)" },
 ];
 
 const ALL_MODULES = [
@@ -27,12 +31,13 @@ const ALL_MODULES = [
 ];
 
 const SECTOR_DEFAULT_MODULES = {
-  dental: ["dashboard", "clinical", "staff", "hr", "training", "cpd", "cqc", "lab"],
-  optician: ["dashboard", "clinical", "staff", "hr", "training"],
-  veterinary: ["dashboard", "clinical", "staff", "hr", "training"],
-  physiotherapy: ["dashboard", "clinical", "staff", "hr", "training", "cpd"],
-  gp: ["dashboard", "clinical", "staff", "hr", "training", "cqc"],
-  other: ["dashboard", "staff", "hr"],
+  dental:     ["dashboard", "clinical", "staff", "hr", "training", "cpd", "cqc", "lab"],
+  optometry:  ["dashboard", "clinical", "staff", "hr", "training"],
+  vets:       ["dashboard", "clinical", "staff", "hr", "training"],
+  physio:     ["dashboard", "clinical", "staff", "hr", "training", "cpd"],
+  gp:         ["dashboard", "clinical", "staff", "hr", "training", "cqc"],
+  other:      ["dashboard", "staff", "hr"],
+  healthcare: ["dashboard", "staff", "hr"],
 };
 
 function autoSlug(name) {
@@ -48,8 +53,10 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
-  const [sector, setSector] = useState("dental");
-  const [modules, setModules] = useState(SECTOR_DEFAULT_MODULES.dental);
+  // No sector default — force the operator to pick a sector explicitly so we
+  // don't bias a vet group into the dental module set.
+  const [sector, setSector] = useState("");
+  const [modules, setModules] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [slugStatus, setSlugStatus] = useState({ state: "idle" });
