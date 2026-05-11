@@ -6,6 +6,8 @@ import {
 } from "../../services/tenants.service";
 import { SECTOR_OPTIONS } from "../../lib/sector";
 import { useTenant } from "../../auth/TenantContext";
+import { useAuth } from "../../auth/AuthContext";
+import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -24,7 +26,12 @@ const ALL_MODULES = [
 
 export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const { environment } = useTenant();
+  const { user: authUser } = useAuth();
   const baseDomain = environment === "staging" ? "staging.verbilo.co.uk" : "verbilo.co.uk";
+  // VER-53: super-admins get write controls in the Users section; support is
+  // read-only there (backend enforces this with 403 too, so this is just to
+  // hide controls a support user couldn't use anyway).
+  const canEditUsers = authUser?.role === "verbilo_super_admin";
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
   // Initial state — overwritten in the tenant-load effect below. Empty
@@ -202,6 +209,14 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           {submitting ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      {/* VER-53: customer users of this tenant — drill-down view for
+          platform admins. Lives between Save and the Danger zone so
+          destructive actions still sit at the bottom of the page. */}
+      <AdminTenantUsersSection
+        tenantId={tenantId}
+        canEdit={canEditUsers}
+      />
 
       {/* VER-50: Danger Zone — separated from the regular form so a
           destructive action can't ever happen on a stray click. The actual
