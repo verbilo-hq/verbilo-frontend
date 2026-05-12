@@ -21,8 +21,10 @@ function resolveActiveSite(session) {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getSession());
 
-  const login = useCallback(async (username, password) => {
-    const next = await authLogin(username, password);
+  const login = useCallback(async (username, password, options = {}) => {
+    // `options.persistent` threads through to session storage selection
+    // (localStorage vs sessionStorage). See VER-54 + services/session.js.
+    const next = await authLogin(username, password, options);
     setSession(next);
     return next.user;
   }, []);
