@@ -8,6 +8,7 @@ import { SECTOR_OPTIONS } from "../../lib/sector";
 import { useTenant } from "../../auth/TenantContext";
 import { useAuth } from "../../auth/AuthContext";
 import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
+import { AdminTenantBrandingSection } from "./AdminTenantBrandingSection";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -209,6 +210,21 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           {submitting ? "Saving…" : "Save changes"}
         </button>
       </div>
+
+      {/* VER-59: tenant branding — logo + colours. Sits between the
+          main form and the Users section. Backend gates by capability;
+          admin portal roles (super_admin, support) can write. */}
+      {tenant && (
+        <AdminTenantBrandingSection
+          tenant={tenant}
+          onSaved={() => {
+            // Re-fetch the tenant so subsequent renders use the new
+            // branding values (the section component also keeps its
+            // own state in sync via its useEffect).
+            getTenant(tenantId).then((next) => setTenant(next)).catch(() => {});
+          }}
+        />
+      )}
 
       {/* VER-53: customer users of this tenant — drill-down view for
           platform admins. Lives between Save and the Danger zone so
