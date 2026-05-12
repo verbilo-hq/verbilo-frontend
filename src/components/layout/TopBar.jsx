@@ -2,7 +2,7 @@ import { I } from "../Icon";
 import { Avatar } from "../ui/Avatar";
 import { useAuth } from "../../auth/AuthContext";
 import { useTenant } from "../../auth/TenantContext";
-import { roleLabel } from "../../lib/sector";
+import { userRoleLabel } from "../../lib/sector";
 import styles from "./TopBar.module.css";
 
 export const TopBar = ({ title, subtitle }) => {
@@ -10,7 +10,12 @@ export const TopBar = ({ title, subtitle }) => {
   const { tenant } = useTenant();
   const sector = tenant?.sector ?? user?.tenant?.sector ?? "";
   const displayName = user?.displayName || user?.username || "";
-  const labelForRole = roleLabel(user?.role, sector, user?.clinicalSpecialty);
+  // VER-60: user.role is a User enum (employee / practice_manager /
+  // company_admin / verbilo_super_admin / etc.) — render via
+  // userRoleLabel which knows the per-sector vocabulary AND that
+  // verbilo_* roles are sector-agnostic. clinicalSpecialty doesn't
+  // apply to User rows (that's a StaffMember field).
+  const labelForRole = userRoleLabel(user?.role, sector);
 
   return (
     <div className={styles.bar}>

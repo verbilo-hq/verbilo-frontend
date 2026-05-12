@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import {
   getSession,
   login as authLogin,
   setPassword as authSetPassword,
   logout as authLogout,
 } from "../services/auth.service";
+import { fetchMyPermissions } from "../services/me.service.js";
 import { persistSession } from "../services/session";
 
 // Exported so other hooks (e.g. useTenant) can compose context values
@@ -21,8 +22,48 @@ function resolveActiveSite(session) {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => getSession());
 
-  const login = useCallback(async (username, password) => {
-    const next = await authLogin(username, password);
+  // VER-61: capability + scope payload from /users/me/permissions.
+  // null = not yet loaded (or signed out). The shape matches the
+  // backend's MePermissionsResponse:
+  //   { role, capabilities[], scope, isPlatformAdmin }.
+  // Fetched after sign-in / on initial load when a session exists.
+  // Refetched when the username changes (different account signed in).
+  const [permissions, setPermissions] = useState(null);
+  const [permissionsStatus, setPermissionsStatus] = useState("idle");
+
+  // Load permissions whenever we have a session token. The /users/me/
+  // permissions call needs the bearer token, so we only fire it when
+  // session?.token is present. fetchJson handles the auth header.
+  useEffect(() => {
+    if (!session?.token) {
+      setPermissions(null);
+      setPermissionsStatus("idle");
+      return;
+    }
+    let cancelled = false;
+    setPermissionsStatus("loading");
+    fetchMyPermissions()
+      .then((data) => {
+        if (cancelled) return;
+        setPermissions(data);
+        setPermissionsStatus("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        // Permissions fetch failed — fall back to an empty-cap state
+        // so the UI hides everything rather than guessing. Backend
+        // still enforces, so this is just degraded UX, not a hole.
+        console.warn("Failed to load /users/me/permissions", err);
+        setPermissions({ role: session?.user?.role ?? "", capabilities: [], scope: { kind: "none" }, isPlatformAdmin: false });
+        setPermissionsStatus("error");
+      });
+    return () => { cancelled = true; };
+  }, [session?.token, session?.user?.username]);
+
+  const login = useCallback(async (username, password, options = {}) => {
+    // `options.persistent` threads through to session storage selection
+    // (localStorage vs sessionStorage). See VER-54 + services/session.js.
+    const next = await authLogin(username, password, options);
     setSession(next);
     return next.user;
   }, []);
@@ -37,6 +78,8 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     authLogout();
     setSession(null);
+    setPermissions(null);
+    setPermissionsStatus("idle");
   }, []);
 
   const setActiveSite = useCallback((siteId) => {
@@ -51,6 +94,12 @@ export function AuthProvider({ children }) {
   const sites = session?.user?.sites ?? [];
   const site = useMemo(() => resolveActiveSite(session), [session]);
 
+  // Memoised capability set for O(1) `has` checks from useCapability().
+  const capabilitySet = useMemo(
+    () => new Set(permissions?.capabilities ?? []),
+    [permissions?.capabilities],
+  );
+
   const value = {
     user: session?.user ?? null,
     token: session?.token ?? null,
@@ -61,6 +110,9 @@ export function AuthProvider({ children }) {
     login,
     setPassword,
     logout,
+    permissions,
+    permissionsStatus,
+    capabilitySet,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -72,6 +124,26 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return ctx;
+}
+
+/**
+ * VER-61: returns whether the current actor has a given capability.
+ *
+ * Backend is still the source of truth — every protected endpoint
+ * checks role + scope. This hook is for UX: hide controls the user
+ * can't use rather than showing them and 403'ing on click.
+ *
+ * Returns `false` until permissions have loaded — pages should
+ * either skeleton the affected controls or render them disabled
+ * while `permissionsStatus === 'loading'`.
+ *
+ * Safe to call outside an AuthProvider — returns false rather than
+ * throwing, so public pages don't need to know about auth.
+ */
+export function useCapability(capability) {
+  const ctx = useContext(AuthContext);
+  if (!ctx) return false;
+  return ctx.capabilitySet.has(capability);
 }
 
 /**

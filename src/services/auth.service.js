@@ -28,7 +28,14 @@ async function enrichSession(session) {
   }
 }
 
-export async function login(username, password) {
+export async function login(username, password, options = {}) {
+  // `options.persistent` (boolean) — selects the session storage backend:
+  //   true  → localStorage (Remember my session ticked, VER-54)
+  //   false → sessionStorage (default, evaporates with the tab)
+  // Subsequent writes (enrichSession, setActiveSite) call persistSession
+  // without the option and inherit whichever backend was chosen here.
+  const persistOptions = { persistent: options.persistent === true };
+
   const authenticationDetails = new AuthenticationDetails({
     Username: username,
     Password: password,
@@ -46,7 +53,7 @@ export async function login(username, password) {
           token,
           user: { username, isTempPassword: false },
         };
-        persistSession(next);
+        persistSession(next, persistOptions);
         resolve(await enrichSession(next));
       },
       newPasswordRequired() {
@@ -55,7 +62,7 @@ export async function login(username, password) {
           token: null,
           user: { username, isTempPassword: true },
         };
-        persistSession(next);
+        persistSession(next, persistOptions);
         resolve(next);
       },
       onFailure(err) {

@@ -24,7 +24,11 @@ export const LoginPage = ({ onLoggedIn }) => {
     }
     setSubmitting(true);
     try {
-      await login(username.trim(), password);
+      // VER-54: thread the "Remember my session" checkbox through to
+      // the session storage backend. true → localStorage (persists
+      // across tabs and restarts); false → sessionStorage (default,
+      // expires when the tab closes).
+      await login(username.trim(), password, { persistent: remember });
       onLoggedIn?.();
     } catch (e) {
       setError(e.code === "UNAUTHORIZED" ? "Username or password is incorrect." : "Sign-in failed. Please try again.");

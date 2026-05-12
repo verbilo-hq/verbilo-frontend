@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from "react";
 import { useAuth } from "./auth/AuthContext";
 import { Sidebar } from "./components/layout/Sidebar";
+import { CrossTenantBanner } from "./components/layout/CrossTenantBanner";
 import { Card } from "./components/ui/Card";
 import { LoginPage } from "./pages/LoginPage";
 import { SetPasswordPage } from "./pages/SetPasswordPage";
@@ -63,6 +64,7 @@ export default function App() {
     <div className={styles.shell}>
       <Sidebar current={page} onNav={setPage} />
       <main className={styles.main}>
+        <CrossTenantBanner />
         <Suspense fallback={<PageFallback />}>
           <ActivePage {...pageProps} />
         </Suspense>

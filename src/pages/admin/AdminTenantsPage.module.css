@@ -37,11 +37,19 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btnGhost:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .muted {

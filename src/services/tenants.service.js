@@ -23,6 +23,17 @@ export async function updateTenant(id, patch) {
   });
 }
 
+// VER-59: tenant branding (logo + primary/secondary/accent hex colours).
+// Backend rejects no-op requests with 400; the form is expected to send
+// only the fields that actually changed. Pass null to clear a field;
+// omit it to leave it unchanged.
+export async function updateTenantBranding(id, payload) {
+  return fetchJson(`/admin/tenants/${encodeURIComponent(id)}/branding`, {
+    method: "PATCH",
+    body: payload,
+  });
+}
+
 // VER-50: hard-delete a tenant. Backend returns 204 No Content; fetchJson
 // resolves to null on 204. Cascade-wipes Sites/Users/Patients/Appointments/
 // StaffMembers; AuditLog rows survive (no FK relation to Tenant). On prod
