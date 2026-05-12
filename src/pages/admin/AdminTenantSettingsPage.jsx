@@ -232,6 +232,7 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
       <AdminTenantUsersSection
         tenantId={tenantId}
         canEdit={canEditUsers}
+        sector={tenant?.sector}
       />
 
       {/* VER-50: Danger Zone — separated from the regular form so a

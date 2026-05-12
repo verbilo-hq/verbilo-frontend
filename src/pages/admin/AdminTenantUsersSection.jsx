@@ -5,6 +5,7 @@ import {
   listTenantUsers,
   updateTenantUserRole,
 } from "../../services/users.service";
+import { userRoleLabel } from "../../lib/sector";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // Customer-side roles only — platform roles (verbilo_super_admin /
@@ -13,19 +14,16 @@ import styles from "./AdminCreateTenantPage.module.css";
 // appear here.
 //
 // Keep in sync with `USER_ROLES` in verbilo-backend/src/common/user-roles.ts.
-const CUSTOMER_ROLE_OPTIONS = [
-  { id: "employee",          label: "Employee" },
-  { id: "practice_manager",  label: "Practice manager" },
-  { id: "area_manager",      label: "Area manager" },
-  { id: "company_admin",     label: "Company admin" },
-  { id: "company_owner",     label: "Company owner" },
+// VER-60: labels are sector-aware via `userRoleLabel`, so the same `id`
+// renders as "Practice Manager" on a dental tenant and "Branch Manager" on
+// an optometry tenant. The `id` strings still match the backend enum.
+const CUSTOMER_ROLE_IDS = [
+  "employee",
+  "practice_manager",
+  "area_manager",
+  "company_admin",
+  "company_owner",
 ];
-
-const FALLBACK_LABEL = (role) => role ?? "—";
-
-function roleLabel(role) {
-  return CUSTOMER_ROLE_OPTIONS.find((o) => o.id === role)?.label ?? FALLBACK_LABEL(role);
-}
 
 // VER-53: surfaces the customer users of a tenant inside the admin portal
 // so platform operators don't need DB access to see who's in an org.
@@ -33,7 +31,11 @@ function roleLabel(role) {
 // always available; the role <select> + Disable/Enable buttons disable
 // themselves when the signed-in operator is `verbilo_support` (backend
 // enforces this anyway via 403).
-export const AdminTenantUsersSection = ({ tenantId, canEdit }) => {
+//
+// VER-60: `sector` prop (passed from the parent's loaded tenant) drives
+// the role display labels — "Practice Manager" vs "Branch Manager" vs
+// "Site Manager" depending on the tenant's sector vocabulary.
+export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
   const [users, setUsers] = useState(null);
   const [status, setStatus] = useState("loading");
   const [error, setError] = useState(null);
@@ -168,17 +170,17 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit }) => {
                         {/* If the user's current role isn't in the canonical
                             list (legacy / hand-edited), show it disabled at
                             top so the operator can see what's stored. */}
-                        {!CUSTOMER_ROLE_OPTIONS.some((o) => o.id === user.role) && (
+                        {!CUSTOMER_ROLE_IDS.includes(user.role) && (
                           <option value={user.role} disabled>
-                            {roleLabel(user.role)} (unknown)
+                            {userRoleLabel(user.role, sector)} (unknown)
                           </option>
                         )}
-                        {CUSTOMER_ROLE_OPTIONS.map((opt) => (
-                          <option key={opt.id} value={opt.id}>{opt.label}</option>
+                        {CUSTOMER_ROLE_IDS.map((id) => (
+                          <option key={id} value={id}>{userRoleLabel(id, sector)}</option>
                         ))}
                       </select>
                     ) : (
-                      roleLabel(user.role)
+                      userRoleLabel(user.role, sector)
                     )}
                   </td>
                   <td>{user.siteName ?? "—"}</td>

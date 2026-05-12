@@ -6,6 +6,7 @@ import {
   sectorIcon,
   sectorLabel,
   roleLabel,
+  userRoleLabel,
   SECTORS,
   SECTOR_OPTIONS,
 } from "./sector.js";
@@ -120,4 +121,53 @@ test("roleLabel returns the raw role value when neither sector mapping nor overr
   assert.equal(roleLabel("custom_role", "dental"), "custom_role");
   assert.equal(roleLabel(undefined, "dental"), "");
   assert.equal(roleLabel("", "dental"), "");
+});
+
+// ---------- userRoleLabel (VER-60) ----------
+
+test("userRoleLabel returns sector-agnostic labels for platform roles", () => {
+  // Verbilo internal staff aren't tied to a customer sector — labels
+  // should be identical regardless of the sector arg (including undefined).
+  for (const sector of ["dental", "vets", "optometry", "other", "", undefined]) {
+    assert.equal(userRoleLabel("verbilo_super_admin", sector), "Verbilo Admin");
+    assert.equal(userRoleLabel("verbilo_support",     sector), "Verbilo Support");
+  }
+});
+
+test("userRoleLabel renders practice_manager with the sector's customer vocabulary", () => {
+  assert.equal(userRoleLabel("practice_manager", "dental"),    "Practice Manager");
+  assert.equal(userRoleLabel("practice_manager", "gp"),        "Practice Manager");
+  assert.equal(userRoleLabel("practice_manager", "vets"),      "Practice Manager");
+  assert.equal(userRoleLabel("practice_manager", "physio"),    "Practice Manager");
+  assert.equal(userRoleLabel("practice_manager", "optometry"), "Branch Manager");
+  // Generic fallback for "other" / "healthcare" / unknown sector.
+  assert.equal(userRoleLabel("practice_manager", "other"),      "Site Manager");
+  assert.equal(userRoleLabel("practice_manager", "healthcare"), "Site Manager");
+  assert.equal(userRoleLabel("practice_manager", "unknown"),    "Site Manager");
+});
+
+test("userRoleLabel renders area_manager with the sector vocabulary", () => {
+  assert.equal(userRoleLabel("area_manager", "dental"), "Area Manager");
+  assert.equal(userRoleLabel("area_manager", "vets"),   "Regional Manager");
+  assert.equal(userRoleLabel("area_manager", "other"),  "Area Manager");
+});
+
+test("userRoleLabel returns common labels for company_admin / company_owner / employee across all sectors", () => {
+  for (const sector of ["dental", "vets", "optometry", "other"]) {
+    assert.equal(userRoleLabel("company_admin", sector), "Company Admin");
+    assert.equal(userRoleLabel("company_owner", sector), "Company Owner");
+    assert.equal(userRoleLabel("employee",      sector), "Employee");
+  }
+});
+
+test("userRoleLabel falls back to the raw role for unknown roles", () => {
+  // Defensive: a hand-edited or legacy role just echoes back rather
+  // than rendering as undefined / empty.
+  assert.equal(userRoleLabel("some_legacy_role", "dental"), "some_legacy_role");
+});
+
+test("userRoleLabel returns empty string for null/undefined/empty role", () => {
+  assert.equal(userRoleLabel(null,      "dental"), "");
+  assert.equal(userRoleLabel(undefined, "dental"), "");
+  assert.equal(userRoleLabel("",        "dental"), "");
 });
