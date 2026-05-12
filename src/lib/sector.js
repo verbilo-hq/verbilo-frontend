@@ -138,3 +138,80 @@ export function roleLabel(role, sector, clinicalSpecialty) {
   const table = ROLE_LABELS[sector] ?? ROLE_LABELS.generic;
   return table[role] ?? role ?? "";
 }
+
+// VER-60: sector-aware labels for the User-row role enum (not to be
+// confused with `ROLE_LABELS` above which is for the StaffMember enum).
+// The User.role values are platform-level admin / org-level admin /
+// org-level manager etc., not clinical job titles. Customer-side roles
+// adapt to the tenant's sector vocabulary; platform roles
+// (`verbilo_super_admin`, `verbilo_support`) are sector-agnostic.
+const USER_ROLE_LABELS = {
+  dental: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Area Manager",
+    practice_manager:    "Practice Manager",
+    employee:            "Employee",
+  },
+  gp: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Area Manager",
+    practice_manager:    "Practice Manager",
+    employee:            "Employee",
+  },
+  vets: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Regional Manager",
+    practice_manager:    "Practice Manager",
+    employee:            "Employee",
+  },
+  physio: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Area Manager",
+    practice_manager:    "Practice Manager",
+    employee:            "Employee",
+  },
+  optometry: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Area Manager",
+    practice_manager:    "Branch Manager",
+    employee:            "Employee",
+  },
+  // Generic fallback used for `other` / `healthcare` sectors and any
+  // unknown sector string.
+  generic: {
+    company_owner:       "Company Owner",
+    company_admin:       "Company Admin",
+    area_manager:        "Area Manager",
+    practice_manager:    "Site Manager",
+    employee:            "Employee",
+  },
+};
+
+// Platform admin roles are sector-agnostic — they're Verbilo employees,
+// not customer-side staff, so the tenant's sector doesn't apply.
+const PLATFORM_USER_ROLE_LABELS = {
+  verbilo_super_admin: "Verbilo Admin",
+  verbilo_support:     "Verbilo Support",
+};
+
+/**
+ * Render a User-row role for the given sector. Sector-agnostic for
+ * platform roles; sector-aware for customer-side roles (Company Admin,
+ * Area Manager, Practice/Branch/Site Manager, Employee).
+ *
+ * Falls back to the raw role string if the role isn't in any mapping
+ * — defensive against legacy / hand-edited data.
+ */
+export function userRoleLabel(role, sector) {
+  if (!role) return "";
+  if (role in PLATFORM_USER_ROLE_LABELS) {
+    return PLATFORM_USER_ROLE_LABELS[role];
+  }
+  const table = USER_ROLE_LABELS[sector] ?? USER_ROLE_LABELS.generic;
+  return table[role] ?? role;
+}

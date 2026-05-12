@@ -5,6 +5,7 @@ import { SetPasswordPage } from "../SetPasswordPage";
 import { AdminTenantsPage } from "./AdminTenantsPage";
 import { AdminCreateTenantPage } from "./AdminCreateTenantPage";
 import { AdminTenantSettingsPage } from "./AdminTenantSettingsPage";
+import { userRoleLabel } from "../../lib/sector";
 import styles from "./AdminPortalApp.module.css";
 
 const ALLOWED_ROLES = new Set(["verbilo_super_admin", "verbilo_support"]);
@@ -23,7 +24,8 @@ export default function AdminPortalApp() {
           <h1>Not authorised</h1>
           <p>
             This portal is for Verbilo internal staff only. You're signed in as{" "}
-            <strong>{user.username}</strong> with role <code>{user.role ?? "unknown"}</code>.
+            <strong>{user.username}</strong> with role{" "}
+            <code>{userRoleLabel(user.role) || "unknown"}</code>.
           </p>
           <button className={styles.btnSecondary} onClick={logout}>
             Sign out
@@ -42,7 +44,7 @@ export default function AdminPortalApp() {
         </div>
         <div className={styles.headerRight}>
           <span className={styles.userLabel}>
-            {user?.username} · {user?.role}
+            {user?.username} · {userRoleLabel(user?.role)}
           </span>
           <button className={styles.btnGhost} onClick={logout}>
             Sign out
