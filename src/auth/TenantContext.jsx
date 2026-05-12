@@ -40,6 +40,41 @@ export function TenantProvider({ children }) {
     };
   }, [surface.surface, surface.slug]);
 
+  // VER-59: inject tenant branding as CSS custom properties on the
+  // document root whenever the tenant payload (or its branding fields)
+  // changes. Null/empty values clear the property, letting the global
+  // stylesheet's :root defaults kick back in.
+  //
+  // We only do this on the tenant surface — admin.verbilo.co.uk keeps
+  // Verbilo's own brand regardless of which tenant the operator is
+  // currently editing.
+  useEffect(() => {
+    if (surface.surface !== "tenant") return;
+    const root = typeof document !== "undefined" ? document.documentElement : null;
+    if (!root) return;
+
+    const apply = (varName, value) => {
+      if (value) root.style.setProperty(varName, value);
+      else       root.style.removeProperty(varName);
+    };
+
+    apply("--tenant-primary",   tenant?.primaryColor);
+    apply("--tenant-secondary", tenant?.secondaryColor);
+    apply("--tenant-accent",    tenant?.accentColor);
+
+    // Cleanup on unmount / tenant change — leave defaults in place.
+    return () => {
+      apply("--tenant-primary", null);
+      apply("--tenant-secondary", null);
+      apply("--tenant-accent", null);
+    };
+  }, [
+    surface.surface,
+    tenant?.primaryColor,
+    tenant?.secondaryColor,
+    tenant?.accentColor,
+  ]);
+
   const value = useMemo(
     () => ({
       surface: surface.surface,
