@@ -6,7 +6,7 @@ import {
 } from "../../services/tenants.service";
 import { SECTOR_OPTIONS } from "../../lib/sector";
 import { useTenant } from "../../auth/TenantContext";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth, useCapability } from "../../auth/AuthContext";
 import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
 import { AdminTenantBrandingSection } from "./AdminTenantBrandingSection";
 import styles from "./AdminCreateTenantPage.module.css";
@@ -27,12 +27,18 @@ const ALL_MODULES = [
 
 export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const { environment } = useTenant();
-  const { user: authUser } = useAuth();
   const baseDomain = environment === "staging" ? "staging.verbilo.co.uk" : "verbilo.co.uk";
-  // VER-53: super-admins get write controls in the Users section; support is
-  // read-only there (backend enforces this with 403 too, so this is just to
-  // hide controls a support user couldn't use anyway).
-  const canEditUsers = authUser?.role === "verbilo_super_admin";
+  // VER-53/61: write controls in the Users section gate on the
+  // `users.update_role` capability (verbilo_support is read-only). Was
+  // a role-string check; now capability-driven so future role changes
+  // don't need to touch this comparison.
+  const canEditUsers = useCapability("users.update_role");
+  // VER-61: branding section + Danger zone delete also gate on
+  // capabilities. Backend always enforces; these just hide the UI
+  // for operators who can't use it.
+  const canEditBranding = useCapability("tenant.update_branding");
+  const canDeleteTenant = useCapability("tenant.delete");
+  const canUpdateTenant = useCapability("tenant.update");
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
   // Initial state — overwritten in the tenant-load effect below. Empty
@@ -206,21 +212,19 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
         <button type="button" className={styles.btnSecondary} onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className={styles.btnPrimary} disabled={submitting}>
-          {submitting ? "Saving…" : "Save changes"}
-        </button>
+        {canUpdateTenant && (
+          <button type="submit" className={styles.btnPrimary} disabled={submitting}>
+            {submitting ? "Saving…" : "Save changes"}
+          </button>
+        )}
       </div>
 
-      {/* VER-59: tenant branding — logo + colours. Sits between the
-          main form and the Users section. Backend gates by capability;
-          admin portal roles (super_admin, support) can write. */}
-      {tenant && (
+      {/* VER-59 / VER-61: branding panel only shown to operators with
+          the tenant.update_branding capability. Backend 403s either way. */}
+      {tenant && canEditBranding && (
         <AdminTenantBrandingSection
           tenant={tenant}
           onSaved={() => {
-            // Re-fetch the tenant so subsequent renders use the new
-            // branding values (the section component also keeps its
-            // own state in sync via its useEffect).
             getTenant(tenantId).then((next) => setTenant(next)).catch(() => {});
           }}
         />
@@ -235,25 +239,27 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
         sector={tenant?.sector}
       />
 
-      {/* VER-50: Danger Zone — separated from the regular form so a
-          destructive action can't ever happen on a stray click. The actual
-          confirmation flow requires the operator to type the tenant slug
-          verbatim in the modal below. */}
-      <section className={styles.dangerZone}>
-        <p className={styles.dangerZoneTitle}>Danger zone</p>
-        <p className={styles.dangerZoneBody}>
-          Deleting this tenant permanently removes all of its sites, users,
-          patients, appointments, and staff records. The Vercel domain (on
-          production) is removed too. This action cannot be undone.
-        </p>
-        <button
-          type="button"
-          className={styles.btnDanger}
-          onClick={openDeleteModal}
-        >
-          Delete tenant…
-        </button>
-      </section>
+      {/* VER-50 / VER-61: Danger Zone — separated from the regular
+          form so a destructive action can't happen on a stray click.
+          Only rendered for operators with tenant.delete capability;
+          backend 403s direct API calls regardless. */}
+      {canDeleteTenant && (
+        <section className={styles.dangerZone}>
+          <p className={styles.dangerZoneTitle}>Danger zone</p>
+          <p className={styles.dangerZoneBody}>
+            Deleting this tenant permanently removes all of its sites, users,
+            patients, appointments, and staff records. The Vercel domain (on
+            production) is removed too. This action cannot be undone.
+          </p>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={openDeleteModal}
+          >
+            Delete tenant…
+          </button>
+        </section>
+      )}
     </form>
 
     {/* VER-50 confirmation modal — rendered outside the form so submitting

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { listTenants } from "../../services/tenants.service";
 import { useTenant } from "../../auth/TenantContext";
+import { useCapability } from "../../auth/AuthContext";
 import { tenantUrl } from "../../lib/host";
 import styles from "./AdminTenantsPage.module.css";
 
 export const AdminTenantsPage = ({ onCreate, onEdit }) => {
   const { environment } = useTenant();
+  // VER-61: gate the "New tenant" button on the capability the
+  // backend uses. Verbilo Support can list but not create.
+  const canCreateTenant = useCapability("tenant.create");
   // Build tenant URLs from the active surface's environment so admin.staging
   // shows e.g. `smileco.staging.verbilo.co.uk` and admin (prod) shows
   // `smileco.verbilo.co.uk`. The backend's `t.url` field is hardcoded prod
@@ -46,9 +50,11 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
             subdomain.
           </p>
         </div>
-        <button className={styles.btnPrimary} onClick={onCreate}>
-          + New tenant
-        </button>
+        {canCreateTenant && (
+          <button className={styles.btnPrimary} onClick={onCreate}>
+            + New tenant
+          </button>
+        )}
       </header>
 
       {status === "loading" && <p className={styles.muted}>Loading tenants…</p>}
