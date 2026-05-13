@@ -39,6 +39,11 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const canEditBranding = useCapability("tenant.update_branding");
   const canDeleteTenant = useCapability("tenant.delete");
   const canUpdateTenant = useCapability("tenant.update");
+  // VER-70: sector drives enabledModules + UI copy. Only verbilo_super_admin
+  // can change it after creation (verbilo_support sees the dropdown read-only
+  // even though they otherwise have tenant.update). Backend 403s if anyone
+  // else PATCHes with a different sector value.
+  const canEditSector = useCapability("tenant.update_sector");
   const [tenant, setTenant] = useState(null);
   const [name, setName] = useState("");
   // Initial state — overwritten in the tenant-load effect below. Empty
@@ -119,11 +124,19 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
     setSubmitting(true);
     setError(null);
     try {
-      await updateTenant(tenantId, {
+      // VER-70: only include `sector` in the payload when the operator
+      // can actually change it. Backend's no-op echo rule means sending
+      // the unchanged value would still pass, but skipping it keeps the
+      // wire payload honest (and avoids a stray 403 if the page state
+      // ever drifts from the DB).
+      const payload = {
         name: name.trim(),
-        sector,
         enabledModules: modules,
-      });
+      };
+      if (canEditSector) {
+        payload.sector = sector;
+      }
+      await updateTenant(tenantId, payload);
       onSaved?.();
     } catch (err) {
       setError(err);
@@ -160,6 +173,8 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           className={styles.input}
           value={sector}
           onChange={(e) => setSector(e.target.value)}
+          disabled={!canEditSector}
+          aria-describedby={!canEditSector ? "sector-locked-hint" : undefined}
         >
           {/* Defensive: if the tenant row in the DB stores a sector that
               isn't in the canonical SECTOR_OPTIONS list (e.g. legacy data
@@ -177,6 +192,14 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
+        {/* VER-70: hint shown when the dropdown is locked. Sector drives
+            enabledModules + customer-facing copy, so we keep it editable
+            only by Verbilo platform admins. */}
+        {!canEditSector && (
+          <p id="sector-locked-hint" className={styles.hint}>
+            Sector can only be changed by Verbilo platform admins.
+          </p>
+        )}
       </div>
 
       <div className={styles.field}>
