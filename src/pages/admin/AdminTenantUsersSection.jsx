@@ -8,6 +8,7 @@ import {
 import { useAuth, useCapability } from "../../auth/AuthContext";
 import { userRoleLabel } from "../../lib/sector";
 import { AddUserModal } from "./AddUserModal";
+import { DeleteUserModal } from "./DeleteUserModal";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // Customer-side roles only — platform roles (verbilo_super_admin /
@@ -51,6 +52,12 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
   const { permissions } = useAuth();
   const canCreate = useCapability("users.create");
   const [addOpen, setAddOpen] = useState(false);
+
+  // VER-67: Delete user (post-disable only). USERS_DELETE is its own
+  // capability — operators with USERS_DISABLE don't necessarily have
+  // USERS_DELETE. `deleteTarget` is the row being confirmed.
+  const canDelete = useCapability("users.delete");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const refresh = useCallback(() => {
     setStatus("loading");
@@ -162,6 +169,15 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
         />
       )}
 
+      {deleteTarget && (
+        <DeleteUserModal
+          tenantId={tenantId}
+          user={deleteTarget}
+          onDeleted={refresh}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
       {error && (
         <p className={styles.submitError} style={{ marginBottom: 12 }}>
           {error.code === "FORBIDDEN"
@@ -233,6 +249,17 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
                         disabled={isBusy}
                       >
                         {isBusy ? "…" : disabled ? "Enable" : "Disable"}
+                      </button>
+                    )}
+                    {canDelete && disabled && (
+                      <button
+                        type="button"
+                        className={`${styles.btnRow} ${styles.btnRowDanger}`}
+                        onClick={() => setDeleteTarget(user)}
+                        disabled={isBusy}
+                        title="Permanently delete this user from Verbilo and Cognito"
+                      >
+                        Delete
                       </button>
                     )}
                   </td>

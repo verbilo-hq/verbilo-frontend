@@ -46,3 +46,14 @@ export async function enableTenantUser(tenantId, userId) {
     { method: "POST" },
   );
 }
+
+// VER-67: hard delete a tenant user. Backend rejects with 409 if the
+// user isn't already disabled — disable must happen first. Removes
+// the Cognito identity AND the DB row (UserSiteAssignment cascades).
+// Audit log keeps the trail.
+export async function deleteTenantUser(tenantId, userId) {
+  return fetchJson(
+    `/admin/tenants/${encodeURIComponent(tenantId)}/users/${encodeURIComponent(userId)}`,
+    { method: "DELETE" },
+  );
+}
