@@ -1,4 +1,4 @@
-import { fetchJson } from "./http";
+import { fetchJson, fetchMultipart } from "./http";
 
 export async function getPublicTenant(slug) {
   return fetchJson(`/tenants/by-slug/${encodeURIComponent(slug)}`);
@@ -32,6 +32,22 @@ export async function updateTenantBranding(id, payload) {
     method: "PATCH",
     body: payload,
   });
+}
+
+// VER-69: upload a tenant logo file. Backend validates magic bytes
+// (PNG / JPG / SVG / WebP), enforces a 2 MB cap, uploads to S3, and
+// updates `tenant.logoUrl` to the new public URL atomically. Returns
+// `{ logoUrl }`. Common errors:
+//   413 PAYLOAD_TOO_LARGE → file > 2 MB
+//   415 UNSUPPORTED_MEDIA → format not in whitelist
+//   503 SERVICE_UNAVAILABLE → S3 not configured (local dev)
+export async function uploadTenantLogo(id, file) {
+  const form = new FormData();
+  form.append("file", file);
+  return fetchMultipart(
+    `/admin/tenants/${encodeURIComponent(id)}/branding/logo`,
+    form,
+  );
 }
 
 // VER-50: hard-delete a tenant. Backend returns 204 No Content; fetchJson
