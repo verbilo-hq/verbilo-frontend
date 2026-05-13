@@ -60,7 +60,12 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   //   `slugConfirm` is what the operator has typed; the destructive button is
   //   disabled until it exactly matches the tenant's real slug.
   //   `deleting` is the in-flight flag; `deleteError` shows API errors inline.
+  // VER-76: also tracks a `deletePhase` ('slug' | 'finalConfirm') so the
+  // operator gets a second "really?" prompt after typing the slug, before
+  // we actually fire the DELETE. Cascading across DB + Cognito + Vercel
+  // + Route53 + S3 deserves two clicks, not one.
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePhase, setDeletePhase] = useState("slug");
   const [slugConfirm, setSlugConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -68,12 +73,26 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   const openDeleteModal = () => {
     setSlugConfirm("");
     setDeleteError(null);
+    setDeletePhase("slug");
     setDeleteOpen(true);
   };
 
   const closeDeleteModal = () => {
     if (deleting) return; // don't let the user dismiss mid-request
     setDeleteOpen(false);
+  };
+
+  // VER-76: phase 1 → 2 transition. Slug typing already gated us; this
+  // is the operator confirming they've understood the cascade.
+  const advanceToFinalConfirm = () => {
+    if (slugConfirm !== tenant?.slug || deleting) return;
+    setDeleteError(null);
+    setDeletePhase("finalConfirm");
+  };
+
+  const backToSlugConfirm = () => {
+    if (deleting) return;
+    setDeletePhase("slug");
   };
 
   const handleDelete = async () => {
@@ -281,7 +300,10 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
     </form>
 
     {/* VER-50 confirmation modal — rendered outside the form so submitting
-        the form (Save changes) can't accidentally trigger it. */}
+        the form (Save changes) can't accidentally trigger it.
+        VER-76: two-phase confirmation. Phase 1 = type the slug; clicking
+        "Delete tenant" advances to phase 2 (final "really?" screen).
+        Only the phase-2 button actually fires the API call. */}
     {deleteOpen && tenant && (
       <div
         className={styles.modalBackdrop}
@@ -295,59 +317,106 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <h2 id="delete-tenant-title" className={styles.modalTitle}>
-            Delete <strong>{tenant.name}</strong>?
+            {deletePhase === "finalConfirm"
+              ? <>Last chance — delete <strong>{tenant.name}</strong>?</>
+              : <>Delete <strong>{tenant.name}</strong>?</>}
           </h2>
-          <div className={styles.modalBody}>
-            <p>
-              This will permanently delete the tenant and everything tied to
-              it:
-            </p>
-            <ul>
-              <li>Sites</li>
-              <li>Users (their Cognito accounts remain, but they lose access)</li>
-              <li>Patients, appointments, staff records</li>
-              <li>The <code>{tenant.slug}.{baseDomain}</code> Vercel domain (production only)</li>
-            </ul>
-            <p>
-              Audit-log entries are preserved for compliance. To confirm, type
-              the tenant slug <code>{tenant.slug}</code> below:
-            </p>
-          </div>
-          <input
-            className={styles.input}
-            value={slugConfirm}
-            onChange={(e) => setSlugConfirm(e.target.value)}
-            placeholder={tenant.slug}
-            autoFocus
-            disabled={deleting}
-          />
-          {deleteError && (
-            <p className={styles.submitError} style={{ marginTop: 12 }}>
-              {deleteError.code === "FORBIDDEN"
-                ? "You don't have permission to delete tenants."
-                : deleteError.code === "NOT_FOUND"
-                ? "Tenant not found (already deleted?)."
-                : `Couldn't delete tenant (${deleteError.status ?? deleteError.code ?? "error"}).`}
-            </p>
+
+          {deletePhase === "slug" ? (
+            <>
+              <div className={styles.modalBody}>
+                <p>
+                  This will permanently delete the tenant and everything tied to
+                  it:
+                </p>
+                <ul>
+                  <li>Sites</li>
+                  {/* VER-76: Cognito accounts are now also torn down. */}
+                  <li>Users (and their Cognito sign-in accounts)</li>
+                  <li>Patients, appointments, staff records</li>
+                  <li>The <code>{tenant.slug}.{baseDomain}</code> Vercel domain (production only)</li>
+                </ul>
+                <p>
+                  Audit-log entries are preserved for compliance. To confirm, type
+                  the tenant slug <code>{tenant.slug}</code> below:
+                </p>
+              </div>
+              <input
+                className={styles.input}
+                value={slugConfirm}
+                onChange={(e) => setSlugConfirm(e.target.value)}
+                placeholder={tenant.slug}
+                autoFocus
+                disabled={deleting}
+              />
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={closeDeleteModal}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnDanger}
+                  onClick={advanceToFinalConfirm}
+                  disabled={deleting || slugConfirm !== tenant.slug}
+                >
+                  Delete tenant
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* VER-76: phase 2 — final confirmation. No further inputs,
+                  just a last "really?" + the irrevocable button. */}
+              <div className={styles.modalBody}>
+                <p>
+                  This is your last chance to back out. Clicking the button
+                  below will permanently delete <strong>{tenant.name}</strong>,
+                  all of its data, and the Cognito sign-in accounts for every
+                  user on this tenant.
+                </p>
+                <p>There is no undo.</p>
+              </div>
+              {deleteError && (
+                <p className={styles.submitError} style={{ marginTop: 12 }}>
+                  {deleteError.code === "FORBIDDEN"
+                    ? "You don't have permission to delete tenants."
+                    : deleteError.code === "NOT_FOUND"
+                    ? "Tenant not found (already deleted?)."
+                    : `Couldn't delete tenant (${deleteError.status ?? deleteError.code ?? "error"}).`}
+                </p>
+              )}
+              <div className={styles.modalActions}>
+                {/* VER-76: autoFocus on Back, not the destructive button.
+                    The phase-1 "Delete tenant" click might have been
+                    triggered by Enter; if we autoFocused the danger
+                    button here a reflexive second Enter could double-fire.
+                    Making Back the default focus means the destructive
+                    action always needs a deliberate click or Tab+Enter. */}
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={backToSlugConfirm}
+                  disabled={deleting}
+                  autoFocus
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className={styles.btnDanger}
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting…" : "Yes, delete forever"}
+                </button>
+              </div>
+            </>
           )}
-          <div className={styles.modalActions}>
-            <button
-              type="button"
-              className={styles.btnSecondary}
-              onClick={closeDeleteModal}
-              disabled={deleting}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className={styles.btnDanger}
-              onClick={handleDelete}
-              disabled={deleting || slugConfirm !== tenant.slug}
-            >
-              {deleting ? "Deleting…" : "Delete tenant"}
-            </button>
-          </div>
         </div>
       </div>
     )}
