@@ -114,6 +114,7 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
     isValidSlug(slug) &&
     !isReservedSubdomain(slug) &&
     slugStatus.state === "available" &&
+    sector !== "" &&
     modules.length > 0;
 
   const handleSubmit = async (e) => {
@@ -193,6 +194,13 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
           value={sector}
           onChange={(e) => setSector(e.target.value)}
         >
+          {/* Explicit placeholder so the select doesn't visually show
+              the first option (Dental) when state is still empty. Without
+              this the UI lied about what was selected — the operator
+              thought they were picking Dental defaults, but the empty
+              sector state meant no defaults got applied to `modules`.
+              Form is now blocked from submitting until a sector is picked. */}
+          <option value="">Select a sector…</option>
           {SECTOR_OPTIONS.map((s) => (
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
