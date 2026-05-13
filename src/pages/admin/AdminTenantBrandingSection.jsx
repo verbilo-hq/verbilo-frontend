@@ -271,13 +271,27 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
     accent:    accentColor    || VERBILO_DEFAULT_ACCENT,
   };
 
+  // VER-72: "Reset to defaults" — clears all four branding fields in
+  // local state. Operator still hits Save Branding to persist, which
+  // mirrors how every other field on this section works (no surprise
+  // server-side writes). Disabled when everything is already blank.
+  const isAlreadyBlank =
+    !logoUrl && !primaryColor && !secondaryColor && !accentColor;
+
+  const resetToDefaults = () => {
+    setLogoUrl("");
+    setLogoSource("url");
+    setPrimaryColor("");
+    setSecondaryColor("");
+    setAccentColor("");
+    setSuggestion(null);
+    setSuggestionStatus("idle");
+    setSuggestionError(null);
+  };
+
   return (
     <section className={styles.section}>
       <p className={styles.sectionTitle}>Branding</p>
-      <p className={styles.sectionBody}>
-        Logo + colour overrides for this tenant. Leave empty to inherit Verbilo defaults. Hex
-        colours accept <code>#006974</code> or <code>#006974FF</code>; #-prefixed.
-      </p>
 
       <form className={styles.form} onSubmit={handleSave} style={{ marginTop: 12, gap: 16 }}>
         <div className={styles.field}>
@@ -389,6 +403,19 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
         )}
 
         <div className={styles.actions}>
+          {/* VER-72: Reset to Verbilo defaults — clears all four
+              branding fields in local state. Operator still clicks
+              Save Branding to persist (mirrors the rest of the
+              form). Hidden when there's nothing to reset. */}
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={resetToDefaults}
+            disabled={isAlreadyBlank || submitting}
+            title="Clear logo + all colours (Save branding to apply)"
+          >
+            Reset to defaults
+          </button>
           <button
             type="submit"
             className={styles.btnPrimary}
@@ -668,9 +695,6 @@ function BrandPreview({ preview, logoUrl, tenantName }) {
           </div>
         </div>
       </div>
-      <p className={styles.helperMuted} style={{ marginTop: 6, fontSize: 11 }}>
-        Mini preview of {tenantName ? <strong>{tenantName}</strong> : "the tenant"}'s intranet shell with the current palette applied. Re-renders as you change hex values.
-      </p>
     </div>
   );
 }
@@ -744,9 +768,6 @@ function SuggestedPalette({ status, suggestion, errorReason, onApplyAll, onApply
 
   return (
     <div style={{ marginTop: 10 }}>
-      <p className={styles.helperMuted} style={{ marginBottom: 6 }}>
-        Suggested palette from logo — click a swatch to apply just that one, or use the button.
-      </p>
       <div
         style={{
           display: "flex",
@@ -798,12 +819,6 @@ function SuggestedPalette({ status, suggestion, errorReason, onApplyAll, onApply
           Use suggested palette
         </button>
       </div>
-      {suggestion.primaryAdjusted && suggestion.primaryOriginal && (
-        <p className={styles.helperMuted} style={{ marginTop: 6, fontSize: 12 }}>
-          Primary adjusted slightly for legibility against white (original was{" "}
-          <code>{suggestion.primaryOriginal}</code>).
-        </p>
-      )}
     </div>
   );
 }
