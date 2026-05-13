@@ -351,48 +351,177 @@ function ColorField({ label, value, onChange, fallback, error }) {
   );
 }
 
+// Tenant-intranet shell preview. Renders a miniature of what
+// {slug}.verbilo.co.uk will actually look like with the current
+// primary/secondary/accent values applied — sidebar (secondary),
+// content background (accent), primary button + active nav item.
+// Re-renders live as the operator types so they can dial in the
+// palette in context instead of guessing from three hex chips.
 function BrandPreview({ preview, logoUrl, tenantName }) {
+  const navItems = ["Dashboard", "Clinical", "Staff", "HR", "Training"];
   return (
     <div className={styles.field}>
       <label className={styles.label}>Preview</label>
       <div
         style={{
-          padding: 16,
           borderRadius: 12,
           border: "1px solid var(--outline, rgba(0,0,0,0.12))",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          background: preview.accent,
-          color: preview.secondary,
+          overflow: "hidden",
+          background: "#f4f6f8",
+          display: "grid",
+          gridTemplateColumns: "120px 1fr",
+          minHeight: 240,
+          fontSize: 11,
+          lineHeight: 1.3,
         }}
       >
+        {/* Sidebar */}
         <div
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            background: preview.primary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            background: preview.secondary,
             color: "white",
-            fontWeight: 700,
-            fontSize: 18,
-            overflow: "hidden",
+            padding: "12px 10px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
           }}
         >
-          {logoUrl ? (
-            <img src={logoUrl} alt="" style={{ maxWidth: "100%", maxHeight: "100%" }} />
-          ) : (
-            (tenantName?.[0] ?? "V").toUpperCase()
-          )}
+          {/* Brand row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: preview.primary,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontWeight: 700,
+                fontSize: 13,
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt=""
+                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                (tenantName?.[0] ?? "V").toUpperCase()
+              )}
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <div style={{ fontWeight: 700, fontSize: 12, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                {tenantName ?? "Tenant"}
+              </div>
+              <div style={{ opacity: 0.65, fontSize: 9 }}>Intranet</div>
+            </div>
+          </div>
+
+          {/* Nav items */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+            {navItems.map((label, i) => {
+              const active = i === 0;
+              return (
+                <div
+                  key={label}
+                  style={{
+                    padding: "5px 8px",
+                    borderRadius: 4,
+                    background: active ? preview.primary : "transparent",
+                    color: active ? "white" : "rgba(255,255,255,0.85)",
+                    fontWeight: active ? 600 : 400,
+                  }}
+                >
+                  {label}
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Main area */}
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <strong style={{ fontSize: 16 }}>{tenantName ?? "Tenant"}</strong>
-          <span style={{ fontSize: 13, opacity: 0.8 }}>Brand preview</span>
+          {/* Top bar */}
+          <div
+            style={{
+              padding: "8px 12px",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
+              background: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ fontWeight: 600, color: "#1f2937" }}>Dashboard</div>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: "50%",
+                background: preview.accent,
+                border: `1px solid ${preview.primary}`,
+              }}
+            />
+          </div>
+
+          {/* Body */}
+          <div
+            style={{
+              padding: 12,
+              background: preview.accent,
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <div
+              style={{
+                background: "white",
+                borderRadius: 6,
+                padding: 10,
+                boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+              }}
+            >
+              <div style={{ fontWeight: 600, color: "#1f2937" }}>
+                Welcome back
+              </div>
+              <div style={{ color: "rgba(0,0,0,0.55)", fontSize: 10 }}>
+                3 tasks pending · 12 documents to review
+              </div>
+              <button
+                type="button"
+                disabled
+                style={{
+                  marginTop: 4,
+                  alignSelf: "flex-start",
+                  padding: "5px 10px",
+                  background: preview.primary,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  cursor: "default",
+                }}
+              >
+                View details →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+      <p className={styles.helperMuted} style={{ marginTop: 6, fontSize: 11 }}>
+        Mini preview of {tenantName ? <strong>{tenantName}</strong> : "the tenant"}'s intranet shell with the current palette applied. Re-renders as you change hex values.
+      </p>
     </div>
   );
 }
