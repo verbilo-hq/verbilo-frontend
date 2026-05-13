@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { createTenantUser } from "../../services/users.service";
 import { userRoleLabel } from "../../lib/sector";
@@ -30,8 +30,18 @@ export const AddUserModal = ({
   const [role, setRole]               = useState("");
   const [submitting, setSubmitting]   = useState(false);
   const [error, setError]             = useState(null);
-  const [created, setCreated]         = useState(null); // { user, temporaryPassword }
+  // VER-74: `created` is one of two shapes from the backend:
+  //   - { user, temporaryPassword }      manual-share path
+  //   - { user, invitationEmailedTo }    Cognito-emailed-invite path
+  // The success view branches on which key is present.
+  const [created, setCreated]         = useState(null);
   const [copied, setCopied]           = useState(false);
+
+  // VER-74: opt into Cognito-managed invite email. Defaults to checked
+  // when an email is provided (the most common case for tenants whose
+  // staff all have email); auto-disables + unchecks when the email
+  // field is empty so the checkbox state always tracks reality.
+  const [sendInvitationEmail, setSendInvitationEmail] = useState(false);
 
   const allowedRoles = assignableCustomerRoles(actorRole);
 
@@ -51,6 +61,25 @@ export const AddUserModal = ({
   const displayNameOk = trimmedDisplayName.length >= 1 && trimmedDisplayName.length <= 80;
   const emailOk = trimmedEmail === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
   const roleOk = allowedRoles.includes(role);
+
+  // VER-74: email-invite can only fire when there's a valid email to
+  // send it to. Keep the checkbox state honest with the email field.
+  const canEmailInvite = trimmedEmail !== "" && emailOk;
+  // Default to checked the first time the operator types a valid email
+  // — most clinics will want this on once it's available. If they
+  // clear the email afterwards we force-uncheck so the form can never
+  // submit `sendInvitationEmail: true` without an email (backend 400s
+  // that anyway, but better not to bother round-tripping).
+  useEffect(() => {
+    if (!canEmailInvite && sendInvitationEmail) {
+      setSendInvitationEmail(false);
+    } else if (canEmailInvite && !sendInvitationEmail && !created) {
+      setSendInvitationEmail(true);
+    }
+    // `created` guard: don't flip the checkbox back on after we've
+    // shown the success state — it'd be a confusing flicker.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canEmailInvite]);
 
   const canSubmit = usernameOk && displayNameOk && emailOk && roleOk && !submitting;
 
@@ -76,6 +105,10 @@ export const AddUserModal = ({
         displayName: trimmedDisplayName,
         role,
         ...(trimmedEmail ? { email: trimmedEmail } : {}),
+        // VER-74: opt-in flag. Backend 400s if true without an email,
+        // but we already gate the checkbox on email presence above so
+        // that should never reach the server.
+        ...(sendInvitationEmail ? { sendInvitationEmail: true } : {}),
       });
       setCreated(result);
       onCreated?.();
@@ -125,37 +158,51 @@ export const AddUserModal = ({
         {created ? (
           <>
             <div className={styles.modalBody}>
-              <p>
-                <strong>{created.user.username}</strong> can now sign in.
-                Share this temporary password securely — they'll be prompted
-                to set their own on first login.
-              </p>
-              <div className={styles.field} style={{ marginTop: 16 }}>
-                <label className={styles.label}>Temporary password</label>
-                <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
-                  <input
-                    className={styles.input}
-                    value={created.temporaryPassword}
-                    readOnly
-                    onFocus={(e) => e.target.select()}
-                    style={{
-                      flex: 1,
-                      fontFamily: "var(--font-mono, ui-monospace, monospace)",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className={styles.btnSecondary}
-                    onClick={copyTemporaryPassword}
-                  >
-                    {copied ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <p className={styles.sectionBody} style={{ marginTop: 8 }}>
-                  This password won't be shown again. If you lose it, reset
-                  it for the user separately.
+              {/* VER-74: success view branches on the discriminated
+                  response. Cognito-emailed path needs no password
+                  display; manual-share path keeps the existing
+                  "copy this once" UX. */}
+              {created.invitationEmailedTo ? (
+                <p>
+                  <strong>{created.user.username}</strong> can now sign in.
+                  An invitation email with their temporary password has
+                  been sent to <strong>{created.invitationEmailedTo}</strong>.
                 </p>
-              </div>
+              ) : (
+                <>
+                  <p>
+                    <strong>{created.user.username}</strong> can now sign in.
+                    Share this temporary password securely — they'll be prompted
+                    to set their own on first login.
+                  </p>
+                  <div className={styles.field} style={{ marginTop: 16 }}>
+                    <label className={styles.label}>Temporary password</label>
+                    <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+                      <input
+                        className={styles.input}
+                        value={created.temporaryPassword}
+                        readOnly
+                        onFocus={(e) => e.target.select()}
+                        style={{
+                          flex: 1,
+                          fontFamily: "var(--font-mono, ui-monospace, monospace)",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        onClick={copyTemporaryPassword}
+                      >
+                        {copied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <p className={styles.sectionBody} style={{ marginTop: 8 }}>
+                      This password won't be shown again. If you lose it, reset
+                      it for the user separately.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
             <div className={styles.modalActions}>
               <button
@@ -216,6 +263,26 @@ export const AddUserModal = ({
                   Doesn't look like a valid email address.
                 </p>
               )}
+            </div>
+
+            {/* VER-74: opt into Cognito-managed invite email. Disabled
+                until there's a valid email to send to; auto-checks
+                once one is filled (most clinics will want this). */}
+            <div className={styles.field}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: canEmailInvite ? "pointer" : "default" }}>
+                <input
+                  type="checkbox"
+                  checked={sendInvitationEmail}
+                  disabled={!canEmailInvite || submitting}
+                  onChange={(e) => setSendInvitationEmail(e.target.checked)}
+                />
+                <span>Email invitation to user</span>
+              </label>
+              <p className={styles.helperMuted} style={{ marginTop: 4, fontSize: 12 }}>
+                {canEmailInvite
+                  ? "Cognito sends the temporary password directly to this email."
+                  : "Add an email above to enable email invites."}
+              </p>
             </div>
 
             <div className={styles.field}>
