@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { createTenantUser } from "../../services/users.service";
 import { userRoleLabel } from "../../lib/sector";
 import { assignableCustomerRoles } from "../../lib/roleRank";
@@ -54,15 +55,18 @@ export const AddUserModal = ({
   const canSubmit = usernameOk && displayNameOk && emailOk && roleOk && !submitting;
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    // VER-65 hotfix: the modal can be mounted inside a parent <form>
-    // (the admin-portal AdminTenantSettingsPage wraps the whole tenant
-    // form around its sections). The browser submit event bubbles, so
-    // without stopPropagation the parent's onSubmit fires, saves the
-    // tenant, calls its onSaved callback, and navigates away — the
-    // create-user request never goes out. Stop the bubble at the
-    // modal boundary.
-    e.stopPropagation();
+    e?.preventDefault?.();
+    // VER-65 hotfix #2: the previous stopPropagation attempt didn't
+    // help because the modal was mounted inside the admin-portal's
+    // outer <form>. A submit button inside a nested form ends up
+    // associated with the OUTER form by Chrome's form-owner rules, so
+    // the inner form's onSubmit never even fires — the tenant-save
+    // handler fires directly. Two changes here:
+    //   1. The whole modal is rendered via createPortal at document.body
+    //      level so it's not a DOM descendant of any parent form.
+    //   2. Submission is driven by a plain `type="button"` + onClick,
+    //      not a `type="submit"` inside a `<form>` — no implicit
+    //      form-submission semantics involved.
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
@@ -102,7 +106,7 @@ export const AddUserModal = ({
     onClose?.();
   };
 
-  return (
+  const modal = (
     <div
       className={styles.modalBackdrop}
       onClick={handleBackdropClick}
@@ -164,7 +168,7 @@ export const AddUserModal = ({
             </div>
           </>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <div>
             <div className={styles.modalBody}>
               <p>
                 Creates a Cognito account and a Verbilo user row for this
@@ -262,16 +266,23 @@ export const AddUserModal = ({
                 Cancel
               </button>
               <button
-                type="submit"
+                type="button"
                 className={styles.btnPrimary}
+                onClick={handleSubmit}
                 disabled={!canSubmit}
               >
                 {submitting ? "Creating…" : "Create user"}
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </div>
   );
+
+  // Portal the whole thing to document.body so it's not a DOM
+  // descendant of any ancestor <form> on the page.
+  return typeof document !== "undefined"
+    ? createPortal(modal, document.body)
+    : modal;
 };
