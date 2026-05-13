@@ -5,7 +5,9 @@ import {
   listTenantUsers,
   updateTenantUserRole,
 } from "../../services/users.service";
+import { useAuth, useCapability } from "../../auth/AuthContext";
 import { userRoleLabel } from "../../lib/sector";
+import { AddUserModal } from "./AddUserModal";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // Customer-side roles only — platform roles (verbilo_super_admin /
@@ -42,6 +44,13 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
 
   // Per-row in-flight flags so two simultaneous toggles don't conflict.
   const [busyRow, setBusyRow] = useState(null);
+
+  // VER-65: "Add user" modal. Capability-gated separately from
+  // `canEdit` because USERS_CREATE and USERS_UPDATE_ROLE are distinct
+  // capabilities in the backend matrix.
+  const { permissions } = useAuth();
+  const canCreate = useCapability("users.create");
+  const [addOpen, setAddOpen] = useState(false);
 
   const refresh = useCallback(() => {
     setStatus("loading");
@@ -124,11 +133,34 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
 
   return (
     <section className={styles.section}>
-      <p className={styles.sectionTitle}>Users</p>
-      <p className={styles.sectionBody}>
-        Customer users of this tenant. Disabled users keep their data but
-        can't sign in.
-      </p>
+      <div className={styles.sectionHeader}>
+        <div>
+          <p className={styles.sectionTitle}>Users</p>
+          <p className={styles.sectionBody}>
+            Customer users of this tenant. Disabled users keep their data but
+            can't sign in.
+          </p>
+        </div>
+        {canCreate && (
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={() => setAddOpen(true)}
+          >
+            + Add user
+          </button>
+        )}
+      </div>
+
+      {addOpen && (
+        <AddUserModal
+          tenantId={tenantId}
+          sector={sector}
+          actorRole={permissions?.role}
+          onCreated={refresh}
+          onClose={() => setAddOpen(false)}
+        />
+      )}
 
       {error && (
         <p className={styles.submitError} style={{ marginBottom: 12 }}>
