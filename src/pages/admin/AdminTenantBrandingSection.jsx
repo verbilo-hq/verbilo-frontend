@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { updateTenantBranding } from "../../services/tenants.service";
+import { paletteFromLogo } from "../../lib/paletteFromLogo";
 import styles from "./AdminCreateTenantPage.module.css";
 
 // Default Verbilo brand colours — used as the live-preview baseline when
@@ -31,6 +32,16 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
   const [error, setError]                     = useState(null);
   const [savedAt, setSavedAt]                 = useState(null);
 
+  // VER-64: palette suggestion derived from the uploaded logo. Null
+  // when there's no usable suggestion (no URL, still loading, or
+  // extraction failed). `suggestionError` is set to a reason string
+  // ('cors' | 'load' | etc.) when extraction failed deterministically
+  // so we can surface a friendly hint without spamming console errors.
+  const [suggestion, setSuggestion] = useState(null);
+  const [suggestionStatus, setSuggestionStatus] = useState("idle"); // idle | loading | ready | error
+  const [suggestionError, setSuggestionError] = useState(null);
+  const suggestionAbortRef = useRef(null);
+
   // Keep local state in sync if the tenant prop updates (e.g. parent
   // re-fetched the row).
   useEffect(() => {
@@ -39,6 +50,59 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
     setSecondaryColor(tenant?.secondaryColor ?? "");
     setAccentColor(tenant?.accentColor ?? "");
   }, [tenant?.id, tenant?.logoUrl, tenant?.primaryColor, tenant?.secondaryColor, tenant?.accentColor]);
+
+  // VER-64: debounced palette extraction on logo URL change. Skips
+  // empty / obviously-invalid URLs (don't fire on every keystroke
+  // before the operator has finished typing). Cancels any in-flight
+  // extraction when the input changes again — paletteFromLogo
+  // respects AbortSignal.
+  useEffect(() => {
+    const trimmed = logoUrl?.trim?.() ?? "";
+    if (!trimmed || !/^https?:\/\//i.test(trimmed)) {
+      setSuggestion(null);
+      setSuggestionStatus("idle");
+      setSuggestionError(null);
+      return;
+    }
+    const controller = new AbortController();
+    suggestionAbortRef.current?.abort();
+    suggestionAbortRef.current = controller;
+    setSuggestionStatus("loading");
+    setSuggestionError(null);
+    const timer = setTimeout(async () => {
+      const result = await paletteFromLogo(trimmed, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      if (result.ok) {
+        setSuggestion(result);
+        setSuggestionStatus("ready");
+        setSuggestionError(null);
+      } else if (result.reason !== "aborted") {
+        setSuggestion(null);
+        setSuggestionStatus("error");
+        setSuggestionError(result.reason);
+      }
+    }, 600);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [logoUrl]);
+
+  // Apply one suggested swatch into a single colour input. The
+  // existing live-preview re-renders without further wiring.
+  const applySuggestionSlot = (slot) => {
+    if (!suggestion) return;
+    if (slot === "primary")   setPrimaryColor(suggestion.primary);
+    if (slot === "secondary") setSecondaryColor(suggestion.secondary);
+    if (slot === "accent")    setAccentColor(suggestion.accent);
+  };
+
+  const applySuggestionAll = () => {
+    if (!suggestion) return;
+    setPrimaryColor(suggestion.primary);
+    setSecondaryColor(suggestion.secondary);
+    setAccentColor(suggestion.accent);
+  };
 
   // Detect what's actually changed vs the loaded tenant — backend
   // rejects no-op requests with 400, and we want to surface clear
@@ -109,6 +173,13 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
             placeholder="https://cdn.example.com/logo.svg"
             type="url"
             maxLength={2048}
+          />
+          <SuggestedPalette
+            status={suggestionStatus}
+            suggestion={suggestion}
+            errorReason={suggestionError}
+            onApplyAll={applySuggestionAll}
+            onApplySlot={applySuggestionSlot}
           />
         </div>
 
@@ -269,4 +340,107 @@ function toPayload(value) {
 // Kept as a separate helper for symmetry / clarity at the call site.
 function normaliseHexOrUrl(value) {
   return (value ?? "").trim();
+}
+
+// VER-64: row of three swatches + a button rendered under the Logo
+// URL input once an extraction has produced a usable palette. Each
+// swatch is independently click-applyable; the right-side button
+// applies all three at once.
+function SuggestedPalette({ status, suggestion, errorReason, onApplyAll, onApplySlot }) {
+  if (status === "idle") return null;
+
+  if (status === "loading") {
+    return (
+      <p className={styles.helperMuted} style={{ marginTop: 8 }}>
+        Analysing logo…
+      </p>
+    );
+  }
+
+  if (status === "error") {
+    const message =
+      errorReason === "cors"
+        ? "Couldn't analyse this logo — the image isn't served with CORS enabled. Pick colours manually below or host the logo on a CORS-enabled URL."
+        : errorReason === "load"
+        ? "Couldn't load that URL — double-check it points at a public image (PNG, JPG, or SVG)."
+        : errorReason === "monochrome"
+        ? "Logo only contains one tone — pick colours manually below."
+        : "Couldn't analyse this logo — pick colours manually below.";
+    return (
+      <p className={styles.helperMuted} style={{ marginTop: 8 }}>{message}</p>
+    );
+  }
+
+  if (!suggestion) return null;
+
+  const slots = [
+    { key: "primary",   label: "Primary",   hex: suggestion.primary },
+    { key: "secondary", label: "Secondary", hex: suggestion.secondary },
+    { key: "accent",    label: "Accent",    hex: suggestion.accent },
+  ];
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p className={styles.helperMuted} style={{ marginBottom: 6 }}>
+        Suggested palette from logo — click a swatch to apply just that one, or use the button.
+      </p>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        {slots.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => onApplySlot(s.key)}
+            title={`Apply ${s.label}: ${s.hex}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "4px 8px",
+              border: "1px solid var(--outline, rgba(0,0,0,0.16))",
+              borderRadius: 6,
+              background: "var(--surface, white)",
+              cursor: "pointer",
+              font: "inherit",
+              fontSize: 12,
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 4,
+                background: s.hex,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            />
+            <span style={{ fontFamily: "var(--font-mono, ui-monospace, monospace)" }}>
+              {s.hex}
+            </span>
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={onApplyAll}
+          className={styles.btnSecondary}
+          style={{ marginLeft: "auto" }}
+        >
+          Use suggested palette
+        </button>
+      </div>
+      {suggestion.primaryAdjusted && suggestion.primaryOriginal && (
+        <p className={styles.helperMuted} style={{ marginTop: 6, fontSize: 12 }}>
+          Primary adjusted slightly for legibility against white (original was{" "}
+          <code>{suggestion.primaryOriginal}</code>).
+        </p>
+      )}
+    </div>
+  );
 }
