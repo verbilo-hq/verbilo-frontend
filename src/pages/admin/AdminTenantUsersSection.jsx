@@ -141,13 +141,7 @@ export const AdminTenantUsersSection = ({ tenantId, canEdit, sector }) => {
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
-        <div>
-          <p className={styles.sectionTitle}>Users</p>
-          <p className={styles.sectionBody}>
-            Customer users of this tenant. Disabled users keep their data but
-            can't sign in.
-          </p>
-        </div>
+        <p className={styles.sectionTitle}>Users</p>
         {canCreate && (
           <button
             type="button"

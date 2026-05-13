@@ -55,9 +55,6 @@ export const TenantSettingsPage = () => {
     <section>
       <header className={styles.header}>
         <h1 className={styles.title}>Settings</h1>
-        <p className={styles.subtitle}>
-          Manage {tenant.name}'s branding and users.
-        </p>
       </header>
 
       {canEditBranding && (
