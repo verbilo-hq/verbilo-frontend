@@ -269,11 +269,6 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
       {canDeleteTenant && (
         <section className={styles.dangerZone}>
           <p className={styles.dangerZoneTitle}>Danger zone</p>
-          <p className={styles.dangerZoneBody}>
-            Deleting this tenant permanently removes all of its sites, users,
-            patients, appointments, and staff records. The Vercel domain (on
-            production) is removed too. This action cannot be undone.
-          </p>
           <button
             type="button"
             className={styles.btnDanger}

@@ -169,13 +169,6 @@ export const AddUserModal = ({
           </>
         ) : (
           <div>
-            <div className={styles.modalBody}>
-              <p>
-                Creates a Cognito account and a Verbilo user row for this
-                tenant. You'll get a one-time temporary password to share.
-              </p>
-            </div>
-
             <div className={styles.field}>
               <label className={styles.label}>Username</label>
               <input

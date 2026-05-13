@@ -148,10 +148,6 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
     <form className={styles.form} onSubmit={handleSubmit}>
       <header className={styles.header}>
         <h1 className={styles.title}>New tenant</h1>
-        <p className={styles.subtitle}>
-          Provision a new company on Verbilo. The slug becomes their subdomain
-          and cannot be changed later.
-        </p>
       </header>
 
       <div className={styles.field}>
@@ -160,7 +156,7 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
           className={styles.input}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. SmileCo Dental Group, Riverside Vets, BrightSight Opticians"
+          placeholder="Company name"
           autoFocus
           required
         />
@@ -205,9 +201,6 @@ export const AdminCreateTenantPage = ({ onCreated, onCancel }) => {
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
-        <p className={styles.helperMuted}>
-          Sector picks a default set of modules. You can fine-tune below.
-        </p>
       </div>
 
       <div className={styles.field}>

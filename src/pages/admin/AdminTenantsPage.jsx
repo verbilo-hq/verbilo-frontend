@@ -43,13 +43,7 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
   return (
     <section>
       <header className={styles.toolbar}>
-        <div>
-          <h1 className={styles.title}>Tenants</h1>
-          <p className={styles.subtitle}>
-            Companies provisioned on Verbilo. Each tenant runs at its own
-            subdomain.
-          </p>
-        </div>
+        <h1 className={styles.title}>Tenants</h1>
         {canCreateTenant && (
           <button className={styles.btnPrimary} onClick={onCreate}>
             + New tenant
@@ -66,10 +60,6 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
       {status === "ready" && tenants.length === 0 && (
         <div className={styles.emptyCard}>
           <h2>No tenants yet</h2>
-          <p>
-            Create your first tenant to provision a dedicated subdomain on
-            <code> {baseDomain}</code>.
-          </p>
         </div>
       )}
       {status === "ready" && tenants.length > 0 && (
