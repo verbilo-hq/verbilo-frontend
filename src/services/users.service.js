@@ -13,9 +13,17 @@ export async function listTenantUsers(tenantId) {
 
 // VER-65: replaces the manual Cognito-console + Prisma-Studio flow.
 // Backend creates the Cognito user + DB row + audit-log entry in one
-// request and returns `{ user, temporaryPassword }`. The temp password
-// must be displayed to the inviter once — the backend doesn't store it
-// in plaintext and won't return it again.
+// request.
+//
+// VER-74: response is a discriminated union driven by
+// `payload.sendInvitationEmail`:
+//   - `{ user, temporaryPassword }` — manual-share path. Operator
+//     must display the temp password to the new user once; backend
+//     doesn't store it in plaintext and won't return it again.
+//   - `{ user, invitationEmailedTo }` — email-invite path. Cognito
+//     emailed the temp password directly to the user; no password
+//     comes back in the response body.
+// Backend 400s if sendInvitationEmail is true without an email field.
 export async function createTenantUser(tenantId, payload) {
   return fetchJson(
     `/admin/tenants/${encodeURIComponent(tenantId)}/users`,
