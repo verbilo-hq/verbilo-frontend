@@ -1,6 +1,6 @@
 import { I } from "../Icon";
 import { Avatar } from "../ui/Avatar";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth, useCapability } from "../../auth/AuthContext";
 import { useTenant } from "../../auth/TenantContext";
 import { sectorIcon, sectorLabel, roleLabel } from "../../lib/sector";
 import styles from "./Sidebar.module.css";
@@ -28,6 +28,14 @@ export const Sidebar = ({ current, onNav }) => {
   const sector      = tenant?.sector ?? user?.tenant?.sector ?? "";
   const subtitle    = sector ? sectorLabel(sector) : "";
   const enabledModules = tenant?.enabledModules ?? user?.tenant?.enabledModules ?? null;
+
+  // VER-63: Settings entry is capability-gated (not module-gated) — it
+  // shows up if there's anything the user could actually do on the
+  // Settings page. False while permissions are loading, so the entry
+  // doesn't flicker in before /users/me/permissions resolves.
+  const canEditBranding = useCapability("tenant.update_branding");
+  const canListUsers    = useCapability("users.list");
+  const showSettings    = canEditBranding || canListUsers;
 
   return (
   <aside className={styles.sidebar}>
@@ -64,6 +72,16 @@ export const Sidebar = ({ current, onNav }) => {
           </a>
         );
       })}
+      {showSettings && (
+        <a
+          key="settings"
+          onClick={() => onNav("settings")}
+          className={current === "settings" ? `${styles.link} ${styles.linkActive}` : styles.link}
+        >
+          <I name="settings" size={18} />
+          Settings
+        </a>
+      )}
     </nav>
 
     <div className={styles.footer}>
