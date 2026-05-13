@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { updateTenantBranding } from "../../services/tenants.service";
+import { updateTenantBranding, uploadTenantLogo } from "../../services/tenants.service";
 import { paletteFromLogo } from "../../lib/paletteFromLogo";
 import styles from "./AdminCreateTenantPage.module.css";
+
+// VER-69: enforce the same limits the backend enforces, just earlier
+// so the operator gets immediate feedback. Backend remains the source
+// of truth (magic-byte validation + size cap + IAM scoping).
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const LOGO_ACCEPT = "image/png,image/jpeg,image/svg+xml,image/webp";
+const LOGO_ACCEPT_LABEL = "PNG, JPG, SVG, or WebP up to 2 MB";
 
 // Default Verbilo brand colours — used as the live-preview baseline when
 // the tenant hasn't overridden anything. Keep in sync with the
@@ -41,6 +48,56 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
   const [suggestionStatus, setSuggestionStatus] = useState("idle"); // idle | loading | ready | error
   const [suggestionError, setSuggestionError] = useState(null);
   const suggestionAbortRef = useRef(null);
+
+  // VER-69: logo file upload (S3-backed). Client-side validates size
+  // + type before the request; backend re-validates via magic bytes.
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleLogoFile = async (file) => {
+    setUploadError(null);
+    if (!file) return;
+    if (file.size > LOGO_MAX_BYTES) {
+      setUploadError(`File is too large (max ${Math.round(LOGO_MAX_BYTES / 1024 / 1024)} MB).`);
+      return;
+    }
+    if (!LOGO_ACCEPT.split(",").includes(file.type) && !/svg/i.test(file.name)) {
+      // SVGs sometimes arrive without a recognised MIME (older Safari);
+      // fall back to extension sniff.
+      setUploadError(`Unsupported format. Use ${LOGO_ACCEPT_LABEL}.`);
+      return;
+    }
+    if (!tenant?.id) {
+      setUploadError("Tenant not loaded yet — refresh and retry.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const result = await uploadTenantLogo(tenant.id, file);
+      setLogoUrl(result.logoUrl);
+      // Let the parent know the tenant row changed so the next
+      // re-fetch picks up the new logoUrl (audit log entry will
+      // also show up under the tenant).
+      onSaved?.();
+    } catch (err) {
+      const message =
+        err.code === "PAYLOAD_TOO_LARGE"
+          ? `File is too large (max ${Math.round(LOGO_MAX_BYTES / 1024 / 1024)} MB).`
+          : err.code === "UNSUPPORTED_MEDIA"
+          ? `Unsupported format. Use ${LOGO_ACCEPT_LABEL}.`
+          : err.code === "FORBIDDEN"
+          ? "You don't have permission to update branding for this tenant."
+          : err.code === "SERVICE_UNAVAILABLE"
+          ? "Logo upload isn't configured in this environment. Paste a URL instead."
+          : `Couldn't upload the logo (${err.status ?? err.code ?? "error"}).`;
+      setUploadError(message);
+    } finally {
+      setUploading(false);
+      // Clear the file input so picking the same file again still fires onChange.
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   // Keep local state in sync if the tenant prop updates (e.g. parent
   // re-fetched the row).
@@ -165,15 +222,43 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
 
       <form className={styles.form} onSubmit={handleSave} style={{ marginTop: 12, gap: 16 }}>
         <div className={styles.field}>
-          <label className={styles.label}>Logo URL</label>
-          <input
-            className={styles.input}
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://cdn.example.com/logo.svg"
-            type="url"
-            maxLength={2048}
-          />
+          <label className={styles.label}>Logo</label>
+          <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+            <input
+              className={styles.input}
+              style={{ flex: 1 }}
+              value={logoUrl}
+              onChange={(e) => setLogoUrl(e.target.value)}
+              placeholder="https://cdn.example.com/logo.svg"
+              type="url"
+              maxLength={2048}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={LOGO_ACCEPT}
+              onChange={(e) => handleLogoFile(e.target.files?.[0])}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              title={`Upload an image file (${LOGO_ACCEPT_LABEL})`}
+            >
+              {uploading ? "Uploading…" : "Upload logo"}
+            </button>
+          </div>
+          <p className={styles.helperMuted} style={{ marginTop: 6, fontSize: 12 }}>
+            Paste a public URL or upload an image directly ({LOGO_ACCEPT_LABEL}).
+            Uploaded logos are stored on Verbilo's CDN.
+          </p>
+          {uploadError && (
+            <p className={styles.submitError} style={{ marginTop: 6 }}>
+              {uploadError}
+            </p>
+          )}
           <SuggestedPalette
             status={suggestionStatus}
             suggestion={suggestion}
