@@ -55,6 +55,14 @@ export const AddUserModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // VER-65 hotfix: the modal can be mounted inside a parent <form>
+    // (the admin-portal AdminTenantSettingsPage wraps the whole tenant
+    // form around its sections). The browser submit event bubbles, so
+    // without stopPropagation the parent's onSubmit fires, saves the
+    // tenant, calls its onSaved callback, and navigates away — the
+    // create-user request never goes out. Stop the bubble at the
+    // modal boundary.
+    e.stopPropagation();
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
