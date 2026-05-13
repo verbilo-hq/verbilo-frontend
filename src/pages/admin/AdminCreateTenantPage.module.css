@@ -282,6 +282,14 @@
   border-radius: 12px;
 }
 
+/* VER-65: section header with a right-aligned action button (e.g. "+ Add user"). */
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .sectionTitle {
   margin: 0 0 8px;
   font-size: 14px;
