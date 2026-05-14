@@ -10,6 +10,7 @@ import {
 } from "../services/manager.service";
 import { udaPaceTarget, udaOnTrack, udaCompletePct } from "../services/logic/manager.logic";
 import { toRgba } from "../services/logic/shared.logic";
+import { isDemoMode } from "../lib/mode";
 import styles from "./ManagerPage.module.css";
 
 const TRAINING_COLS = [
@@ -86,7 +87,66 @@ const Section = ({ id, icon, iconColor, accentColor, title, badge, badgeStyle, o
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
+/* VER-90: Tenant-mode Manager Hub.
+ *
+ * Honest zero-state. The fake UDA performance + financials + GDC
+ * alerts that fill the demo path don't exist on a fresh tenant — show
+ * empty cards with clear copy about what'll populate as the practice
+ * records activity. */
+function TenantManagerPage() {
+  return (
+    <div>
+      <TopBar
+        title="Manager Hub"
+        subtitle="Practice performance, leave requests, registrations, training."
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        <Card hover={false}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="trending-up" size={16} color="var(--primary)" /> UDA targets
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+            Populates once you record UDA contracts + appointment activity.
+          </p>
+        </Card>
+
+        <Card hover={false}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="calendar" size={16} color="var(--primary)" /> Leave requests
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+            No pending requests. Staff can submit leave once they're invited.
+          </p>
+        </Card>
+
+        <Card hover={false}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="award" size={16} color="var(--primary)" /> Registrations & training
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+            GDC / RCVS / HCPC expiry watch + mandatory-training overview appear here once staff records are added.
+          </p>
+        </Card>
+
+        <Card hover={false}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="shield" size={16} color="var(--primary)" /> CQC summary
+          </h3>
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+            Compliance overview reflects evidence + incidents posted under the CQC Compliance Hub.
+          </p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export const ManagerPage = ({ currentUser }) => {
+  if (!isDemoMode()) {
+    return <TenantManagerPage />;
+  }
+
   const [snapshotActions, setSnapshotActions] = useState([]);
   const [leave,            setLeave]           = useState([]);
   const [gdcRecords,       setGdcRecords]      = useState([]);
