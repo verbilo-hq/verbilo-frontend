@@ -2,12 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
+import { Pill } from "../components/ui/Pill";
 import { SearchBar } from "../components/ui/SearchBar";
+import { TopBar } from "../components/layout/TopBar";
 import {
   listPolicies, addPolicy, listMandatoryTraining,
   listNotices, listHrQuickLinks, submitLeaveRequest,
+  listHrStarterTemplates,
 } from "../services/hr.service";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./HrPage.module.css";
 
 const trainingStatus = {
@@ -169,7 +173,96 @@ const LeaveModal = ({ balance, onClose, onSubmit }) => {
   );
 };
 
+/* VER-88: Tenant-mode HR Hub.
+ *
+ * Slim view: starter policy library from VER-85's endpoint + an
+ * empty "Published" state. Demo path (existing layout with fake
+ * holiday allowances + fake mandatory training stats) lives below. */
+function TenantHrPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listHrStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        setItems(Array.isArray(data?.items) ? data.items : []);
+        setError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err);
+        setItems([]);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
+  return (
+    <div>
+      <TopBar
+        title="HR Hub"
+        subtitle="Policies, handbook, time-off, payroll."
+      />
+
+      <Card hover={false} style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
+            <I name="file" size={18} color="var(--primary)" /> Starter policies
+          </h2>
+          <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Verbilo</Pill>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Draft policies ready to review. Adopt as-is, edit to match your practice, then publish for staff to see.
+        </p>
+
+        {items === null ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
+        ) : error && items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--error)" }}>
+            Couldn't load starter templates ({error?.status ?? error?.code ?? "error"}).
+          </p>
+        ) : items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>No starter templates available.</p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+            {items.map((item) => (
+              <Card key={item.id} hover style={{ padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Pill bg="rgba(0,0,0,0.08)" color="var(--on-surface-variant)" small>
+                    Verbilo starter template
+                  </Pill>
+                </div>
+                <h3 style={{ margin: "0 0 6px 0", fontSize: 15, color: "var(--on-surface)" }}>{item.title}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                  {item.summary}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="checkcircle" size={18} color="var(--primary)" /> Published policies
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+          Anything you publish appears here for all staff. Empty until you publish your first policy above.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
 export const HrPage = () => {
+  if (!isDemoMode()) {
+    return <TenantHrPage />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "Verbilo";
   const [showLeaveModal, setShowLeaveModal] = useState(false);
