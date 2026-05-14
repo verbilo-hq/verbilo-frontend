@@ -3,7 +3,8 @@ import {
   mandatoryTrainingFixture,
   noticesFixture,
   hrQuickLinksFixture,
-} from "./fixtures/hr.fixture";
+} from "../fixtures/demo/hr";
+import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
 // import { fetchJson } from "./http";
 
