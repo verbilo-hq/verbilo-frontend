@@ -28,16 +28,19 @@ const DEMO_AUTH_USER = {
 };
 
 // All capabilities granted in demo so every UI control is visible —
-// the demo is a feature tour, not a permissions test.
+// the demo is a feature tour, not a permissions test. Capability names
+// must match what useCapability() consumers actually check for; see
+// `verbilo-backend/src/common/capabilities.ts` for the canonical list.
 const DEMO_CAPABILITIES = [
   "tenant.update_branding",
   "tenant.update_sites",
   "tenant.create",
   "tenant.archive",
   "users.list",
-  "users.invite",
+  "users.create",
   "users.update_role",
-  "users.deactivate",
+  "users.disable",
+  "users.delete",
 ];
 
 function resolveActiveSite(session) {
