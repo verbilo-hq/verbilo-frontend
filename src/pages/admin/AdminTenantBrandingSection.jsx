@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { updateTenantBranding, uploadTenantLogo } from "../../services/tenants.service";
+import { useTenant } from "../../auth/TenantContext";
+import { isDemoMode } from "../../lib/mode";
 import { paletteFromLogo } from "../../lib/paletteFromLogo";
 import styles from "./AdminCreateTenantPage.module.css";
 
@@ -17,8 +19,12 @@ const LOGO_ACCEPT_LABEL = "PNG, JPG, SVG, or WebP up to 2 MB";
 // `verbilo-backend/src/tenants/tenants.service.ts`.
 const VERBILO_LOGO_CDN_PREFIX =
   "https://verbilo-tenant-logos.s3.eu-west-2.amazonaws.com/";
+// VER-39 follow-up: blob URLs from the demo flow look like
+// `blob:https://demo.verbilo.co.uk/...` — treat them as uploaded so the
+// preview chip renders instead of the raw URL leaking into the input.
 const isUploadedLogoUrl = (url) =>
-  typeof url === "string" && url.startsWith(VERBILO_LOGO_CDN_PREFIX);
+  typeof url === "string" &&
+  (url.startsWith(VERBILO_LOGO_CDN_PREFIX) || url.startsWith("blob:"));
 
 // Default Verbilo brand colours — used as the live-preview baseline when
 // the tenant hasn't overridden anything. Keep in sync with the
@@ -41,6 +47,12 @@ function normaliseHex(value) {
 // if the operator's role lacks `tenant.update_branding`, and 400 if no
 // real change was sent. The form sends only changed fields.
 export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
+  // VER-39 follow-up: in demo mode, branding updates merge directly into
+  // TenantContext (no backend round-trip), so each visitor's session is
+  // isolated. setLocalBranding is undefined outside a TenantProvider —
+  // which is fine, the demo path is the only caller using it.
+  const { setLocalBranding } = useTenant() ?? {};
+  const demo = isDemoMode();
   const [logoUrl, setLogoUrl]                 = useState(tenant?.logoUrl ?? "");
   const [primaryColor, setPrimaryColor]       = useState(tenant?.primaryColor ?? "");
   const [secondaryColor, setSecondaryColor]   = useState(tenant?.secondaryColor ?? "");
@@ -88,6 +100,38 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
     }
     if (!tenant?.id) {
       setUploadError("Tenant not loaded yet — refresh and retry.");
+      return;
+    }
+    // VER-39 follow-up: demo subdomain has no S3 bucket / no auth token
+    // — hand the file straight to a blob URL and stash it in the
+    // context so the live preview + persistent sidebar logo both pick
+    // it up. The blob URL is revoked when the page unloads.
+    if (demo) {
+      const demoLogoUrl = URL.createObjectURL(file);
+      setLogoUrl(demoLogoUrl);
+      setLogoSource("upload");
+      setLocalBranding?.({ logoUrl: demoLogoUrl });
+      // Reuse the existing palette path on the same blob URL — gives
+      // the demo visitor the same "suggested palette" UX as the real
+      // upload flow.
+      suggestionAbortRef.current?.abort();
+      const controller = new AbortController();
+      suggestionAbortRef.current = controller;
+      setSuggestionStatus("loading");
+      setSuggestionError(null);
+      paletteFromLogo(demoLogoUrl, { signal: controller.signal }).then((r) => {
+        if (controller.signal.aborted) return;
+        if (r.ok) {
+          setSuggestion(r);
+          setSuggestionStatus("ready");
+          setSuggestionError(null);
+        } else if (r.reason !== "aborted") {
+          setSuggestion(null);
+          setSuggestionStatus("error");
+          setSuggestionError(r.reason);
+        }
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
     setUploading(true);
@@ -260,7 +304,15 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
       const payload = Object.fromEntries(
         Object.entries(diff).filter(([, v]) => v !== undefined),
       );
-      await updateTenantBranding(tenant.id, payload);
+      // VER-39 follow-up: demo subdomain skips the network. Merge the
+      // payload straight into TenantContext so the CSS-vars effect
+      // re-applies, then mark saved. Each visitor's session is
+      // isolated — refresh and the tenant resets to defaults.
+      if (demo) {
+        setLocalBranding?.(payload);
+      } else {
+        await updateTenantBranding(tenant.id, payload);
+      }
       setSavedAt(new Date());
       onSaved?.();
     } catch (err) {
@@ -408,7 +460,9 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
         )}
         {savedAt && !error && (
           <p className={styles.helperMuted ?? styles.sectionBody}>
-            Saved at {savedAt.toLocaleTimeString()}.
+            {demo
+              ? "Applied — preview only. Refresh resets to defaults."
+              : `Saved at ${savedAt.toLocaleTimeString()}.`}
           </p>
         )}
 
