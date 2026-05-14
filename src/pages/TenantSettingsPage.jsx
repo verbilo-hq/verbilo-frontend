@@ -3,6 +3,7 @@ import { useTenant } from "../auth/TenantContext";
 import { useCapability } from "../auth/AuthContext";
 import { AdminTenantBrandingSection } from "./admin/AdminTenantBrandingSection";
 import { AdminTenantUsersSection } from "./admin/AdminTenantUsersSection";
+import { AdminTenantAuditLogSection } from "./admin/AdminTenantAuditLogSection";
 import { TenantSettingsOnboardingSection } from "./TenantSettingsOnboardingSection";
 import styles from "./TenantSettingsPage.module.css";
 
@@ -75,6 +76,11 @@ export const TenantSettingsPage = () => {
           sector={tenant.sector}
         />
       )}
+
+      {/* VER-94: capability-gated internally (`audit.read`); renders null
+          for roles that don't have the cap, so this can sit unconditionally
+          below the other sections without extra logic here. */}
+      <AdminTenantAuditLogSection tenantId={tenant.id} />
 
       {!canEditBranding && !canListUsers && (
         <p className={styles.muted}>

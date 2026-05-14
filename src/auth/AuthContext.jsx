@@ -41,6 +41,7 @@ const DEMO_CAPABILITIES = [
   "users.update_role",
   "users.disable",
   "users.delete",
+  "audit.read",
 ];
 
 function resolveActiveSite(session) {
