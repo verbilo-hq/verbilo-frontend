@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTenant } from "../auth/TenantContext";
 import { useCapability } from "../auth/AuthContext";
-import { getPublicTenant } from "../services/tenants.service";
 import { AdminTenantBrandingSection } from "./admin/AdminTenantBrandingSection";
 import { AdminTenantUsersSection } from "./admin/AdminTenantUsersSection";
 import styles from "./TenantSettingsPage.module.css";
@@ -18,21 +17,19 @@ import styles from "./TenantSettingsPage.module.css";
 // VER-53 — they don't care which surface they're mounted on, only that
 // they're given a tenant payload + onSaved/canEdit callbacks.
 export const TenantSettingsPage = () => {
-  const { tenant: contextTenant, slug } = useTenant();
+  // VER-79: pull `refreshTenant` from the context — after a branding
+  // save we need the CONTEXT's tenant to update so the document-root
+  // CSS variables (--tenant-primary etc.) re-apply. Updating only the
+  // local `tenant` state below would refresh this page's preview but
+  // leave the rest of the tenant surface on the old colours.
+  const { tenant: contextTenant, refreshTenant } = useTenant();
 
-  // VER-63: branding payload comes from the public-tenant endpoint via
-  // TenantContext. We re-fetch after a branding save so the form
-  // reflects the latest server-side state (and CSS custom properties
-  // re-apply via the TenantContext effect).
+  // Local mirror of the context tenant — kept so child sections that
+  // expect a `tenant` prop don't have to call useTenant themselves.
+  // The useEffect syncs to context on any context change (including
+  // the post-save refresh).
   const [tenant, setTenant] = useState(contextTenant);
   useEffect(() => setTenant(contextTenant), [contextTenant]);
-
-  const refetchTenant = useCallback(() => {
-    if (!slug) return;
-    getPublicTenant(slug)
-      .then((next) => setTenant(next))
-      .catch(() => {});
-  }, [slug]);
 
   // Capability gates — backend enforces, this just hides UI a user
   // can't use anyway. Loading state from AuthContext is a no-op here:
@@ -60,7 +57,7 @@ export const TenantSettingsPage = () => {
       {canEditBranding && (
         <AdminTenantBrandingSection
           tenant={tenant}
-          onSaved={refetchTenant}
+          onSaved={refreshTenant}
         />
       )}
 

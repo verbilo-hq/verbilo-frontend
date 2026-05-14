@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { resolveSurface } from "../lib/host";
 import { getPublicTenant } from "../services/tenants.service";
 import { AuthContext } from "./AuthContext";
@@ -75,6 +82,23 @@ export function TenantProvider({ children }) {
     tenant?.accentColor,
   ]);
 
+  // VER-79: callers (e.g. TenantSettingsPage after a branding save) need
+  // a way to force the context's tenant payload to refresh — otherwise
+  // the CSS-vars effect below keeps applying stale colours and the
+  // sidebar/topbar/etc. don't visibly update until a hard reload.
+  const refreshTenant = useCallback(async () => {
+    if (surface.surface !== "tenant" || !surface.slug) return;
+    try {
+      const next = await getPublicTenant(surface.slug);
+      setTenant(next);
+    } catch (err) {
+      // Don't crash the page on a transient refresh failure — the user
+      // already got a 200 from the underlying save, and the next route
+      // change / mount will re-fetch anyway.
+      setError(err);
+    }
+  }, [surface.surface, surface.slug]);
+
   const value = useMemo(
     () => ({
       surface: surface.surface,
@@ -86,8 +110,17 @@ export function TenantProvider({ children }) {
       tenant,
       status,
       error,
+      refreshTenant,
     }),
-    [surface.surface, surface.slug, surface.environment, tenant, status, error],
+    [
+      surface.surface,
+      surface.slug,
+      surface.environment,
+      tenant,
+      status,
+      error,
+      refreshTenant,
+    ],
   );
 
   return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
