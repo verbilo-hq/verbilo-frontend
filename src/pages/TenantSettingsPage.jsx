@@ -3,6 +3,7 @@ import { useTenant } from "../auth/TenantContext";
 import { useCapability } from "../auth/AuthContext";
 import { AdminTenantBrandingSection } from "./admin/AdminTenantBrandingSection";
 import { AdminTenantUsersSection } from "./admin/AdminTenantUsersSection";
+import { TenantSettingsOnboardingSection } from "./TenantSettingsOnboardingSection";
 import styles from "./TenantSettingsPage.module.css";
 
 // VER-63: Settings page on the tenant surface ({slug}.verbilo.co.uk).
@@ -53,6 +54,12 @@ export const TenantSettingsPage = () => {
       <header className={styles.header}>
         <h1 className={styles.title}>Settings</h1>
       </header>
+
+      {/* VER-91 follow-up: surface the user-facing checklist here too,
+          mirroring the Verbilo-admin Onboarding section. Read-only —
+          no handover button (operator-only). Hides itself when there
+          are no pending actions. */}
+      <TenantSettingsOnboardingSection />
 
       {canEditBranding && (
         <AdminTenantBrandingSection
