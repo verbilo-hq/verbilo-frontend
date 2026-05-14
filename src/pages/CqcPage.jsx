@@ -1,9 +1,12 @@
-import { useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnOutline } from "../components/ui/Buttons";
 import { Pill } from "../components/ui/Pill";
 import { I } from "../components/Icon";
+import { TopBar } from "../components/layout/TopBar";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
+import { listCqcStarterTemplates } from "../services/cqc.service";
 import styles from "./CqcPage.module.css";
 
 // ── Audit definitions ─────────────────────────────────────────────────────────
@@ -758,7 +761,92 @@ const ReportIncidentModal = ({ onClose, onSave }) => {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
+/* VER-89: Tenant-mode CQC Compliance Hub.
+ *
+ * Renders the 5 KLOE domain buckets from VER-85's starter-templates
+ * endpoint. Other sectors get an empty items array → friendly empty
+ * state. Demo path (existing ~1k LoC of audit fixtures + fake
+ * incidents) lives below. */
+function TenantCqcPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [items, setItems] = useState(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listCqcStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        setItems(Array.isArray(data?.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setItems([]);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
+  return (
+    <div>
+      <TopBar
+        title="CQC Compliance"
+        subtitle="Evidence library for the five Care Quality Commission key lines of enquiry."
+      />
+
+      <Card hover={false} style={{ marginBottom: 24 }}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="shield" size={18} color="var(--primary)" /> KLOE domains
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Five buckets organise your evidence. Add audits, policies, incident reports, and feedback under the relevant domain.
+        </p>
+
+        {items === null ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
+        ) : items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+            CQC inspection applies to dental + GP practices only. Nothing to track here for this sector.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+            {items.map((item) => (
+              <Card key={item.id} hover style={{ padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Pill bg="rgba(0,0,0,0.08)" color="var(--on-surface-variant)" small>Not started</Pill>
+                </div>
+                <h3 style={{ margin: "0 0 6px 0", fontSize: 15, color: "var(--on-surface)" }}>{item.title}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                  {item.summary}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {items && items.length > 0 && (
+        <Card hover={false}>
+          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+            <I name="file" size={18} color="var(--primary)" /> Your evidence
+          </h2>
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+            Evidence you upload appears here. Empty until you add your first item.
+          </p>
+          <BtnPrimary disabled title="Coming soon">
+            <I name="plus" size={14} /> Add first evidence
+          </BtnPrimary>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export const CqcPage = () => {
+  if (!isDemoMode()) {
+    return <TenantCqcPage />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "Practice";
   const [completed, setCompleted] = useState(new Set());

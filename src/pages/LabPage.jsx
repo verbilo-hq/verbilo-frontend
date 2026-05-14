@@ -8,6 +8,7 @@ import {
   listLabContacts, listDigitalGuides, listLabCases,
   createLabCase, updateLabCase,
 } from "../services/lab.service";
+import { isDemoMode } from "../lib/mode";
 import styles from "./LabPage.module.css";
 
 // VER-47: this page is UK dental-sector — dental lab case tracking (crowns,
@@ -147,7 +148,40 @@ const LogCaseModal = ({ onClose, onSave, labContacts }) => {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
+/* VER-89: Tenant-mode Lab Work Hub.
+ *
+ * Empty operational tracker — no fake cases. Demo path (existing
+ * ~290 LoC of fixture-driven lab orders + contacts) lives below. */
+function TenantLabPage() {
+  return (
+    <div>
+      <TopBar
+        title="Lab Work Hub"
+        subtitle="Track lab orders, turnaround, and case status."
+      />
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="package" size={18} color="var(--primary)" /> Lab orders
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Active and historical lab cases appear here once you add your first.
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <BtnPrimary disabled title="Coming soon">
+            <I name="plus" size={14} /> Add first lab order
+          </BtnPrimary>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export const LabPage = () => {
+  if (!isDemoMode()) {
+    return <TenantLabPage />;
+  }
+
   const [labCases, setLabCases] = useState([]);
   const [labContacts, setLabContacts] = useState([]);
   const [digitalGuides, setDigitalGuides] = useState([]);
