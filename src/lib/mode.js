@@ -29,5 +29,10 @@ export function isDemoMode() {
   if (typeof window !== "undefined" && window.location.hostname.startsWith("demo.")) {
     return true;
   }
-  return true;
+  // VER-86: flipped to default false now that DashboardPage has a
+  // tenant-mode branch. Other module pages (Clinical, HR, CPD, etc.)
+  // don't yet branch on this helper — they still render their fixture
+  // imports unconditionally — so flipping the default doesn't affect
+  // them until VER-87..VER-90 add per-module branches.
+  return false;
 }
