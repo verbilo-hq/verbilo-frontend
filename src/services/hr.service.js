@@ -6,7 +6,16 @@ import {
 } from "../fixtures/demo/hr";
 import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
-// import { fetchJson } from "./http";
+import { fetchJson } from "./http";
+
+// VER-88: starter-template library for HR Hub. Backed by
+// /admin/tenants/:id/starter-templates?module=hr from VER-85.
+export async function listHrStarterTemplates(tenantId) {
+  if (!tenantId) return { items: [] };
+  return fetchJson(
+    `/admin/tenants/${encodeURIComponent(tenantId)}/starter-templates?module=hr`,
+  );
+}
 
 let policiesStore = [...policiesFixture];
 
