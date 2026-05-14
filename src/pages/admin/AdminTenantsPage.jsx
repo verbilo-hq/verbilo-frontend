@@ -98,21 +98,27 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
                     : <span className={styles.muted}>—</span>}
                 </td>
                 <td>{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "—"}</td>
-                <td className={styles.rowActions}>
-                  {/* VER-62: opens the tenant subdomain in a new tab. On the
-                      tenant surface, a banner reminds the operator they're
-                      acting as a Verbilo Admin and all actions are audited. */}
-                  <a
-                    className={styles.btnGhost}
-                    href={tenantUrl(t.slug, isStaging ? "staging" : "production")}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open as admin
-                  </a>
-                  <button className={styles.btnGhost} onClick={() => onEdit(t.id)}>
-                    Edit
-                  </button>
+                <td>
+                  {/* Flex on an inner div, not the <td> itself — applying
+                      `display: flex` to the cell breaks table-cell layout
+                      and the row's bottom border stops short of this
+                      column. */}
+                  <div className={styles.rowActions}>
+                    {/* VER-62: opens the tenant subdomain in a new tab. On the
+                        tenant surface, a banner reminds the operator they're
+                        acting as a Verbilo Admin and all actions are audited. */}
+                    <a
+                      className={styles.btnGhost}
+                      href={tenantUrl(t.slug, isStaging ? "staging" : "production")}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open as admin
+                    </a>
+                    <button className={styles.btnGhost} onClick={() => onEdit(t.id)}>
+                      Edit
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
