@@ -7,8 +7,37 @@ import {
   useState,
 } from "react";
 import { resolveSurface } from "../lib/host";
+import { isDemoMode } from "../lib/mode";
 import { getPublicTenant } from "../services/tenants.service";
 import { AuthContext } from "./AuthContext";
+
+// VER-39: synthetic tenant injected on `demo.verbilo.co.uk`. No backend
+// fetch, no auth gate — the demo subdomain is the public sales tour.
+// Sector "dental" picks the richest fixture set; all modules enabled so
+// every nav link resolves. Colours left null so the default Verbilo
+// palette renders (tokens.css :root defaults).
+const DEMO_TENANT = {
+  id: "demo-tenant",
+  slug: "demo",
+  name: "Verbilo Demo Practice",
+  sector: "dental",
+  enabledModules: [
+    "dashboard",
+    "clinical",
+    "hr",
+    "cpd",
+    "training",
+    "cqc",
+    "marketing",
+    "lab",
+  ],
+  logoUrl: null,
+  primaryColor: null,
+  secondaryColor: null,
+  accentColor: null,
+  createdAt: null,
+  archivedAt: null,
+};
 
 const TenantContext = createContext(null);
 
@@ -65,6 +94,14 @@ export function TenantProvider({ children }) {
 
   useEffect(() => {
     if (surface.surface !== "tenant" || !surface.slug) return;
+    // VER-39: demo subdomain short-circuits the network — no backend
+    // tenant row exists for "demo", so we inject the synthetic one and
+    // mark ready immediately.
+    if (surface.slug === "demo" && isDemoMode()) {
+      setTenant(DEMO_TENANT);
+      setStatus("ready");
+      return;
+    }
     let cancelled = false;
     setStatus("loading");
     getPublicTenant(surface.slug)
