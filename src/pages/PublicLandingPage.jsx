@@ -172,11 +172,11 @@ export const PublicLandingPage = () => {
               physiotherapy groups running 5 to 100+ sites.
             </p>
             <div className={styles.heroCtas}>
-              <a href="mailto:hello@verbilo.co.uk" className={styles.btnPrimary}>
-                Book a 20-min demo <Arrow />
+              <a href="https://demo.verbilo.co.uk" className={styles.btnPrimary}>
+                View live demo <Arrow />
               </a>
-              <a href="#product" className={styles.btnGhost}>
-                See how it works
+              <a href="mailto:hello@verbilo.co.uk" className={styles.btnGhost}>
+                Book a 20-min call
               </a>
             </div>
             <div className={styles.trustRow}>
@@ -307,13 +307,13 @@ export const PublicLandingPage = () => {
             <div className={styles.ctaCopy}>
               <h2 className={styles.ctaTitle}>Ready to retire the WhatsApp group?</h2>
               <p className={styles.ctaLead}>
-                Book a 20-minute call. We'll show you a real tenant configured for a
-                multi-site healthcare group and answer anything CQC, GDPR or technical.
+                Take the live demo for a spin, or book a 20-minute call and we'll walk a
+                real tenant through with you — CQC, GDPR and technical questions welcome.
               </p>
             </div>
             <div className={styles.ctaActions}>
-              <a href="mailto:hello@verbilo.co.uk" className={styles.btnPrimary}>
-                Book a demo <Arrow />
+              <a href="https://demo.verbilo.co.uk" className={styles.btnPrimary}>
+                View live demo <Arrow />
               </a>
               <a href="mailto:hello@verbilo.co.uk" className={styles.btnGhostOnDark}>
                 hello@verbilo.co.uk

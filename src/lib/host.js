@@ -47,6 +47,10 @@ export function isReservedSubdomain(slug) {
 function classifyLeadingLabel(sub, environment) {
   if (sub === "www") return { surface: "public", slug: null, environment };
   if (sub === "admin") return { surface: "admin", slug: null, environment };
+  // VER-39: demo.verbilo.co.uk renders the tenant surface with a synthetic
+  // "demo" tenant — no backend fetch, no auth gate. Special-cased before the
+  // RESERVED check so it doesn't fall through to public.
+  if (sub === "demo") return { surface: "tenant", slug: "demo", environment };
   if (RESERVED_SUBDOMAINS.has(sub)) return { surface: "public", slug: null, environment };
   if (!isValidSlug(sub)) return { surface: "public", slug: null, environment };
   return { surface: "tenant", slug: sub, environment };
