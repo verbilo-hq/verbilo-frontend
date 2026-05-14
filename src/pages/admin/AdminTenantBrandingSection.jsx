@@ -244,8 +244,13 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  // VER-79: handleSave is now wired to onClick on the Save button (was
+  // onSubmit on an inner <form>). The wrapper element is a <div>, not a
+  // <form>, because this panel renders inside the admin-portal's outer
+  // <form> for tenant settings — HTML forms can't be nested, and Chrome's
+  // form-owner rules previously hijacked the click into the outer form.
+  // No event arg to preventDefault on a plain onClick.
+  const handleSave = async () => {
     if (!hasChange || hasErrors || submitting) return;
     setSubmitting(true);
     setError(null);
@@ -293,7 +298,12 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
     <section className={styles.section}>
       <p className={styles.sectionTitle}>Branding</p>
 
-      <form className={styles.form} onSubmit={handleSave} style={{ marginTop: 12, gap: 16 }}>
+      {/* VER-79: this was a <form> but the admin-portal's tenant settings
+          page wraps the whole tenant-edit screen in its own <form>, and
+          nesting forms causes Chrome to associate the inner submit with
+          the OUTER form (same bug as VER-65 AddUserModal). Using a plain
+          <div> + onClick on the Save button avoids the trap. */}
+      <div className={styles.form} style={{ marginTop: 12, gap: 16 }}>
         <div className={styles.field}>
           <label className={styles.label}>Logo</label>
           {/* Hidden file picker — referenced from both modes. Defining
@@ -417,14 +427,15 @@ export const AdminTenantBrandingSection = ({ tenant, onSaved }) => {
             Reset to defaults
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSave}
             className={styles.btnPrimary}
             disabled={!hasChange || hasErrors || submitting}
           >
             {submitting ? "Saving…" : "Save branding"}
           </button>
         </div>
-      </form>
+      </div>
     </section>
   );
 };
