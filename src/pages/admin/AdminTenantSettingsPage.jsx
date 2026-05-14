@@ -171,6 +171,31 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
   return (
   <>
     <form className={styles.form} onSubmit={handleSave}>
+      {/* Back nav — Cancel at the bottom of the form does the same
+          thing, but operators expect a top-of-page exit too. */}
+      <button
+        type="button"
+        onClick={onCancel}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          background: "transparent",
+          border: "none",
+          padding: "4px 0",
+          marginBottom: 4,
+          color: "var(--on-surface-variant)",
+          fontFamily: "inherit",
+          fontSize: 13,
+          cursor: "pointer",
+          alignSelf: "flex-start",
+        }}
+        title="Back to tenants list"
+      >
+        <span aria-hidden="true">←</span>
+        <span>Back to tenants</span>
+      </button>
+
       <header className={styles.header}>
         <h1 className={styles.title}>Tenant settings</h1>
         <p className={styles.subtitle}>
