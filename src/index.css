@@ -12,7 +12,10 @@
 body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  background: var(--surface);
+  /* VER-81: semantic token — defaults to --surface for Verbilo's
+     untenanted brand; tenants override --accent-bg with their
+     accentColor via TenantContext to tint the body background. */
+  background: var(--accent-bg);
   color: var(--on-surface);
 }
 
