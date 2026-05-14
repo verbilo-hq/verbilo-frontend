@@ -14,7 +14,8 @@
 // the sites/practices endpoint is a separate concern (no Linear ticket
 // yet — add one when the page needs live site data).
 
-import { practicesFixture, practiceAddressesFixture } from "./fixtures/staff.fixture";
+import { practicesFixture, practiceAddressesFixture } from "../fixtures/demo/staff";
+import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
 import { roleLabel } from "../lib/sector";

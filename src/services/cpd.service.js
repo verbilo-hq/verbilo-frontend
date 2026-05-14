@@ -2,7 +2,8 @@ import {
   cpdRolesFixture,
   cpdRoleProfilesFixture,
   practiceStaffFixture,
-} from "./fixtures/cpd.fixture";
+} from "../fixtures/demo/cpd";
+import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
 // import { fetchJson } from "./http";
 
