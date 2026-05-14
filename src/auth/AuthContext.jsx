@@ -7,10 +7,38 @@ import {
 } from "../services/auth.service";
 import { fetchMyPermissions } from "../services/me.service.js";
 import { persistSession } from "../services/session";
+import { isDemoMode } from "../lib/mode";
 
 // Exported so other hooks (e.g. useTenant) can compose context values
 // without re-throwing when used outside a provider.
 export const AuthContext = createContext(null);
+
+// VER-39: synthetic auth identity for `demo.verbilo.co.uk`. The demo
+// surface has no real session — useAuth.user would be null and the
+// Sidebar / role-aware pages would crash on `user.displayName`. Inject
+// this instead so the demo renders end-to-end.
+const DEMO_AUTH_USER = {
+  id: "demo-user",
+  username: "demo.user",
+  displayName: "Demo User",
+  email: "demo@verbilo.co.uk",
+  role: "practice_manager",
+  isTempPassword: false,
+  sites: [],
+};
+
+// All capabilities granted in demo so every UI control is visible —
+// the demo is a feature tour, not a permissions test.
+const DEMO_CAPABILITIES = [
+  "tenant.update_branding",
+  "tenant.update_sites",
+  "tenant.create",
+  "tenant.archive",
+  "users.list",
+  "users.invite",
+  "users.update_role",
+  "users.deactivate",
+];
 
 function resolveActiveSite(session) {
   const sites = session?.user?.sites ?? [];
@@ -100,20 +128,42 @@ export function AuthProvider({ children }) {
     [permissions?.capabilities],
   );
 
-  const value = {
-    user: session?.user ?? null,
-    token: session?.token ?? null,
-    isAuthenticated: !!session?.user,
-    site,
-    sites,
-    setActiveSite,
-    login,
-    setPassword,
-    logout,
-    permissions,
-    permissionsStatus,
-    capabilitySet,
-  };
+  // VER-39: on the demo subdomain, override the live session with a
+  // synthetic identity + full capability set. Done at the value layer
+  // rather than the state layer so logout/login plumbing stays inert —
+  // demo mode just shadows whatever auth state happens to exist.
+  const demo = isDemoMode();
+  const demoCapabilitySet = useMemo(() => new Set(DEMO_CAPABILITIES), []);
+
+  const value = demo
+    ? {
+        user: DEMO_AUTH_USER,
+        token: null,
+        isAuthenticated: true,
+        site: null,
+        sites: [],
+        setActiveSite: () => {},
+        login,
+        setPassword,
+        logout,
+        permissions: { role: DEMO_AUTH_USER.role, capabilities: DEMO_CAPABILITIES, scope: { kind: "tenant" }, isPlatformAdmin: false },
+        permissionsStatus: "ready",
+        capabilitySet: demoCapabilitySet,
+      }
+    : {
+        user: session?.user ?? null,
+        token: session?.token ?? null,
+        isAuthenticated: !!session?.user,
+        site,
+        sites,
+        setActiveSite,
+        login,
+        setPassword,
+        logout,
+        permissions,
+        permissionsStatus,
+        capabilitySet,
+      };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

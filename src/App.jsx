@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { useAuth } from "./auth/AuthContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { CrossTenantBanner } from "./components/layout/CrossTenantBanner";
+import { DemoBanner } from "./components/layout/DemoBanner";
 import { Card } from "./components/ui/Card";
 import { LoginPage } from "./pages/LoginPage";
 import { SetPasswordPage } from "./pages/SetPasswordPage";
@@ -46,7 +47,9 @@ export default function App() {
   const { user, isAuthenticated } = useAuth();
   const [page, setPage] = useState(user?.isTempPassword ? "setpassword" : "dashboard");
 
-  // Standalone pages (no sidebar)
+  // Standalone pages (no sidebar). Demo mode is gated upstream in
+  // AuthProvider (VER-39) — isAuthenticated is true with a synthetic
+  // user, so this branch falls through to the tenant shell.
   if (!isAuthenticated) return <LoginPage onLoggedIn={() => setPage("dashboard")} />;
   if (user?.isTempPassword || page === "setpassword") {
     return <SetPasswordPage onComplete={() => setPage("dashboard")} />;
@@ -66,6 +69,7 @@ export default function App() {
     <div className={styles.shell}>
       <Sidebar current={page} onNav={setPage} />
       <main className={styles.main}>
+        <DemoBanner />
         <CrossTenantBanner />
         <Suspense fallback={<PageFallback />}>
           <ActivePage {...pageProps} />

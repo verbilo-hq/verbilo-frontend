@@ -2,7 +2,7 @@ import {
   groupUpdatesFixture, tipsFixture, defaultQuickLinksFixture,
   linkIconsFixture, rssFeedsFixture, fallbackNewsFixture,
 } from "../fixtures/demo/dashboard";
-import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
+import { isDemoMode } from "../lib/mode";
 import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
 
@@ -16,6 +16,21 @@ const EMPTY_SUMMARY = {
   recentActivity: [],
 };
 
+// VER-39: synthetic summary shown on demo.verbilo.co.uk. Plausible
+// mid-sized practice numbers so the dashboard header cards have content
+// instead of "0 patients". Numbers are static — the demo doesn't need
+// to feel live, just complete.
+const DEMO_SUMMARY = {
+  patientCount: 1248,
+  todaysAppointments: 23,
+  openTasks: 7,
+  recentActivity: [
+    { id: "a1", label: "Sarah Patel completed CPD: Safeguarding Children", at: "2h ago" },
+    { id: "a2", label: "New patient registered: Tom Brennan",              at: "4h ago" },
+    { id: "a3", label: "Lab case #4421 returned from Henry Schein",        at: "yesterday" },
+  ],
+};
+
 /**
  * Tenant + site-scoped summary for the DashboardPage header.
  * Shape mirrors the VER-25 backend DTO:
@@ -25,6 +40,9 @@ const EMPTY_SUMMARY = {
  * than crashing — the auth layer will redirect to /login separately.
  */
 export async function getDashboardSummary() {
+  // VER-39: demo surface has no backend session and no real numbers;
+  // serve synthetic data so the dashboard renders fully.
+  if (isDemoMode()) return { ...DEMO_SUMMARY };
   try {
     return await fetchJson("/dashboard/summary");
   } catch (err) {
