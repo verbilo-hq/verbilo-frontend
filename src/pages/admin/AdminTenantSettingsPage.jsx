@@ -10,6 +10,7 @@ import { useAuth, useCapability } from "../../auth/AuthContext";
 import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
 import { AdminTenantBrandingSection } from "./AdminTenantBrandingSection";
 import { AdminTenantOnboardingSection } from "./AdminTenantOnboardingSection";
+import { AdminTenantAuditLogSection } from "./AdminTenantAuditLogSection";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -312,6 +313,10 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
         canEdit={canEditUsers}
         sector={tenant?.sector}
       />
+
+      {/* VER-94: audit log viewer — cross-tenant scope via the tenantId
+          prop. Capability-gated internally (`audit.read`). */}
+      <AdminTenantAuditLogSection tenantId={tenantId} />
 
       {/* VER-50 / VER-61: Danger Zone — separated from the regular
           form so a destructive action can't happen on a stray click.
