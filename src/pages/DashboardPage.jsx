@@ -10,6 +10,7 @@ import {
   fetchNews, listInternalNews, saveInternalNews,
   getDashboardSummary,
 } from "../services/dashboard.service";
+import { getMyOnboardingActions } from "../services/onboarding.service";
 import { useTenant } from "../auth/TenantContext";
 import { isDemoMode } from "../lib/mode";
 import styles from "./DashboardPage.module.css";
@@ -176,11 +177,31 @@ function TenantDashboard({ currentUser, onNav }) {
   const [internalNews, setInternalNews] = useState(() => listInternalNews());
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState(false);
+  // VER-91: actions list comes from /users/me/onboarding-actions. Null
+  // while loading, [] when nothing to do (platform actors or fully
+  // onboarded tenants), or an array of action items.
+  const [actions, setActions] = useState(null);
 
   useEffect(() => {
     getDashboardSummary()
       .then((data) => { setSummary(data); setSummaryError(false); })
       .catch(() => { setSummary(null); setSummaryError(true); });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMyOnboardingActions()
+      .then((data) => {
+        if (cancelled) return;
+        setActions(Array.isArray(data?.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Endpoint not reachable / 401 — just hide the checklist rather
+        // than blocking the rest of the dashboard.
+        setActions([]);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -199,32 +220,12 @@ function TenantDashboard({ currentUser, onNav }) {
   const dateDay  = now.toLocaleDateString("en-GB", { weekday: "long" });
   const dateFull = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-  // VER-86: setup checklist — derived purely from `tenant` context, no
-  // extra API calls. VER-91 replaces this with the backend-driven
-  // /admin/tenants/:id/onboarding state once it ships.
-  const checklistItems = [
-    {
-      id: "branding",
-      label: "Customise your branding",
-      hint: "Upload a logo + pick brand colours so the intranet feels like yours.",
-      done: Boolean(tenant?.logoUrl || tenant?.primaryColor),
-      nav: "settings",
-    },
-    {
-      id: "invite-team",
-      label: "Invite your team",
-      hint: "Add the staff who need to sign in.",
-      done: false, // VER-91 will replace with real user-count check
-      nav: "settings",
-    },
-    {
-      id: "starter-content",
-      label: "Publish starter clinical resources",
-      hint: "Review the sector-specific protocol drafts under Clinical Resources and publish the ones you want staff to see.",
-      done: false, // VER-91 will replace with real published-count check
-      nav: "clinical",
-    },
-  ];
+  // VER-91: setup checklist now driven by /users/me/onboarding-actions.
+  // While the request is in flight `actions` is null; once it resolves
+  // we have an array (possibly empty). Hide the card entirely if the
+  // list is empty OR everything is done — no point cluttering a fully-
+  // onboarded dashboard.
+  const checklistItems = actions ?? [];
   const checklistRemaining = checklistItems.filter((i) => !i.done).length;
 
   const displayNews = newsLoading ? [] : liveNews;
