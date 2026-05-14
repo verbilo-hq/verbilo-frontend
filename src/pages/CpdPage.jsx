@@ -4,11 +4,14 @@ import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { ProgressBar } from "../components/ui/ProgressBar";
+import { TopBar } from "../components/layout/TopBar";
 import { formatDate } from "../lib/formatDate";
 import {
   listCpdRoles, getCpdProfile, addCpdLogEntry, listPracticeStaffCpd,
+  listCpdStarterTemplates,
 } from "../services/cpd.service";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./CpdPage.module.css";
 
 
@@ -410,7 +413,74 @@ const CertificatesModal = ({ entries, onClose }) => {
   );
 };
 
+/* VER-89: Tenant-mode CPD Hub.
+ *
+ * Shows the sector's regulator framework (GDC / RCVS / GOC / HCPC /
+ * GMC) header card + an empty "Your CPD log" card with a CTA. No
+ * fake CPD points, no fake activities. Demo path (existing ~870
+ * LoC of role profiles + fake staff CPD) lives below. */
+function TenantCpdPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [framework, setFramework] = useState(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listCpdStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        const items = Array.isArray(data?.items) ? data.items : [];
+        setFramework(items[0] ?? null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFramework(null);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
+  return (
+    <div>
+      <TopBar
+        title="CPD Hub"
+        subtitle="Log your continuing professional development against the right framework."
+      />
+
+      {framework && (
+        <Card hover={false} style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
+              <I name="award" size={18} color="var(--primary)" /> {framework.title}
+            </h2>
+            <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Framework</Pill>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+            {framework.summary}
+          </p>
+        </Card>
+      )}
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="clock" size={18} color="var(--primary)" /> Your CPD log
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Your logged activities will appear here with the running points total. Nothing yet.
+        </p>
+        <BtnPrimary disabled title="Coming soon">
+          <I name="plus" size={14} /> Add first CPD activity
+        </BtnPrimary>
+      </Card>
+    </div>
+  );
+}
+
 export const CpdPage = ({ currentUser }) => {
+  if (!isDemoMode()) {
+    return <TenantCpdPage />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "Verbilo";
   const isManager = currentUser?.role === "manager";
