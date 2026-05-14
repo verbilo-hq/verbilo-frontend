@@ -4,11 +4,13 @@ import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary, BtnOutline } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
 import { Pill } from "../components/ui/Pill";
+import { TopBar } from "../components/layout/TopBar";
 import { useClickOutside } from "../hooks/useClickOutside";
 import { listStaff, createStaff, updateStaff, deleteStaff } from "../services/staff.service";
 import { registerAccount } from "../services/auth.service";
 import { gdcAlertsFor } from "../services/logic/staff.logic";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import { roleLabel as sectorRoleLabel } from "../lib/sector";
 import styles from "./StaffPage.module.css";
 
@@ -932,7 +934,71 @@ const CustomSelect = ({ value, onChange, options, placeholder }) => {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+/* VER-90: Tenant-mode Staff Directory.
+ *
+ * Real StaffMember-backed list when there ARE staff; honest empty
+ * state with 3 CTAs when there aren't. Demo path (~1180 LoC of
+ * fixture-driven directory with profiles + GDC alerts + practice
+ * locations) lives below. */
+function TenantStaffPage() {
+  const [staff, setStaff] = useState(null);
+
+  useEffect(() => {
+    listStaff()
+      .then((list) => setStaff(Array.isArray(list) ? list : []))
+      .catch(() => setStaff([]));
+  }, []);
+
+  return (
+    <div>
+      <TopBar
+        title="Staff Directory"
+        subtitle="Your team, in one place."
+      />
+
+      <Card hover={false}>
+        {staff === null ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
+        ) : staff.length === 0 ? (
+          <>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+              <I name="users" size={18} color="var(--primary)" /> No staff members yet
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+              Add the people who'll appear in the directory. Staff records hold professional registration details (GDC / RCVS / HCPC numbers etc.); sign-in accounts are separate and live under Settings → Users.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <BtnPrimary disabled title="Coming soon">
+                <I name="plus" size={14} /> Add staff member
+              </BtnPrimary>
+              <BtnSecondary disabled title="Coming soon">
+                <I name="upload" size={14} /> Import CSV
+              </BtnSecondary>
+              <BtnSecondary disabled title="Use Settings → Users to invite sign-in accounts">
+                <I name="users" size={14} /> Invite users
+              </BtnSecondary>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+              <I name="users" size={18} color="var(--primary)" /> Staff ({staff.length})
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+              Full directory view coming soon. {staff.length} staff member{staff.length === 1 ? "" : "s"} on record.
+            </p>
+          </>
+        )}
+      </Card>
+    </div>
+  );
+}
+
 export const StaffPage = ({ currentUser }) => {
+  if (!isDemoMode()) {
+    return <TenantStaffPage />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "your practice";
   const sector = tenant?.sector ?? "";

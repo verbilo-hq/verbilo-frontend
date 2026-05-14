@@ -5,6 +5,7 @@ import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TopBar } from "../components/layout/TopBar";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./MarketingPage.module.css";
 
 /* ── Data ──────────────────────────────────────────────────────────────────── */
@@ -306,7 +307,46 @@ const openBrandBook = (palette, tenantName = "Verbilo") => {
 };
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
+/* VER-90: Tenant-mode Brand Hub.
+ *
+ * Scope of this module beyond "logo + colours" is still TBD — the
+ * demo path mocks up a marketing-asset library but we haven't
+ * committed to building that. For now: minimal honest placeholder
+ * pointing to the existing branding workflow. Demo path preserved. */
+function TenantMarketingPage() {
+  return (
+    <div>
+      <TopBar
+        title="Brand Hub"
+        subtitle="Your logo, colours, and brand assets."
+      />
+
+      <Card hover={false} style={{ marginBottom: 24 }}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="palette" size={18} color="var(--primary)" /> Brand basics
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+          Your logo and brand colours are managed under <strong>Settings → Branding</strong>. The intranet's sidebar, hero, and primary buttons re-theme to whatever you set there.
+        </p>
+      </Card>
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="image" size={18} color="var(--primary)" /> Brand assets
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
+          Wider asset library (logo variants, social templates, typography reference) is on the roadmap. Nothing here yet.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
 export const MarketingPage = ({ currentUser }) => {
+  if (!isDemoMode()) {
+    return <TenantMarketingPage />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "Verbilo";
   const logoUploadRef     = useRef();
