@@ -238,6 +238,10 @@ export function TenantProvider({ children }) {
   // sidebar/topbar/etc. don't visibly update until a hard reload.
   const refreshTenant = useCallback(async () => {
     if (surface.surface !== "tenant" || !surface.slug) return;
+    // VER-39: on the demo subdomain there's no backend tenant row to
+    // re-fetch — the branding panel already updates the in-memory
+    // tenant via setLocalBranding, so there's nothing to do here.
+    if (surface.slug === "demo" && isDemoMode()) return;
     try {
       const next = await getPublicTenant(surface.slug);
       setTenant(next);
@@ -248,6 +252,16 @@ export function TenantProvider({ children }) {
       setError(err);
     }
   }, [surface.surface, surface.slug]);
+
+  // VER-39 follow-up: merge a partial branding patch into the in-memory
+  // tenant. Used by the demo subdomain so visitors can play with the
+  // branding panel without round-tripping to a backend they have no
+  // session for — each visitor gets their own client-only preview, no
+  // shared state. Pages elsewhere should keep using updateTenantBranding
+  // + refreshTenant; this is the demo escape hatch.
+  const setLocalBranding = useCallback((patch) => {
+    setTenant((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -261,6 +275,7 @@ export function TenantProvider({ children }) {
       status,
       error,
       refreshTenant,
+      setLocalBranding,
     }),
     [
       surface.surface,
@@ -270,6 +285,7 @@ export function TenantProvider({ children }) {
       status,
       error,
       refreshTenant,
+      setLocalBranding,
     ],
   );
 
