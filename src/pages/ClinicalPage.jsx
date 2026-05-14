@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
-import { BtnSecondary } from "../components/ui/Buttons";
+import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
+import { Pill } from "../components/ui/Pill";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TopBar } from "../components/layout/TopBar";
 import {
   listClinicalTabs, listEmergencyDrugs, listLaDrugs, listAntibiotics,
   listProtocolCategories, listPils,
   listSafeguardingContacts, listSafeguardingDocs,
+  listClinicalStarterTemplates,
 } from "../services/clinical.service";
+import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./ClinicalPage.module.css";
 
 /* ── Domain reference data (consent forms, guideline orgs, referral pathways)
@@ -282,7 +286,107 @@ const EmergencyModal = ({ type, laWeight, onWeightChange, onClose }) => {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
+/* VER-87: Tenant-mode Clinical Resources.
+ *
+ * Renders the starter-template library from VER-85's endpoint + an
+ * empty state for tenant-authored resources. No demo protocols, no
+ * fake emergency-drug doses, no fake LA reference data — those live
+ * in the demo path below.
+ *
+ * The static SDCEP / BDA links inside the demo path are legitimately
+ * useful clinical reference. A future ticket can split those out into
+ * "external references" and surface them in tenant mode too; for v1
+ * we just lead with the starter templates the operator can adopt. */
+function TenantClinicalPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listClinicalStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        setItems(Array.isArray(data?.items) ? data.items : []);
+        setError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err);
+        setItems([]);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
+  return (
+    <div>
+      <TopBar
+        title="Clinical Resources"
+        subtitle="Protocols, consent forms, clinical guidelines, and referral pathways."
+      />
+
+      <Card hover={false} style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
+            <I name="file" size={18} color="var(--primary)" /> Starter templates
+          </h2>
+          <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Verbilo</Pill>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          A sector-appropriate starter pack. Review, edit, publish, or delete — these aren't visible to your staff until you choose to publish them.
+        </p>
+
+        {items === null ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
+        ) : error && items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--error)" }}>
+            Couldn't load starter templates ({error?.status ?? error?.code ?? "error"}).
+          </p>
+        ) : items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+            No starter templates available for this sector yet.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+            {items.map((item) => (
+              <Card key={item.id} hover style={{ padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Pill bg="rgba(0,0,0,0.08)" color="var(--on-surface-variant)" small>
+                    Verbilo starter template
+                  </Pill>
+                </div>
+                <h3 style={{ margin: "0 0 6px 0", fontSize: 15, color: "var(--on-surface)" }}>{item.title}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                  {item.summary}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="upload" size={18} color="var(--primary)" /> Your resources
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Anything you upload or publish appears here. Empty for now.
+        </p>
+        <BtnPrimary disabled title="Coming soon — adopt a starter template above for now">
+          <I name="plus" size={14} /> Upload your own resource
+        </BtnPrimary>
+      </Card>
+    </div>
+  );
+}
+
 export const ClinicalPage = () => {
+  if (!isDemoMode()) {
+    return <TenantClinicalPage />;
+  }
+
   const [activeTab,         setActiveTab]         = useState("protocols");
   const [activeProtoCat,    setActiveProtoCat]    = useState("emergency");
   const [activeGuideline,   setActiveGuideline]   = useState(null);
