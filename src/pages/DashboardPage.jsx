@@ -11,6 +11,7 @@ import {
   getDashboardSummary,
 } from "../services/dashboard.service";
 import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./DashboardPage.module.css";
 
 /* ─── Tip-of-the-day colour config (UI only, not data) ─── */
@@ -159,7 +160,284 @@ const IconSelect = ({ value, onChange, options }) => {
 };
 
 
+/* VER-86: Tenant-mode dashboard.
+ *
+ * Slim, honest first-view: real summary stats (live endpoint), setup
+ * checklist derived from observable tenant state, RSS industry news,
+ * group internal news (localStorage; empty until something is posted),
+ * recent activity placeholder. No fake protocols / fake CPD / fake
+ * "Coffee with Dr Sarah Jenkins" / fake tip-of-the-day — those live
+ * in the demo path further down. */
+function TenantDashboard({ currentUser, onNav }) {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
+  const [liveNews, setLiveNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [internalNews, setInternalNews] = useState(() => listInternalNews());
+  const [summary, setSummary] = useState(null);
+  const [summaryError, setSummaryError] = useState(false);
+
+  useEffect(() => {
+    getDashboardSummary()
+      .then((data) => { setSummary(data); setSummaryError(false); })
+      .catch(() => { setSummary(null); setSummaryError(true); });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchNews().then((items) => {
+      if (cancelled) return;
+      setLiveNews(items);
+      setNewsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const dateDay  = now.toLocaleDateString("en-GB", { weekday: "long" });
+  const dateFull = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+  // VER-86: setup checklist — derived purely from `tenant` context, no
+  // extra API calls. VER-91 replaces this with the backend-driven
+  // /admin/tenants/:id/onboarding state once it ships.
+  const checklistItems = [
+    {
+      id: "branding",
+      label: "Customise your branding",
+      hint: "Upload a logo + pick brand colours so the intranet feels like yours.",
+      done: Boolean(tenant?.logoUrl || tenant?.primaryColor),
+      nav: "settings",
+    },
+    {
+      id: "invite-team",
+      label: "Invite your team",
+      hint: "Add the staff who need to sign in.",
+      done: false, // VER-91 will replace with real user-count check
+      nav: "settings",
+    },
+    {
+      id: "starter-content",
+      label: "Publish starter clinical resources",
+      hint: "Review the sector-specific protocol drafts under Clinical Resources and publish the ones you want staff to see.",
+      done: false, // VER-91 will replace with real published-count check
+      nav: "clinical",
+    },
+  ];
+  const checklistRemaining = checklistItems.filter((i) => !i.done).length;
+
+  const displayNews = newsLoading ? [] : liveNews;
+
+  return (
+    <div>
+      {/* Welcome banner */}
+      <div className={styles.welcome}>
+        <div className={styles.welcomeText}>
+          <h1 className={styles.welcomeTitle}>{greeting}, {currentUser?.displayName}.</h1>
+          <p className={styles.welcomeSub}>Here's what's happening at {tenantName} today.</p>
+        </div>
+        <div className={styles.welcomeDate}>
+          <span className={styles.welcomeDateDay}>{dateDay}</span>
+          <span className={styles.welcomeDateFull}>{dateFull}</span>
+        </div>
+      </div>
+
+      {/* Real summary stats (live endpoint) */}
+      <SummaryStats summary={summary} loading={summary === null && !summaryError} hasError={summaryError} />
+
+      {/* Setup checklist — hides once everything's done */}
+      {checklistRemaining > 0 && (
+        <SetupChecklist items={checklistItems} remaining={checklistRemaining} onNav={onNav} />
+      )}
+
+      {/* News & Updates (Industry RSS + internal Group posts) + Recent activity empty state */}
+      <div className={styles.bottomGrid}>
+        <Card hover={false} className={styles.newsCard}>
+          <div className={styles.cardHeader}>
+            <h3 className={styles.cardHeading}>
+              <I name="zap" size={16} color="var(--primary)" /> News & Updates
+            </h3>
+          </div>
+
+          <div className={styles.newsSectionLabel}>
+            <span>Industry</span>
+            {!newsLoading && <span className={styles.liveTag}><span className={styles.liveDot} /> Live</span>}
+          </div>
+
+          {newsLoading ? (
+            <div className={styles.newsList}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.newsRow}>
+                  <div className={styles.skeletonIcon} />
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.skeletonLine} style={{ width: "40%", marginBottom: 8 }} />
+                    <div className={styles.skeletonLine} style={{ width: "85%", marginBottom: 6 }} />
+                    <div className={styles.skeletonLine} style={{ width: "65%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {displayNews.map((n, idx) => (
+                <a
+                  key={idx}
+                  className={styles.newsRow}
+                  href={n.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className={styles.newsIconWrap} style={{ background: n.bg }}>
+                    <I name={n.icon} size={15} color={n.color} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg={n.bg} color={n.color} small>{n.tag}</Pill>
+                      <span className={styles.newsDate}>{n.date}</span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{n.title}</h4>
+                    <p className={styles.newsDesc}>{n.desc}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.newsSectionDivider} />
+          <div className={styles.newsSectionLabel}>
+            <span>Group</span>
+          </div>
+
+          {internalNews.length === 0 ? (
+            <div className={styles.internalEmpty}>
+              <I name="zap" size={15} color="var(--outline)" />
+              <span>No group updates yet. Anything an admin posts will appear here.</span>
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {internalNews.map((post) => (
+                <div key={post.id} className={styles.newsRow}>
+                  <div className={styles.newsIconWrap} style={{ background: "rgba(156,39,176,0.08)" }}>
+                    <I name="building" size={15} color="#9C27B0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>Group</Pill>
+                      <span className={styles.newsDate}>{post.date} · {post.author}</span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{post.title}</h4>
+                    {post.desc && <p className={styles.newsDesc}>{post.desc}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Recent activity empty state — replaces the Suggestion Box card in tenant mode */}
+        <Card hover={false} className={styles.suggestionCard}>
+          <div className={styles.suggestionTop}>
+            <div className={styles.suggestionIconWrap}>
+              <I name="clock" size={20} color="var(--primary)" />
+            </div>
+            <h3 className={styles.suggestionTitle}>Recent activity</h3>
+          </div>
+          <p className={styles.suggestionDesc}>
+            Once your team starts using {tenantName} — uploading documents, completing CPD,
+            adding patients — the latest changes will appear here.
+          </p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* VER-86: SetupChecklist card. Static items for now; VER-91 replaces
+ * the source with /admin/tenants/:id/onboarding. */
+function SetupChecklist({ items, remaining, onNav }) {
+  const handleClick = (item) => {
+    if (item.nav && onNav) onNav(item.nav);
+  };
+  return (
+    <Card hover={false} style={{ marginBottom: 24, padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "18px 22px 4px 22px", borderBottom: "1px solid var(--outline-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="checkcircle" size={18} color="var(--primary)" /> Setup checklist
+          </h3>
+          <span style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
+            {remaining} step{remaining === 1 ? "" : "s"} left
+          </span>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 14px 0" }}>
+          A short list to get the most out of Verbilo. Tick these off and the card disappears.
+        </p>
+      </div>
+      <div>
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => handleClick(item)}
+            disabled={item.done}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 14,
+              padding: "14px 22px",
+              width: "100%",
+              textAlign: "left",
+              background: "transparent",
+              border: "none",
+              borderTop: "1px solid var(--outline-variant)",
+              cursor: item.done ? "default" : "pointer",
+              opacity: item.done ? 0.65 : 1,
+              font: "inherit",
+            }}
+          >
+            <div
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: item.done ? "var(--primary)" : "var(--surface-container)",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+                marginTop: 1,
+              }}
+            >
+              {item.done && <I name="check" size={13} color="white" />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--on-surface)", textDecoration: item.done ? "line-through" : "none" }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--on-surface-variant)", marginTop: 3 }}>
+                {item.hint}
+              </div>
+            </div>
+            {!item.done && (
+              <I name="arrow" size={14} color="var(--on-surface-variant)" style={{ marginTop: 4 }} />
+            )}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 export const DashboardPage = ({ currentUser, onNav }) => {
+  // VER-86: in tenant mode (not on demo subdomain + no demo env override),
+  // render the slim honest-empty-state dashboard instead of the
+  // hypothetical-practice fixture-driven one below. The demo path stays
+  // intact for the eventual demo.verbilo.co.uk + for VITE_VERBILO_MODE=demo.
+  if (!isDemoMode()) {
+    return <TenantDashboard currentUser={currentUser} onNav={onNav} />;
+  }
+
   const { tenant } = useTenant();
   const tenantName = tenant?.name ?? "your practice";
   const [activeIdx,    setActiveIdx]    = useState(0);
