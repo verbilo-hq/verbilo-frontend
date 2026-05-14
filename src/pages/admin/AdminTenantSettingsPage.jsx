@@ -9,6 +9,7 @@ import { useTenant } from "../../auth/TenantContext";
 import { useAuth, useCapability } from "../../auth/AuthContext";
 import { AdminTenantUsersSection } from "./AdminTenantUsersSection";
 import { AdminTenantBrandingSection } from "./AdminTenantBrandingSection";
+import { AdminTenantOnboardingSection } from "./AdminTenantOnboardingSection";
 import styles from "./AdminCreateTenantPage.module.css";
 
 const ALL_MODULES = [
@@ -271,6 +272,12 @@ export const AdminTenantSettingsPage = ({ tenantId, onSaved, onCancel }) => {
           }}
         />
       )}
+
+      {/* VER-91: onboarding checklist — sits between Branding and Users
+          because Branding is the most common pending check, and the
+          natural operator flow is set branding → invite users → tick
+          handover at the end. */}
+      <AdminTenantOnboardingSection tenantId={tenantId} />
 
       {/* VER-53: customer users of this tenant — drill-down view for
           platform admins. Lives between Save and the Danger zone so
