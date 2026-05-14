@@ -43,6 +43,21 @@
   --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-dim) 100%);
   --shadow-card: 0 12px 32px rgba(43, 52, 53, 0.06);
 
+  /* VER-81: semantic tokens for the intranet shell. Default to the raw
+     surface tokens so untenanted appearance is bit-for-bit unchanged.
+     TenantContext overrides these on tenant-themed surfaces so the
+     BrandPreview mock matches the real app (sidebar fills with
+     secondary, body tints with accent). */
+  --sidebar-bg:          var(--surface-low);
+  --sidebar-fg:          var(--on-surface);
+  --sidebar-fg-muted:    var(--on-surface-variant);
+  --sidebar-card-bg:     var(--surface-container);
+  --sidebar-active-bg:   var(--surface-lowest);
+  --sidebar-active-fg:   var(--brand-active);
+  --sidebar-brand-color: var(--brand-active);
+  --sidebar-track-bg:    var(--outline-variant);
+  --accent-bg:           var(--surface);
+
   /* Typography */
   --font-display: 'Manrope', sans-serif;
   --font-body: 'Inter', sans-serif;

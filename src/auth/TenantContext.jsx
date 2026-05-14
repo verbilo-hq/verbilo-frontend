@@ -30,6 +30,24 @@ function darkenHex(hex, amount) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+// VER-81: perceived-luminance check on `#rrggbb`. Returns true for
+// light colours (where we want dark foreground), false for dark
+// (where white foreground reads). Threshold 140 picks middle-grey
+// as the boundary. Used to decide sidebar text colour when a tenant
+// has overridden the sidebar bg via `secondaryColor`.
+function isHexLight(hex) {
+  if (typeof hex !== "string") return false;
+  const match = /^#([0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!match) return false;
+  const v = match[1];
+  const r = parseInt(v.slice(0, 2), 16);
+  const g = parseInt(v.slice(2, 4), 16);
+  const b = parseInt(v.slice(4, 6), 16);
+  // Rec. 601 luma — perceived brightness, 0-255.
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luma > 140;
+}
+
 export function TenantProvider({ children }) {
   const [surface] = useState(() =>
     resolveSurface({
@@ -99,12 +117,59 @@ export function TenantProvider({ children }) {
     // means defaults stay byte-identical to before.
     const primary = tenant?.primaryColor || null;
     const primaryDim = primary ? darkenHex(primary, 0.12) : null;
+    const secondary = tenant?.secondaryColor || null;
+    const accent = tenant?.accentColor || null;
 
     apply("--primary",      primary);
     apply("--primary-dim",  primaryDim);
     apply("--brand-active", primary); // sidebar wordmark + active nav text
-    apply("--secondary",    tenant?.secondaryColor || null);
-    apply("--accent",       tenant?.accentColor || null); // new token; consumers opt in via var(--accent, fallback)
+    apply("--secondary",    secondary);
+    apply("--accent",       accent);
+
+    // VER-81: when the tenant has overridden --secondary, drive the
+    // semantic sidebar tokens too — sidebar bg becomes the tenant
+    // secondary, foreground flips to white/dark based on luminance,
+    // and the per-card / active-state highlights become semi-translucent
+    // whites so they read against the new fill regardless of hue.
+    if (secondary) {
+      const sidebarLight = isHexLight(secondary);
+      const sidebarFg = sidebarLight ? "#0e1313" : "#ffffff";
+      const sidebarFgMuted = sidebarLight
+        ? "rgba(14, 19, 19, 0.65)"
+        : "rgba(255, 255, 255, 0.72)";
+      const sidebarCardBg = sidebarLight
+        ? "rgba(0, 0, 0, 0.06)"
+        : "rgba(255, 255, 255, 0.10)";
+      const sidebarActiveBg = sidebarLight
+        ? "rgba(0, 0, 0, 0.10)"
+        : "rgba(255, 255, 255, 0.18)";
+      const sidebarTrackBg = sidebarLight
+        ? "rgba(0, 0, 0, 0.12)"
+        : "rgba(255, 255, 255, 0.20)";
+
+      apply("--sidebar-bg",          secondary);
+      apply("--sidebar-fg",          sidebarFg);
+      apply("--sidebar-fg-muted",    sidebarFgMuted);
+      apply("--sidebar-card-bg",     sidebarCardBg);
+      apply("--sidebar-active-bg",   sidebarActiveBg);
+      apply("--sidebar-active-fg",   sidebarFg);
+      apply("--sidebar-brand-color", sidebarFg);
+      apply("--sidebar-track-bg",    sidebarTrackBg);
+    } else {
+      // No secondary override → unset the semantic tokens so the
+      // tokens.css defaults (var(--surface-low) etc.) kick back in.
+      apply("--sidebar-bg",          null);
+      apply("--sidebar-fg",          null);
+      apply("--sidebar-fg-muted",    null);
+      apply("--sidebar-card-bg",     null);
+      apply("--sidebar-active-bg",   null);
+      apply("--sidebar-active-fg",   null);
+      apply("--sidebar-brand-color", null);
+      apply("--sidebar-track-bg",    null);
+    }
+
+    // VER-81: tenant.accentColor tints the body background.
+    apply("--accent-bg", accent);
 
     // Cleanup on unmount / tenant change — leave defaults in place.
     return () => {
@@ -113,6 +178,15 @@ export function TenantProvider({ children }) {
       apply("--brand-active", null);
       apply("--secondary", null);
       apply("--accent", null);
+      apply("--sidebar-bg", null);
+      apply("--sidebar-fg", null);
+      apply("--sidebar-fg-muted", null);
+      apply("--sidebar-card-bg", null);
+      apply("--sidebar-active-bg", null);
+      apply("--sidebar-active-fg", null);
+      apply("--sidebar-brand-color", null);
+      apply("--sidebar-track-bg", null);
+      apply("--accent-bg", null);
     };
   }, [
     surface.surface,
