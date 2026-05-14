@@ -1,7 +1,13 @@
 .shell {
   display: flex;
   min-height: 100vh;
-  background: var(--surface);
+  /* VER-81 follow-up: was `var(--surface)` which masked the tenant
+     `--accent-bg` set on body by TenantContext. Now uses the same
+     semantic token so tenant accent flows through to the page body
+     (BrandPreview's mock body fill matches the real intranet shell).
+     Falls back to --surface on untenanted surfaces — the tokens.css
+     default keeps --accent-bg === --surface there. */
+  background: var(--accent-bg);
 }
 
 .main {
