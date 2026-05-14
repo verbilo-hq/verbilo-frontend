@@ -10,7 +10,17 @@ import {
 } from "../fixtures/demo/clinical";
 import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
-// import { fetchJson } from "./http";
+import { fetchJson } from "./http";
+
+// VER-87: starter-template library for the Clinical Resources module.
+// Backed by /admin/tenants/:id/starter-templates?module=clinical from
+// VER-85. Each item is { id, title, summary, body, status: "template" }.
+export async function listClinicalStarterTemplates(tenantId) {
+  if (!tenantId) return { items: [] };
+  return fetchJson(
+    `/admin/tenants/${encodeURIComponent(tenantId)}/starter-templates?module=clinical`,
+  );
+}
 
 export async function listClinicalTabs() {
   await simulateLatency();
