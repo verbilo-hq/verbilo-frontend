@@ -42,6 +42,9 @@ const DEMO_CAPABILITIES = [
   "users.disable",
   "users.delete",
   "audit.read",
+  "announcements.list",
+  "announcements.create",
+  "announcements.delete",
 ];
 
 function resolveActiveSite(session) {
