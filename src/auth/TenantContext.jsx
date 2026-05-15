@@ -30,6 +30,7 @@ const DEMO_TENANT = {
     "cqc",
     "marketing",
     "lab",
+    "documents",
   ],
   logoUrl: null,
   primaryColor: null,
