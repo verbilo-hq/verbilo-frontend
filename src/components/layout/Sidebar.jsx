@@ -6,16 +6,17 @@ import { sectorIcon, sectorLabel, roleLabel } from "../../lib/sector";
 import styles from "./Sidebar.module.css";
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard",            icon: "dashboard"                    },
-  { id: "manager",   label: "Manager Hub",          icon: "layers",   roles: ["manager"] },
-  { id: "clinical",  label: "Clinical Resources",   icon: "clinical"                     },
-  { id: "staff",     label: "Staff Directory",      icon: "staff"                        },
-  { id: "marketing", label: "Brand Hub",             icon: "marketing"                    },
-  { id: "hr",        label: "HR Hub",               icon: "building"                     },
-  { id: "training",  label: "Training Hub",         icon: "training"                     },
-  { id: "cpd",       label: "CPD Hub",              icon: "award"                        },
-  { id: "cqc",       label: "CQC Compliance Hub",   icon: "checksquare"                  },
-  { id: "lab",       label: "Lab Work Hub",         icon: "clipboard"                    },
+  { id: "dashboard",  label: "Dashboard",            icon: "dashboard"                    },
+  { id: "manager",    label: "Manager Hub",          icon: "layers",   roles: ["manager"] },
+  { id: "clinical",   label: "Clinical Resources",   icon: "clinical"                     },
+  { id: "staff",      label: "Staff Directory",      icon: "staff"                        },
+  { id: "marketing",  label: "Brand Hub",             icon: "marketing"                    },
+  { id: "documents",  label: "Documents",            icon: "folder"                       }, // VER-92
+  { id: "hr",         label: "HR Hub",               icon: "building"                     },
+  { id: "training",   label: "Training Hub",         icon: "training"                     },
+  { id: "cpd",        label: "CPD Hub",              icon: "award"                        },
+  { id: "cqc",        label: "CQC Compliance Hub",   icon: "checksquare"                  },
+  { id: "lab",        label: "Lab Work Hub",         icon: "clipboard"                    },
 ];
 
 export const Sidebar = ({ current, onNav }) => {
