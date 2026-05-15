@@ -14,6 +14,7 @@ import { AdminPage } from "./pages/AdminPage";
 import { LabPage } from "./pages/LabPage";
 import { ManagerPage } from "./pages/ManagerPage";
 import { TenantSettingsPage } from "./pages/TenantSettingsPage";
+import { DocumentsPage } from "./pages/DocumentsPage";
 import styles from "./App.module.css";
 
 // Code-split the four largest pages for a faster initial load.
@@ -40,6 +41,7 @@ const pageComponents = {
   cqc:       CqcPage,
   lab:       LabPage,
   manager:   ManagerPage,
+  documents: DocumentsPage,
   settings:  TenantSettingsPage,
 };
 
