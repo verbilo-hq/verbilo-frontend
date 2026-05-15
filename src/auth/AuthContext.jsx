@@ -45,6 +45,9 @@ const DEMO_CAPABILITIES = [
   "announcements.list",
   "announcements.create",
   "announcements.delete",
+  "documents.list",
+  "documents.upload",
+  "documents.delete",
 ];
 
 function resolveActiveSite(session) {
