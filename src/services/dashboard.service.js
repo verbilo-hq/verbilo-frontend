@@ -7,7 +7,6 @@ import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
 
 const RSS2JSON = "https://api.rss2json.com/v1/api.json?count=3&rss_url=";
-const INTERNAL_NEWS_KEY = "verbilo_internal_news";
 
 const EMPTY_SUMMARY = {
   patientCount: 0,
@@ -130,16 +129,7 @@ export async function fetchNews({ force = false } = {}) {
   return newsCache;
 }
 
-/* Internal news posts — persisted to localStorage for the demo;
-   swap to fetchJson("/dashboard/internal-news") when backend lands. */
-export function listInternalNews() {
-  try {
-    return JSON.parse(localStorage.getItem(INTERNAL_NEWS_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveInternalNews(posts) {
-  localStorage.setItem(INTERNAL_NEWS_KEY, JSON.stringify(posts));
-}
+// VER-93: the localStorage-backed `listInternalNews` / `saveInternalNews`
+// stub was replaced by the real Announcement endpoint in
+// `services/announcements.service.js`. Removed deliberately so nothing
+// new accidentally writes to the old `verbilo_internal_news` key.

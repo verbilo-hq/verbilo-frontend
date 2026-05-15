@@ -7,13 +7,30 @@ import { Avatar } from "../components/ui/Avatar";
 import { useClickOutside } from "../hooks/useClickOutside";
 import {
   listGroupUpdates, listTips, listLinkIcons, listQuickLinks,
-  fetchNews, listInternalNews, saveInternalNews,
-  getDashboardSummary,
+  fetchNews, getDashboardSummary,
 } from "../services/dashboard.service";
+import { listAnnouncements, deleteAnnouncement } from "../services/announcements.service";
 import { getMyOnboardingActions } from "../services/onboarding.service";
 import { useTenant } from "../auth/TenantContext";
+import { useCapability } from "../auth/AuthContext";
 import { isDemoMode } from "../lib/mode";
+import { ComposeAnnouncementModal } from "./ComposeAnnouncementModal";
 import styles from "./DashboardPage.module.css";
+
+// VER-93: human-friendly date for announcement rows on the dashboard.
+// Compact relative form for recent (<7d), absolute thereafter.
+function formatAnnouncementDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 60) return `${Math.max(1, mins)}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
 
 /* ─── Tip-of-the-day colour config (UI only, not data) ─── */
 const TIP_CFG = {
@@ -174,9 +191,18 @@ function TenantDashboard({ currentUser, onNav }) {
   const tenantName = tenant?.name ?? "your practice";
   const [liveNews, setLiveNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(true);
-  const [internalNews, setInternalNews] = useState(() => listInternalNews());
+  // VER-93: real Announcement endpoint replaces the localStorage stub
+  // (`listInternalNews()`). The endpoint already returns rows scoped to
+  // the actor — site users get their site's announcements + company-wide.
+  const [announcements, setAnnouncements] = useState([]);
+  const canCompose = useCapability("announcements.create");
+  const canDelete = useCapability("announcements.delete");
+  const [composeOpen, setComposeOpen] = useState(false);
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState(false);
+
+  const refreshAnnouncements = () =>
+    listAnnouncements().then((r) => setAnnouncements(r?.items ?? []));
   // VER-91: actions list comes from /users/me/onboarding-actions. Null
   // while loading, [] when nothing to do (platform actors or fully
   // onboarded tenants), or an array of action items.
@@ -211,6 +237,14 @@ function TenantDashboard({ currentUser, onNav }) {
       setLiveNews(items);
       setNewsLoading(false);
     });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    listAnnouncements()
+      .then((r) => { if (!cancelled) setAnnouncements(r?.items ?? []); })
+      .catch(() => { if (!cancelled) setAnnouncements([]); });
     return () => { cancelled = true; };
   }, []);
 
@@ -307,35 +341,75 @@ function TenantDashboard({ currentUser, onNav }) {
           )}
 
           <div className={styles.newsSectionDivider} />
-          <div className={styles.newsSectionLabel}>
-            <span>Group</span>
+          <div className={styles.newsSectionLabel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Announcements</span>
+            {canCompose && (
+              <button
+                type="button"
+                onClick={() => setComposeOpen(true)}
+                style={{
+                  background: "none", border: "1px solid var(--outline)",
+                  borderRadius: 6, padding: "4px 10px", fontSize: 12,
+                  cursor: "pointer", color: "var(--on-surface)",
+                }}
+              >
+                + Compose
+              </button>
+            )}
           </div>
 
-          {internalNews.length === 0 ? (
+          {announcements.length === 0 ? (
             <div className={styles.internalEmpty}>
               <I name="zap" size={15} color="var(--outline)" />
-              <span>No group updates yet. Anything an admin posts will appear here.</span>
+              <span>No announcements yet. Anything an admin posts will appear here.</span>
             </div>
           ) : (
             <div className={styles.newsList}>
-              {internalNews.map((post) => (
-                <div key={post.id} className={styles.newsRow}>
+              {announcements.map((a) => (
+                <div key={a.id} className={styles.newsRow}>
                   <div className={styles.newsIconWrap} style={{ background: "rgba(156,39,176,0.08)" }}>
-                    <I name="building" size={15} color="#9C27B0" />
+                    <I name={a.pinned ? "star" : "building"} size={15} color="#9C27B0" />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div className={styles.newsTop}>
-                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>Group</Pill>
-                      <span className={styles.newsDate}>{post.date} · {post.author}</span>
+                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>
+                        {a.visibilityScope === "company" ? "Company-wide" : "Site"}
+                      </Pill>
+                      <span className={styles.newsDate}>
+                        {formatAnnouncementDate(a.publishedAt)} · {a.author?.displayName ?? "system"}
+                      </span>
                     </div>
-                    <h4 className={styles.newsTitle}>{post.title}</h4>
-                    {post.desc && <p className={styles.newsDesc}>{post.desc}</p>}
+                    <h4 className={styles.newsTitle}>{a.title}</h4>
+                    {a.body && <p className={styles.newsDesc}>{a.body}</p>}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!confirm("Delete this announcement?")) return;
+                          deleteAnnouncement(a.id).then(refreshAnnouncements);
+                        }}
+                        style={{
+                          background: "none", border: "none", padding: 0,
+                          marginTop: 6, fontSize: 11, color: "var(--on-surface-variant)",
+                          cursor: "pointer", textDecoration: "underline",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </Card>
+
+        {composeOpen && (
+          <ComposeAnnouncementModal
+            onCreated={refreshAnnouncements}
+            onClose={() => setComposeOpen(false)}
+          />
+        )}
 
         {/* Recent activity empty state — replaces the Suggestion Box card in tenant mode */}
         <Card hover={false} className={styles.suggestionCard}>
@@ -446,7 +520,14 @@ export const DashboardPage = ({ currentUser, onNav }) => {
   const [submitted,    setSubmitted]    = useState(false);
   const [liveNews,     setLiveNews]     = useState([]);
   const [newsLoading,  setNewsLoading]  = useState(true);
-  const [internalNews, setInternalNews] = useState(() => listInternalNews());
+  // VER-93: real Announcement endpoint replaces the localStorage stub
+  // on the demo path too. Demo subdomain seeds 4 plausible entries.
+  const [announcements, setAnnouncements] = useState([]);
+  const canCompose = useCapability("announcements.create");
+  const canDeleteAnn = useCapability("announcements.delete");
+  const [composeOpen, setComposeOpen] = useState(false);
+  const refreshAnnouncements = () =>
+    listAnnouncements().then((r) => setAnnouncements(r?.items ?? []));
   const [activeItem,   setActiveItem]   = useState(null);
   const [links,         setLinks]         = useState([]);
   const [showManage,    setShowManage]    = useState(false);
@@ -473,6 +554,9 @@ export const DashboardPage = ({ currentUser, onNav }) => {
     listTips().then(setTips);
     listQuickLinks().then(setLinks);
     listLinkIcons().then(setLinkIcons);
+    listAnnouncements()
+      .then((r) => setAnnouncements(r?.items ?? []))
+      .catch(() => setAnnouncements([]));
     getDashboardSummary()
       .then((data) => { setSummary(data); setSummaryError(false); })
       .catch(() => { setSummary(null); setSummaryError(true); });
@@ -717,37 +801,77 @@ export const DashboardPage = ({ currentUser, onNav }) => {
             </div>
           )}
 
-          {/* ── Internal group news ── */}
+          {/* ── Announcements (VER-93) ── */}
           <div className={styles.newsSectionDivider} />
-          <div className={styles.newsSectionLabel}>
-            <span>Group</span>
+          <div className={styles.newsSectionLabel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Announcements</span>
+            {canCompose && (
+              <button
+                type="button"
+                onClick={() => setComposeOpen(true)}
+                style={{
+                  background: "none", border: "1px solid var(--outline)",
+                  borderRadius: 6, padding: "4px 10px", fontSize: 12,
+                  cursor: "pointer", color: "var(--on-surface)",
+                }}
+              >
+                + Compose
+              </button>
+            )}
           </div>
 
-          {internalNews.length === 0 ? (
+          {announcements.length === 0 ? (
             <div className={styles.internalEmpty}>
               <I name="zap" size={15} color="var(--outline)" />
-              <span>No group updates yet.</span>
+              <span>No announcements yet.</span>
             </div>
           ) : (
             <div className={styles.newsList}>
-              {internalNews.map(post => (
-                <div key={post.id} className={styles.newsRow}>
+              {announcements.map((a) => (
+                <div key={a.id} className={styles.newsRow}>
                   <div className={styles.newsIconWrap} style={{ background: "rgba(156,39,176,0.08)" }}>
-                    <I name="building" size={15} color="#9C27B0" />
+                    <I name={a.pinned ? "star" : "building"} size={15} color="#9C27B0" />
                   </div>
                   <div style={{ flex: 1 }}>
                     <div className={styles.newsTop}>
-                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>Group</Pill>
-                      <span className={styles.newsDate}>{post.date} · {post.author}</span>
+                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>
+                        {a.visibilityScope === "company" ? "Company-wide" : "Site"}
+                      </Pill>
+                      <span className={styles.newsDate}>
+                        {formatAnnouncementDate(a.publishedAt)} · {a.author?.displayName ?? "system"}
+                      </span>
                     </div>
-                    <h4 className={styles.newsTitle}>{post.title}</h4>
-                    {post.desc && <p className={styles.newsDesc}>{post.desc}</p>}
+                    <h4 className={styles.newsTitle}>{a.title}</h4>
+                    {a.body && <p className={styles.newsDesc}>{a.body}</p>}
+                    {canDeleteAnn && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!confirm("Delete this announcement?")) return;
+                          deleteAnnouncement(a.id).then(refreshAnnouncements);
+                        }}
+                        style={{
+                          background: "none", border: "none", padding: 0,
+                          marginTop: 6, fontSize: 11, color: "var(--on-surface-variant)",
+                          cursor: "pointer", textDecoration: "underline",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </Card>
+
+        {composeOpen && (
+          <ComposeAnnouncementModal
+            onCreated={refreshAnnouncements}
+            onClose={() => setComposeOpen(false)}
+          />
+        )}
 
         {/* Suggestion Box */}
         <Card hover={false} className={styles.suggestionCard}>
