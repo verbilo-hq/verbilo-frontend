@@ -167,5 +167,58 @@ export function getToken() {
   return session?.token ?? null;
 }
 
+// Cross-subdomain session bridge for the Verbilo Admin → tenant
+// "Open as admin" flow (VER-62 follow-up).
+//
+// localStorage / sessionStorage are per-origin, so a session on
+// `admin.verbilo.co.uk` isn't visible on `{slug}.verbilo.co.uk`. The
+// admin portal builds a `#vb_session=…` fragment on the outbound link;
+// the receiving tab calls `importBridgeSession()` before React mounts,
+// parses the fragment, persists the session (sessionStorage — tab-
+// scoped, doesn't leak into other tenant tabs the operator might
+// open later), and scrubs the fragment so it doesn't sit in the URL.
+//
+// Fragment vs query string: fragments don't reach the server, so the
+// raw Cognito JWT doesn't appear in access logs. Browser history still
+// keeps it; that's the same XSS-exposed footprint as localStorage, so
+// no new exposure beyond what the existing session model already
+// accepts (VER-54 documents the trade-off).
+const BRIDGE_FRAGMENT_KEY = "vb_session";
+
+export function importBridgeSession() {
+  if (typeof window === "undefined") return false;
+  const hash = window.location.hash;
+  if (!hash) return false;
+  const params = new URLSearchParams(hash.slice(1));
+  const raw = params.get(BRIDGE_FRAGMENT_KEY);
+  if (!raw) return false;
+  try {
+    const session = JSON.parse(decodeURIComponent(raw));
+    // Cross-tenant bridge is always tab-scoped — we never want a
+    // platform admin's full-scope token to outlive the inspection tab.
+    persistSession(session, { persistent: false });
+  } catch {
+    /* malformed fragment — drop silently */
+  }
+  // Scrub the fragment regardless of parse success so a malformed
+  // bridge doesn't sit in the URL bar.
+  params.delete(BRIDGE_FRAGMENT_KEY);
+  const remaining = params.toString();
+  const newHash = remaining ? `#${remaining}` : "";
+  history.replaceState(
+    null,
+    "",
+    window.location.pathname + window.location.search + newHash,
+  );
+  return true;
+}
+
+export function buildBridgeUrl(targetUrl, session) {
+  if (!session) return targetUrl;
+  const encoded = encodeURIComponent(JSON.stringify(session));
+  const sep = targetUrl.includes("#") ? "&" : "#";
+  return `${targetUrl}${sep}${BRIDGE_FRAGMENT_KEY}=${encoded}`;
+}
+
 // Exposed for testing / debugging only.
-export const __INTERNAL__ = { SESSION_KEY, LEGACY_KEY };
+export const __INTERNAL__ = { SESSION_KEY, LEGACY_KEY, BRIDGE_FRAGMENT_KEY };
