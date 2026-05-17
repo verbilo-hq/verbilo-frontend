@@ -69,14 +69,19 @@ export default function App() {
 
   return (
     <div className={styles.shell}>
-      <Sidebar current={page} onNav={setPage} />
-      <main className={styles.main}>
-        <DemoBanner />
-        <CrossTenantBanner />
-        <Suspense fallback={<PageFallback />}>
-          <ActivePage {...pageProps} />
-        </Suspense>
-      </main>
+      {/* Banners lifted out of <main> so they span the viewport
+          including over the sidebar gutter (request from Owen
+          2026-05-17). Each component self-hides when not applicable. */}
+      <DemoBanner />
+      <CrossTenantBanner />
+      <div className={styles.layout}>
+        <Sidebar current={page} onNav={setPage} />
+        <main className={styles.main}>
+          <Suspense fallback={<PageFallback />}>
+            <ActivePage {...pageProps} />
+          </Suspense>
+        </main>
+      </div>
     </div>
   );
 }
