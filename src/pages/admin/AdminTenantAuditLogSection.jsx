@@ -127,7 +127,19 @@ export const AdminTenantAuditLogSection = ({ tenantId }) => {
 
       {status === "ready" && items && items.length > 0 && (
         <>
-          <table className={styles.usersTable}>
+          {/* Owen 2026-05-17: row dividers didn't line up because narrow
+              cells wrapped to 2 lines, making rows variable-height. Fix:
+              fixed widths + nowrap on the short cells, give Action the
+              rest of the room and let it wrap (long routes like
+              `patch.admin/tenants/:id/branding` need it). */}
+          <table className={`${styles.usersTable}`} style={{ tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: 110 }} />
+              <col style={{ width: 140 }} />
+              <col />
+              <col style={{ width: 200 }} />
+              <col style={{ width: 100 }} />
+            </colgroup>
             <thead>
               <tr>
                 <th>Time</th>
@@ -142,14 +154,18 @@ export const AdminTenantAuditLogSection = ({ tenantId }) => {
                 const expanded = expandedId === entry.id;
                 return (
                   <tr key={entry.id}>
-                    <td title={entry.createdAt}>{formatRelative(entry.createdAt)}</td>
-                    <td>
+                    <td title={entry.createdAt} style={{ whiteSpace: "nowrap" }}>
+                      {formatRelative(entry.createdAt)}
+                    </td>
+                    <td style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {entry.actor?.displayName ?? entry.actor?.username ?? (
                         <span className={styles.helperMuted}>system</span>
                       )}
                     </td>
-                    <td><code style={{ fontSize: 12 }}>{entry.action}</code></td>
                     <td>
+                      <code style={{ fontSize: 12, wordBreak: "break-all" }}>{entry.action}</code>
+                    </td>
+                    <td style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {entry.entityType}
                       {entry.entityId ? (
                         <span className={styles.helperMuted} style={{ fontSize: 11, marginLeft: 6 }}>
