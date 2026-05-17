@@ -1,5 +1,6 @@
 .shell {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   /* VER-81 follow-up: was `var(--surface)` which masked the tenant
      `--accent-bg` set on body by TenantContext. Now uses the same
@@ -10,8 +11,18 @@
   background: var(--accent-bg);
 }
 
+/* Banners are direct children of .shell, in the document but visually
+   fixed-positioned at the top. The .layout row wraps sidebar + main. */
+.layout {
+  display: flex;
+  flex: 1;
+}
+
 .main {
   margin-left: 240px;
   flex: 1;
-  padding: 32px clamp(90px, 11%, 160px);
+  /* `--top-banner-height` is set on :root by the visible banner (if any)
+     and defaults to 0px. Adding it to the top padding stops the page
+     header from being hidden behind the fixed-overlay banner. */
+  padding: calc(32px + var(--top-banner-height, 0px)) clamp(90px, 11%, 160px) 32px;
 }
