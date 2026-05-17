@@ -8,6 +8,14 @@ import { TenantProvider, useTenant } from "./auth/TenantContext.jsx";
 import { PublicLandingPage } from "./pages/PublicLandingPage.jsx";
 import { TenantNotFoundPage } from "./pages/TenantNotFoundPage.jsx";
 import { SentryErrorBoundary } from "./instrument.js";
+import { importBridgeSession } from "./services/session.js";
+
+// VER-62 follow-up: cross-subdomain session bridge. When the admin
+// portal opens a tenant via "Open as admin", it appends the operator's
+// session to the URL as a `#vb_session=…` fragment. Import it BEFORE
+// React mounts so AuthProvider sees the bridged session on first read
+// and the cross-tenant banner / Settings nav render correctly.
+importBridgeSession();
 
 // Keep `document.title` in sync with the current surface so the browser tab
 // (and any bookmark / unfurl preview) reads e.g. "Verbilo · SmileCo" while
