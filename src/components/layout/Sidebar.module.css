@@ -1,6 +1,10 @@
 .sidebar {
   width: 240px;
-  min-height: 100vh;
+  /* `--top-banner-height` is set on :root by DemoBanner / CrossTenantBanner
+     when they mount (defaults to 0). Subtracting the offset from the
+     viewport height keeps the sidebar fully visible underneath the
+     fixed-overlay banner — see DemoBanner.module.css. */
+  min-height: calc(100vh - var(--top-banner-height, 0px));
   /* VER-81: semantic token — defaults to --surface-low for Verbilo's
      untenanted brand; tenants override --sidebar-bg via TenantContext. */
   background: var(--sidebar-bg);
@@ -9,7 +13,7 @@
   padding: 32px 0;
   position: fixed;
   left: 0;
-  top: 0;
+  top: var(--top-banner-height, 0px);
   z-index: 50;
 }
 
