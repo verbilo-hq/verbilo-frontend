@@ -3,7 +3,22 @@ import { listTenants } from "../../services/tenants.service";
 import { useTenant } from "../../auth/TenantContext";
 import { useCapability } from "../../auth/AuthContext";
 import { tenantUrl } from "../../lib/host";
+import { buildBridgeUrl, readSession } from "../../services/session";
 import styles from "./AdminTenantsPage.module.css";
+
+// VER-62 follow-up: "Open as admin" opens the tenant subdomain in a
+// new tab. localStorage/sessionStorage are per-origin, so without a
+// handoff the new tab has no session and shows the unauthenticated
+// view (or whatever stale session that subdomain happens to hold).
+// We attach the current platform-admin session as a `#vb_session=…`
+// fragment; the receiving tab's `importBridgeSession()` reads it and
+// scrubs the fragment from the URL on mount. Fragments aren't sent to
+// the server, so the raw JWT doesn't appear in any access log.
+function openTenantAsAdmin(url) {
+  const session = readSession();
+  const bridged = session ? buildBridgeUrl(url, session) : url;
+  window.open(bridged, "_blank", "noopener,noreferrer");
+}
 
 export const AdminTenantsPage = ({ onCreate, onEdit }) => {
   const { environment } = useTenant();
@@ -104,17 +119,25 @@ export const AdminTenantsPage = ({ onCreate, onEdit }) => {
                       and the row's bottom border stops short of this
                       column. */}
                   <div className={styles.rowActions}>
-                    {/* VER-62: opens the tenant subdomain in a new tab. On the
-                        tenant surface, a banner reminds the operator they're
-                        acting as a Verbilo Admin and all actions are audited. */}
-                    <a
+                    {/* VER-62: opens the tenant subdomain in a new tab with
+                        the operator's session bridged via a URL fragment.
+                        On the tenant surface, a banner reminds the operator
+                        they're acting as a Verbilo Admin and all actions are
+                        audited. Button (not <a>) because we need a click
+                        handler that reads the live session and rebuilds the
+                        URL — a static href would carry a stale token after
+                        sign-out / refresh. */}
+                    <button
+                      type="button"
                       className={styles.btnGhost}
-                      href={tenantUrl(t.slug, isStaging ? "staging" : "production")}
-                      target="_blank"
-                      rel="noreferrer"
+                      onClick={() =>
+                        openTenantAsAdmin(
+                          tenantUrl(t.slug, isStaging ? "staging" : "production"),
+                        )
+                      }
                     >
                       Open as admin
-                    </a>
+                    </button>
                     <button className={styles.btnGhost} onClick={() => onEdit(t.id)}>
                       Edit
                     </button>
