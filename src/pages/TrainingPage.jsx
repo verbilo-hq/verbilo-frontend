@@ -3,24 +3,15 @@ import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
-import { Avatar } from "../components/ui/Avatar";
 import { ProgressBar } from "../components/ui/ProgressBar";
-import { SearchBar } from "../components/ui/SearchBar";
-import { TopBar } from "../components/layout/TopBar";
-import { useTenant } from "../auth/TenantContext";
-import { isDemoMode } from "../lib/mode";
-import { listTrainingStarterTemplates } from "../services/training.service";
+import { putFile, getObjectUrl } from "../services/clientFileStore";
+import { siteName } from "../services/sites";
+import { useModalA11y } from "../hooks/useModalA11y";
 import styles from "./TrainingPage.module.css";
 
 /* ─── Static module data ───
  * Lesson + quiz content for hand-authored modules. Modules without an entry
  * here fall back to a generic outline (see getModuleContent below).
- *
- * Note (VER-47): the modules below are UK dental-sector training (CQC, NHS
- * UDA contract economics, COSHH, GDC standards, etc.). They're shown to
- * tenants with `sector === "dental"`. Other sectors will get parallel
- * sector-specific modules gated via `Tenant.enabledModules` — tracked as a
- * follow-up once we onboard a non-dental tenant.
  */
 const moduleContent = {
   m1: {
@@ -194,7 +185,7 @@ const moduleContent = {
     quiz: [
       { q: "Under IRMER 2017, who is responsible for justifying a radiographic exposure?", options: ["The operator", "The practitioner", "The referrer", "The patient"], correct: 1 },
       { q: "What does ALARA stand for?", options: ["As Low As Readily Available", "As Low As Reasonably Achievable", "Always Limit All Radiation Application", "As Limited As Reasonably Allowed"], correct: 1 },
-      { q: "What is the recommended grading system for dental radiograph quality?", options: ["Pass/Fail", "Grade 1-3", "A-D", "Excellent/Acceptable/Unacceptable"], correct: 1 },
+      { q: "Under the current CGDent/FGDP Selection Criteria (3rd ed.), which grading system is used for dental radiograph quality?", options: ["Grade 1-3 (legacy three-point scale)", "A/N — Acceptable / Not acceptable (target ≥95% A)", "A-E five-point scale", "Pass/Fail"], correct: 1 },
     ],
   },
   n1: {
@@ -280,16 +271,16 @@ const modules = [
   { id: "h10", role: "hygienist", cat: "Restorative", title: "Direct Restorations (Therapists)", desc: "Class I-V composite restorations, ART technique, pulp protection decisions, and paediatric restorations.", cpd: 6, dur: "6 hrs", type: "Course", status: "optional", pct: 0 },
 ];
 
-/* ─── Internal (tenant-authored) training modules ──────────────────────────── */
+/* ─── Internal Dental Group modules ──────────────────────────────────────── */
 const internalModules = [
-  { id: "i1", title: "Practice Induction",            cat: "Onboarding",  dur: "45 min", cpd: 0, desc: "Practice values, team structure, facilities walkthrough, key contacts, and what to expect in your first weeks.", roles: "all",                      updatedAt: "Jan 2026" },
+  { id: "i1", title: "Dental Group Induction",        cat: "Onboarding",  dur: "45 min", cpd: 0, desc: "Practice values, team structure, facilities walkthrough, key contacts, and what to expect in your first weeks at Dental Group.", roles: "all",                      updatedAt: "Jan 2026" },
   { id: "i2", title: "Practice Management System",   cat: "Systems",     dur: "30 min", cpd: 0, desc: "Full walkthrough of your practice management system — patient records, appointment scheduling, charting, NHS FP17 submission, and reporting dashboards.", roles: "all",              updatedAt: "Feb 2026" },
-  { id: "i3", title: "Patient Journey & Service Standards",   cat: "Patient Care",dur: "25 min", cpd: 0, desc: "Our 5-star patient journey from first contact to recall. Communication standards, greeting protocols, and the Inspire experience.", roles: "all",              updatedAt: "Jan 2026" },
-  { id: "i4", title: "Inspire Infection Control Protocol",    cat: "Compliance",  dur: "20 min", cpd: 1, desc: "Practice-specific decontamination workflows, zone maps, PPE station locations, and HTM 01-05 implementation at Inspire.", roles: "dentist,nurse,hygienist", isNew: true, updatedAt: "Mar 2026" },
-  { id: "i5", title: "Emergency Procedures at Inspire",       cat: "Safety",      dur: "15 min", cpd: 0, desc: "Emergency drug kit and AED locations, fire evacuation plan, first aid contacts, and incident escalation procedures for this practice.", roles: "all",          updatedAt: "Jan 2026" },
-  { id: "i6", title: "Complaint Handling at Inspire",         cat: "Operations",  dur: "20 min", cpd: 0, desc: "Our complaint procedure — intake, investigation, response timeline, and using patient feedback to drive service improvement.", roles: "all",                  updatedAt: "Feb 2026" },
+  { id: "i3", title: "Patient Journey & Service Standards",   cat: "Patient Care",dur: "25 min", cpd: 0, desc: "Our 5-star patient journey from first contact to recall. Communication standards, greeting protocols, and the Dental Group experience.", roles: "all",              updatedAt: "Jan 2026" },
+  { id: "i4", title: "Dental Group Infection Control Protocol",    cat: "Compliance",  dur: "20 min", cpd: 1, desc: "Practice-specific decontamination workflows, zone maps, PPE station locations, and HTM 01-05 implementation at Dental Group.", roles: "dentist,nurse,hygienist", isNew: true, updatedAt: "Mar 2026" },
+  { id: "i5", title: "Emergency Procedures at Dental Group",       cat: "Safety",      dur: "15 min", cpd: 0, desc: "Emergency drug kit and AED locations, fire evacuation plan, first aid contacts, and incident escalation procedures for this practice.", roles: "all",          updatedAt: "Jan 2026" },
+  { id: "i6", title: "Complaint Handling at Dental Group",         cat: "Operations",  dur: "20 min", cpd: 0, desc: "Our complaint procedure — intake, investigation, response timeline, and using patient feedback to drive service improvement.", roles: "all",                  updatedAt: "Feb 2026" },
   { id: "i7", title: "NHS & Private Fee Collection",          cat: "Finance",     dur: "20 min", cpd: 0, desc: "Charging bands, exemption verification, card terminal operation, handling payment queries, and end-of-day reconciliation.", roles: "receptionist,manager",     updatedAt: "Jan 2026" },
-  { id: "i8", title: "Stock Control & Ordering at Inspire",   cat: "Operations",  dur: "15 min", cpd: 0, desc: "Inventory par levels, ordering from approved suppliers, expiry date checks, and the stock request process at Inspire.", roles: "nurse,manager",                updatedAt: "Jan 2026" },
+  { id: "i8", title: "Stock Control & Ordering at Dental Group",   cat: "Operations",  dur: "15 min", cpd: 0, desc: "Inventory par levels, ordering from approved suppliers, expiry date checks, and the stock request process at Dental Group.", roles: "nurse,manager",                updatedAt: "Jan 2026" },
 ];
 
 /* ─── How To video series ─────────────────────────────────────────────────── */
@@ -299,6 +290,7 @@ const howToVideos = [
   { id: "ht2",  title: "How to Process Instruments (HTM 01-05)",      dur: "5 min",  cat: "Decontamination",       roles: "nurse,dentist",          color: "#005c66", videoSrc: `${GTV}ForBiggerEscapes.mp4`             },
   { id: "ht3",  title: "How to Take a BPE Score",                     dur: "2 min",  cat: "Clinical",              roles: "dentist,hygienist",      color: "#006974", videoSrc: `${GTV}ForBiggerFun.mp4`                 },
   { id: "ht4",  title: "How to Book an NHS Appointment",               dur: "3 min",  cat: "Reception",             roles: "receptionist,manager",   color: "#6A1B9A", videoSrc: `${GTV}ForBiggerJoyrides.mp4`            },
+  { id: "ht4b", title: "How to Greet a Patient",                       dur: "2 min",  cat: "Reception",             roles: "receptionist,manager",   color: "#6A1B9A", videoSrc: "/training-videos/dental-reception-greet-patient.mp4" },
   { id: "ht5",  title: "How to Submit an FP17 Form",                   dur: "4 min",  cat: "NHS Admin",             roles: "receptionist,manager",   color: "#7B1FA2", videoSrc: `${GTV}ForBiggerMeltdowns.mp4`           },
   { id: "ht6",  title: "How to Handle a Medical Emergency",            dur: "4 min",  cat: "Emergency",             roles: "all",                    color: "#C62828", videoSrc: `${GTV}BigBuckBunny.mp4`                 },
   { id: "ht7",  title: "How to Maintain Dental Handpieces",            dur: "3 min",  cat: "Equipment",             roles: "nurse",                  color: "#1565C0", videoSrc: `${GTV}ElephantsDream.mp4`               },
@@ -313,12 +305,41 @@ const howToVideos = [
   { id: "ht16", title: "How to Obtain Valid Patient Consent",          dur: "3 min",  cat: "Patient Communication", roles: "dentist,hygienist,nurse", color: "#0D47A1", videoSrc: `${GTV}ForBiggerJoyrides.mp4`            },
 ];
 
+/* ─── External training quick-links ───────────────────────────────────────────
+ * User-curated links to outside CPD providers. Each card is a single
+ * destination (SharePoint quick-link style) that opens in a new tab. The
+ * entries below are starter samples; staff add their own via the modal and
+ * those persist to localStorage. */
+const externalTraining = [
+  { id: "ext1", title: "Dentistry.co.uk CPD",        cat: "Verifiable CPD",    desc: "Team packages covering a wide range of subjects, with personal development plan tools for managing your CPD cycle.",          url: "https://www.dentistry.co.uk/cpd" },
+  { id: "ext2", title: "ProDental CPD",              cat: "Verifiable CPD",    desc: "Extensive range of online courses — clinical skills, patient care, infection control and regulatory compliance — all meeting GDC CPD guidelines.", url: "https://www.prodentalcpd.com" },
+  { id: "ext3", title: "Dentaljuce",                 cat: "Verifiable CPD",    desc: "Enhanced verifiable CPD with team training options, conforming to the GDC's enhanced CPD rules.",                            url: "https://www.dentaljuce.com" },
+  { id: "ext4", title: "CPD Online",                 cat: "Compliance",        desc: "Essential compliance training across health & safety, safeguarding, infection control and more.",                            url: "https://www.cpdonline.co.uk", cpdTopic: "Disinfection & Decontamination" },
+  { id: "ext5", title: "Dental Training Ltd",        cat: "Courses",           desc: "CPD bundle designed to meet GDC recommendations, plus NEBDN courses and apprenticeships.",                                   url: "https://www.dentaltrainingltd.com" },
+  { id: "ext6", title: "BDA Courses & Events",       cat: "Professional Body", desc: "British Dental Association webinars, study days, and verifiable CPD courses across clinical and management topics.",            url: "https://www.bda.org/education-events" },
+  { id: "ext7", title: "GDC Enhanced CPD Scheme",    cat: "Regulatory",        desc: "Official General Dental Council guidance on the Enhanced CPD scheme, requirements, and recording your hours.",                 url: "https://www.gdc-uk.org/education-cpd/cpd" },
+];
+
+const EXTERNAL_COLOR = "#0d55a5";
+
+/* Mandatory GDC CPD topics — drives the lightweight sidebar summary and the
+ * optional "counts toward" tag on external links. The full reference (cards +
+ * at-a-glance table) lives on the CPD page; this is just a pointer so the
+ * Training Hub doesn't have to carry that whole block. */
+const MANDATORY_CPD_TOPICS = [
+  { topic: "Medical Emergencies & CPR",          hrs: 10 },
+  { topic: "Disinfection & Decontamination",     hrs: 5  },
+  { topic: "Radiography & Radiation Protection", hrs: 5  },
+];
+const MANDATORY_CPD_TOTAL = MANDATORY_CPD_TOPICS.reduce((s, t) => s + t.hrs, 0);
+
 const statusColors = {
   mandatory: "var(--error)",
   recommended: "var(--primary)",
   optional: "var(--outline)",
   internal: "#9C27B0",
   howto: "#E91E63",
+  external: EXTERNAL_COLOR,
 };
 
 const typeColors = {
@@ -362,11 +383,41 @@ const ModuleViewer = ({ activeModule, onClose }) => {
   const [quizMode, setQuizMode] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  /* Explicit per-lesson completion tracking — replaces the old
+   * "li < activeLesson" heuristic which couldn't mark the LAST
+   * lesson done. Pushed to here when video ends OR user clicks
+   * Next, so the Assessment can unlock once every lesson is done. */
+  const [completedLessons, setCompletedLessons] = useState(() => new Set());
+  /* Auto-advance countdown after a video lesson finishes. Null
+   * when idle; number 5→0 when ticking. Cancel = set to null. */
+  const [advanceCountdown, setAdvanceCountdown] = useState(null);
 
   const content = getModuleContent(activeModule);
   const lesson = content.lessons[activeLesson];
   const totalLessons = content.lessons.length;
   const lessonPct = Math.round(((activeLesson + 1) / totalLessons) * 100);
+  /* Assessment unlocks ONLY when every lesson is in the completed
+   * set — explicit gate, not just "user scrolled past". */
+  const assessmentUnlocked = completedLessons.size >= content.lessons.length;
+
+  /* Mark current lesson done + countdown lifecycle for auto-advance. */
+  const markCurrentDone = () => setCompletedLessons((prev) => new Set(prev).add(activeLesson));
+  const goToNextLesson  = () => {
+    markCurrentDone();
+    setAdvanceCountdown(null);
+    if (activeLesson < content.lessons.length - 1) setActiveLesson(activeLesson + 1);
+  };
+  const cancelCountdown = () => setAdvanceCountdown(null);
+
+  /* Tick countdown 5→0; jump to next lesson at 0. */
+  useEffect(() => {
+    if (advanceCountdown === null) return;
+    if (advanceCountdown === 0) { goToNextLesson(); return; }
+    const id = setTimeout(() => setAdvanceCountdown((n) => n - 1), 1000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advanceCountdown]);
+
   const allAnswered = Object.keys(quizAnswers).length === content.quiz.length;
   const allCorrect = content.quiz.every((q, i) => quizAnswers[i] === q.correct);
 
@@ -381,7 +432,7 @@ const ModuleViewer = ({ activeModule, onClose }) => {
       <div className={styles.viewerNav}>
         <div className={styles.viewerBack}>
           <div onClick={onClose} className={styles.viewerBackBtn}>
-            <I name="arrow" size={16} color="var(--on-surface)" />
+            <I name="back" size={16} color="var(--on-surface)" />
           </div>
           <div>
             <p className={styles.viewerCategory}>
@@ -413,22 +464,56 @@ const ModuleViewer = ({ activeModule, onClose }) => {
           {!quizMode ? (
             <>
               <div className={styles.player}>
-                <div className={styles.playerBlobA} />
-                <div className={styles.playerBlobB} />
-                <div className={styles.playerPlay}>
-                  <I name={typeIcons[lesson.type] || "play"} size={28} color="white" />
-                </div>
-                <span className={styles.playerLabel}>
-                  {lesson.type === "video"
-                    ? "Click to play video"
-                    : lesson.type === "interactive"
-                    ? "Interactive Exercise"
-                    : "Reading Material"}
-                </span>
-                <span className={styles.playerDuration}>{lesson.dur}</span>
-                <div className={styles.playerProgress}>
-                  <div className={styles.playerProgressFill} />
-                </div>
+                {lesson.type === "video" ? (
+                  /* Real <video> for video lessons so onEnded triggers
+                   * the auto-advance countdown. Uses a known sample
+                   * source — production swaps to the lesson's real
+                   * videoSrc once provisioned. */
+                  <video
+                    key={`lesson-${activeLesson}`}
+                    className={styles.playerVideo}
+                    src={lesson.videoSrc || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"}
+                    controls
+                    preload="metadata"
+                    onEnded={() => setAdvanceCountdown(5)}
+                  />
+                ) : (
+                  <>
+                    <div className={styles.playerBlobA} />
+                    <div className={styles.playerBlobB} />
+                    <div className={styles.playerPlay}>
+                      <I name={typeIcons[lesson.type] || "play"} size={28} color="white" />
+                    </div>
+                    <span className={styles.playerLabel}>
+                      {lesson.type === "interactive" ? "Interactive Exercise" : "Reading Material"}
+                    </span>
+                    <span className={styles.playerDuration}>{lesson.dur}</span>
+                    <div className={styles.playerProgress}>
+                      <div className={styles.playerProgressFill} />
+                    </div>
+                  </>
+                )}
+
+                {/* Auto-advance countdown overlay — fires when video
+                  * ends. Big number + cancel button. */}
+                {advanceCountdown !== null && (
+                  <div className={styles.playerCountdown} role="status" aria-live="polite">
+                    <div className={styles.playerCountdownNum}>{advanceCountdown}</div>
+                    <div className={styles.playerCountdownLabel}>
+                      Advancing to Lesson {activeLesson + 2}…
+                    </div>
+                    <div className={styles.playerCountdownActions}>
+                      <button type="button" className={styles.playerCountdownCancel}
+                        onClick={cancelCountdown}>
+                        Stay here
+                      </button>
+                      <button type="button" className={styles.playerCountdownGo}
+                        onClick={goToNextLesson}>
+                        Next now <I name="arrow" size={12} color="currentColor" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <Card hover={false} className={styles.lessonCard}>
@@ -589,11 +674,13 @@ const ModuleViewer = ({ activeModule, onClose }) => {
             <h4 className={styles.outlineTitle}>Lesson Outline</h4>
             <div className={styles.outlineList}>
               {content.lessons.map((l, li) => {
-                const isCurrent = li === activeLesson && !quizMode;
-                const isCompleted = li < activeLesson || quizMode;
+                const isCurrent   = li === activeLesson && !quizMode;
+                /* Explicit completion (was: heuristic `li < activeLesson`
+                 * which couldn't ever mark the last lesson). */
+                const isCompleted = completedLessons.has(li);
                 let badgeClass = styles.outlineBadge;
-                if (isCompleted) badgeClass += ` ${styles.outlineBadgeDone}`;
-                else if (isCurrent) badgeClass += ` ${styles.outlineBadgeCurrent}`;
+                if (isCompleted)     badgeClass += ` ${styles.outlineBadgeDone}`;
+                else if (isCurrent)  badgeClass += ` ${styles.outlineBadgeCurrent}`;
 
                 return (
                   <div
@@ -616,13 +703,20 @@ const ModuleViewer = ({ activeModule, onClose }) => {
                 );
               })}
 
+              {/* Assessment row — distinct styling + lock icon that
+                * unlocks only when every lesson has been completed. */}
               <div
-                onClick={() => setQuizMode(true)}
-                className={
-                  quizMode
-                    ? `${styles.outlineRow} ${styles.outlineRowCurrent} ${styles.outlineQuizRow}`
-                    : `${styles.outlineRow} ${styles.outlineQuizRow}`
-                }
+                onClick={() => { if (assessmentUnlocked) setQuizMode(true); }}
+                className={[
+                  styles.outlineRow,
+                  styles.outlineQuizRow,
+                  quizMode ? styles.outlineRowCurrent : "",
+                  assessmentUnlocked ? styles.outlineQuizRowUnlocked : styles.outlineQuizRowLocked,
+                ].filter(Boolean).join(" ")}
+                aria-disabled={!assessmentUnlocked}
+                title={assessmentUnlocked
+                  ? "Take the assessment"
+                  : `Complete all ${content.lessons.length} lessons to unlock the assessment`}
               >
                 <div
                   className={
@@ -639,9 +733,18 @@ const ModuleViewer = ({ activeModule, onClose }) => {
                     <I name="award" size={12} color={quizMode ? "white" : "var(--outline)"} />
                   )}
                 </div>
-                <div>
-                  <div className={styles.outlineLessonTitle}>Assessment</div>
-                  <div className={styles.outlineLessonMeta}>{content.quiz.length} questions</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className={styles.outlineLessonTitle}>
+                    Assessment
+                    <span className={styles.outlineQuizLockIcon} aria-hidden="true">
+                      {assessmentUnlocked ? "🔓" : "🔒"}
+                    </span>
+                  </div>
+                  <div className={styles.outlineLessonMeta}>
+                    {assessmentUnlocked
+                      ? `${content.quiz.length} questions · ready`
+                      : `${content.quiz.length} questions · finish all lessons to unlock`}
+                  </div>
                 </div>
               </div>
             </div>
@@ -666,10 +769,10 @@ const ModuleViewer = ({ activeModule, onClose }) => {
             ))}
           </Card>
 
-          <BtnSecondary onClick={() => {}} style={{ width: "100%", justifyContent: "center", marginBottom: 8, fontSize: 12 }}>
+          <BtnSecondary disabled title="Resource download is not available yet" style={{ width: "100%", justifyContent: "center", marginBottom: 8, fontSize: 12 }}>
             <I name="download" size={14} /> Download Resources
           </BtnSecondary>
-          <BtnSecondary onClick={() => {}} style={{ width: "100%", justifyContent: "center", fontSize: 12 }}>
+          <BtnSecondary disabled title="Bookmarking is not available yet" style={{ width: "100%", justifyContent: "center", fontSize: 12 }}>
             <I name="bookmark" size={14} /> Save for Later
           </BtnSecondary>
         </div>
@@ -680,9 +783,15 @@ const ModuleViewer = ({ activeModule, onClose }) => {
 
 /* ─── Internal module card ───────────────────────────────────────────────────── */
 const InternalCard = ({ module: m, onLaunch }) => {
-  const handleClick = () => {
-    if (m.url) window.open(m.url, "_blank", "noopener,noreferrer");
-    else onLaunch({ ...m, type: "Internal", status: "internal" });
+  const handleClick = async () => {
+    if (m.url) {
+      window.open(m.url, "_blank", "noopener,noreferrer");
+    } else if (m.fileKey) {
+      const url = await getObjectUrl(m.fileKey);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      onLaunch({ ...m, type: "Internal", status: "internal" });
+    }
   };
   return (
     <div className={styles.internalCard} onClick={handleClick}>
@@ -712,48 +821,155 @@ const InternalCard = ({ module: m, onLaunch }) => {
 
 /* ─── How To video modal ───────────────────────────────────────────────────────── */
 const HowToVideoModal = ({ video: v, onClose }) => {
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const dialogRef = useModalA11y(onClose);
+  const [resolvedSrc, setResolvedSrc] = useState(v.url || v.videoSrc || null);
+  // Aspect ratio is captured from the video's metadata so the modal sizes
+  // to match the source — no letterbox/pillarbox bars for portrait or
+  // unusual ratios. Defaults to 16:9 to avoid layout jumps before metadata
+  // loads.
+  const [aspectRatio, setAspectRatio] = useState("16 / 9");
 
-  const src = v.url || v.videoSrc;
+  useEffect(() => {
+    let revoked = null;
+    if (!resolvedSrc && v.fileKey) {
+      getObjectUrl(v.fileKey).then((u) => { if (u) { setResolvedSrc(u); revoked = u; } });
+    }
+    return () => { if (revoked) URL.revokeObjectURL(revoked); };
+  }, [v.fileKey, resolvedSrc]);
+
+  const src = resolvedSrc;
+  const onLoadedMetadata = (e) => {
+    const el = e.currentTarget;
+    if (el.videoWidth && el.videoHeight) {
+      setAspectRatio(`${el.videoWidth} / ${el.videoHeight}`);
+    }
+  };
 
   return (
     <div className={styles.htPlayerBackdrop} onClick={onClose}>
-      <div className={styles.htPlayerInner} onClick={e => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className={styles.htPlayerInner}
+        aria-labelledby="how-to-video-title"
+        onClick={e => e.stopPropagation()}
+        style={{ aspectRatio }}
+      >
         <div className={styles.htPlayerHeader}>
           <div>
             <div className={styles.htPlayerMeta}>{v.cat} · {v.dur}</div>
-            <div className={styles.htPlayerTitle}>{v.title}</div>
+            <div id="how-to-video-title" className={styles.htPlayerTitle}>{v.title}</div>
           </div>
-          <button className={styles.htPlayerClose} onClick={onClose}>
+          <button className={styles.htPlayerClose} onClick={onClose} aria-label="Close video player">
             <I name="xcircle" size={22} color="var(--on-surface-variant)" />
           </button>
         </div>
-        <video className={styles.htPlayerVideo} src={src} controls autoPlay />
+        <video
+          className={styles.htPlayerVideo}
+          src={src}
+          controls
+          autoPlay
+          onLoadedMetadata={onLoadedMetadata}
+        />
       </div>
     </div>
   );
 };
 
 /* ─── How To card ─────────────────────────────────────────────────────────────── */
-const HowToCard = ({ video: v, onPlay }) => (
-  <div className={styles.howToCard} onClick={() => onPlay(v)}>
-    <div className={styles.howToThumb} style={{ background: v.color }}>
-      <div className={styles.howToPlay}>
-        <I name="play" size={16} color="white" />
+const HowToCard = ({ video: v, onPlay, isPinned = false, onTogglePin }) => {
+  // Locally-hosted videos (under /training-videos/) get a real video-frame
+  // thumbnail via `preload="metadata"` — browsers render the first frame
+  // without downloading the rest. External sample URLs keep the colour block
+  // (no extra metadata requests at page load, and CORS is friendlier).
+  const isLocalAsset = typeof v.videoSrc === "string" && v.videoSrc.startsWith("/training-videos/");
+  const isSample = !v.isUserAdded && !isLocalAsset;
+  return (
+    <div className={styles.howToCard} onClick={() => onPlay(v)}>
+      <div className={styles.howToThumb} style={{ background: v.color }}>
+        {isLocalAsset && (
+          <video
+            className={styles.howToThumbVideo}
+            src={v.videoSrc}
+            preload="metadata"
+            muted
+            playsInline
+            tabIndex={-1}
+          />
+        )}
+        <div className={styles.howToPlay}>
+          <I name="play" size={16} color="white" />
+        </div>
+        {isSample && <span className={styles.howToSampleBadge}>Sample</span>}
+        {/* Pin toggle — top-right of the thumb. stopPropagation so
+          * the pin click doesn't bubble into the play handler. */}
+        <button
+          type="button"
+          className={`${styles.howToPinBtn} ${isPinned ? styles.howToPinBtnOn : ""}`}
+          aria-label={isPinned ? "Unpin guide" : "Pin guide"}
+          title={isPinned ? "Pinned · click to unpin" : "Pin to top"}
+          onClick={(e) => { e.stopPropagation(); onTogglePin?.(v.id); }}
+        >
+          <I name="bookmark" size={11} color="currentColor" />
+        </button>
+        <span className={styles.howToDur}>{v.dur}</span>
       </div>
-      {!v.isUserAdded && <span className={styles.howToSampleBadge}>Sample</span>}
-      <span className={styles.howToDur}>{v.dur}</span>
+      <div className={styles.howToBody}>
+        <span className={styles.howToCat}>{v.cat}</span>
+        <p className={styles.howToTitle}>{v.title}</p>
+      </div>
     </div>
-    <div className={styles.howToBody}>
-      <span className={styles.howToCat}>{v.cat}</span>
-      <p className={styles.howToTitle}>{v.title}</p>
+  );
+};
+
+/* ─── External training quick-link card ───────────────────────────────────────
+ * Single-destination tile. Clicking anywhere opens the link in a new tab.
+ * User-added links get a remove affordance; sample links don't. */
+const hostOf = (url) => {
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch { return url; }
+};
+
+const ExternalCard = ({ link: l, onRemove }) => {
+  const open = () => window.open(l.url, "_blank", "noopener,noreferrer");
+  return (
+    <div className={styles.externalCard} onClick={open}>
+      <div className={styles.externalCardAccent} />
+      <div className={styles.internalCardBody}>
+        <div className={styles.internalCardTop}>
+          {l.cat && <Pill bg="rgba(21,101,192,0.09)" color={EXTERNAL_COLOR} small>{l.cat}</Pill>}
+          {l.isUserAdded
+            ? <Pill bg="rgba(21,101,192,0.09)" color={EXTERNAL_COLOR} small>Added</Pill>
+            : <Pill bg="rgba(0,0,0,0.05)" color="var(--on-surface-variant)" small>Sample</Pill>
+          }
+          {l.isUserAdded && (
+            <button
+              type="button"
+              className={styles.externalCardRemove}
+              aria-label="Remove link"
+              title="Remove link"
+              onClick={(e) => { e.stopPropagation(); onRemove?.(l.id); }}
+            >
+              <I name="trash" size={13} color="currentColor" />
+            </button>
+          )}
+        </div>
+        <h4 className={styles.internalCardTitle}>{l.title}</h4>
+        {l.desc && <p className={styles.internalCardDesc}>{l.desc}</p>}
+        {l.cpdTopic && (
+          <div className={styles.externalCardCpdTag} title="This provider helps satisfy a mandatory GDC CPD topic">
+            <I name="award" size={11} color="#256f2a" /> Counts toward {l.cpdTopic}
+          </div>
+        )}
+        <div className={styles.internalCardFooter}>
+          <span className={styles.externalCardHost}>
+            <I name="external" size={12} color={EXTERNAL_COLOR} /> {hostOf(l.url)}
+          </span>
+          <span className={styles.externalCardOpen}>Open ↗</span>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ─── Color palette for How To thumbnails ────────────────────────────────────── */
 const CAT_COLORS = {
@@ -770,6 +986,7 @@ const pickColor = cat => CAT_COLORS[cat] || FALLBACK_COLORS[cat.length % FALLBAC
 const INTERNAL_CATS = ["Compliance", "Onboarding", "Operations", "Patient Care", "Safety", "Systems"];
 
 const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
+  const dialogRef = useModalA11y(onClose);
   const [title,     setTitle]     = useState("");
   const [cat,       setCat]       = useState("");
   const [customCat, setCustomCat] = useState("");
@@ -821,10 +1038,10 @@ const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
     return e;
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    const objectUrl = URL.createObjectURL(videoFile);
+    const { key } = await putFile("training-module", videoFile, { title });
     const now = new Date();
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     onAdd({
@@ -835,7 +1052,7 @@ const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
       desc:        desc.trim() || "Uploaded training module.",
       cpd:         parseFloat(cpd) || 0,
       roles:       audience,
-      url:         objectUrl,
+      fileKey:     key,
       isUserAdded: true,
       updatedAt:   `${months[now.getMonth()]} ${now.getFullYear()}`,
       fileName:    videoFile.name,
@@ -845,13 +1062,13 @@ const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.htModal} onClick={e => e.stopPropagation()}>
+      <div ref={dialogRef} className={styles.htModal} onClick={e => e.stopPropagation()} aria-labelledby="upload-training-title">
         <div className={styles.htModalHeader}>
           <div>
-            <h3 className={styles.htModalTitle}>Upload Training Module</h3>
-            <p className={styles.htModalSub}>Record your training content and upload it — it appears in your practice's training grid immediately</p>
+            <h3 id="upload-training-title" className={styles.htModalTitle}>Upload Training Module</h3>
+            <p className={styles.htModalSub}>Record your training content and upload it — it appears in the Dental Group Training grid immediately</p>
           </div>
-          <button className={styles.htModalClose} onClick={onClose}>
+          <button className={styles.htModalClose} onClick={onClose} aria-label="Close training upload dialog">
             <I name="xcircle" size={20} color="var(--on-surface-variant)" />
           </button>
         </div>
@@ -996,6 +1213,7 @@ const AddTrainingModal = ({ onClose, onAdd, existingCats }) => {
 
 /* ─── Add How To Video modal ─────────────────────────────────────────────────── */
 const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
+  const dialogRef = useModalA11y(onClose);
   const [title,     setTitle]     = useState("");
   const [cat,       setCat]       = useState("");
   const [customCat, setCustomCat] = useState("");
@@ -1039,16 +1257,16 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
     return e;
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    const objectUrl = URL.createObjectURL(videoFile);
+    const { key } = await putFile("training-howto", videoFile, { title });
     onAdd({
       id:          `ht-user-${Date.now()}`,
       title:       title.trim(),
       cat:         finalCat,
       dur:         dur.trim() || "—",
-      url:         objectUrl,
+      fileKey:     key,
       audience,
       color:       pickColor(finalCat),
       isUserAdded: true,
@@ -1067,13 +1285,13 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.htModal} onClick={e => e.stopPropagation()}>
+      <div ref={dialogRef} className={styles.htModal} onClick={e => e.stopPropagation()} aria-labelledby="upload-how-to-title">
         <div className={styles.htModalHeader}>
           <div>
-            <h3 className={styles.htModalTitle}>Upload How To Video</h3>
+            <h3 id="upload-how-to-title" className={styles.htModalTitle}>Upload How To Video</h3>
             <p className={styles.htModalSub}>Record on your phone and upload directly — it will appear in the grid and be searchable straight away</p>
           </div>
-          <button className={styles.htModalClose} onClick={onClose}>
+          <button className={styles.htModalClose} onClick={onClose} aria-label="Close how-to upload dialog">
             <I name="xcircle" size={20} color="var(--on-surface-variant)" />
           </button>
         </div>
@@ -1139,6 +1357,7 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
             <div className={styles.htField}>
               <label className={styles.htFieldLabel}>Category *</label>
               <select
+                aria-label="Category"
                 className={`${styles.htFieldSelect} ${errors.cat ? styles.htFieldInputErr : ""}`}
                 value={cat}
                 onChange={e => { setCat(e.target.value); setErrors(p => ({ ...p, cat: "" })); }}
@@ -1173,7 +1392,7 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
             {/* Audience */}
             <div className={styles.htFieldFull}>
               <label className={styles.htFieldLabel}>Target Audience</label>
-              <select className={styles.htFieldSelect} value={audience} onChange={e => setAudience(e.target.value)}>
+              <select aria-label="Target audience" className={styles.htFieldSelect} value={audience} onChange={e => setAudience(e.target.value)}>
                 <option value="all">All Staff</option>
                 <option value="dentist">Dentists</option>
                 <option value="nurse">Dental Nurses</option>
@@ -1197,111 +1416,204 @@ const AddHowToModal = ({ onClose, onAdd, existingCats }) => {
   );
 };
 
-/* VER-88: Tenant-mode Training Hub.
- *
- * Renders starter course outlines from VER-85's endpoint + empty
- * state for assigned courses. Demo path keeps the rich fixture
- * library (~1450 LoC) for the eventual demo subdomain. */
-function TenantTrainingPage() {
-  const { tenant } = useTenant();
-  const tenantId = tenant?.id;
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState(null);
+/* ─── Add External Training link modal ────────────────────────────────────────
+ * No file upload — external training is just a curated link to an outside
+ * site (SharePoint quick-link style). Captures title, URL, optional
+ * description and category. */
+const AddExternalModal = ({ onClose, onAdd, existingCats }) => {
+  const dialogRef = useModalA11y(onClose);
+  const [title,     setTitle]     = useState("");
+  const [url,       setUrl]       = useState("");
+  const [desc,      setDesc]      = useState("");
+  const [cat,       setCat]       = useState("");
+  const [customCat, setCustomCat] = useState("");
+  const [cpdTopic,  setCpdTopic]  = useState("");
+  const [errors,    setErrors]    = useState({});
 
-  useEffect(() => {
-    if (!tenantId) return;
-    let cancelled = false;
-    listTrainingStarterTemplates(tenantId)
-      .then((data) => {
-        if (cancelled) return;
-        setItems(Array.isArray(data?.items) ? data.items : []);
-        setError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err);
-        setItems([]);
-      });
-    return () => { cancelled = true; };
-  }, [tenantId]);
+  const finalCat = cat === "__new__" ? customCat.trim() : cat;
+
+  const normalizeUrl = (raw) => {
+    const t = raw.trim();
+    if (!t) return "";
+    return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!title.trim()) e.title = "Required";
+    const u = normalizeUrl(url);
+    if (!u) e.url = "Required";
+    else { try { new URL(u); } catch { e.url = "Enter a valid web address"; } }
+    return e;
+  };
+
+  const handleAdd = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    onAdd({
+      id:          `ext-user-${Date.now()}`,
+      title:       title.trim(),
+      url:         normalizeUrl(url),
+      desc:        desc.trim(),
+      cat:         finalCat || "General",
+      ...(cpdTopic ? { cpdTopic } : {}),
+      isUserAdded: true,
+    });
+    onClose();
+  };
 
   return (
-    <div>
-      <TopBar
-        title="Training Hub"
-        subtitle="Courses, learning modules, and completion tracking."
-      />
-
-      <Card hover={false} style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
-            <I name="book" size={18} color="var(--primary)" /> Starter courses
-          </h2>
-          <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Verbilo</Pill>
-        </div>
-        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
-          Draft course outlines for the courses every UK healthcare practice needs. Adopt one, edit the content, then assign it to your team.
-        </p>
-
-        {items === null ? (
-          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
-        ) : error && items.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--error)" }}>
-            Couldn't load starter templates ({error?.status ?? error?.code ?? "error"}).
-          </p>
-        ) : items.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>No starter templates available.</p>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-            {items.map((item) => (
-              <Card key={item.id} hover style={{ padding: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                  <Pill bg="rgba(0,0,0,0.08)" color="var(--on-surface-variant)" small>
-                    Verbilo starter template
-                  </Pill>
-                </div>
-                <h3 style={{ margin: "0 0 6px 0", fontSize: 15, color: "var(--on-surface)" }}>{item.title}</h3>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
-                  {item.summary}
-                </p>
-              </Card>
-            ))}
+    <div className={styles.overlay} onClick={onClose}>
+      <div ref={dialogRef} className={styles.htModal} onClick={e => e.stopPropagation()} aria-labelledby="add-external-training-title">
+        <div className={styles.htModalHeader}>
+          <div>
+            <h3 id="add-external-training-title" className={styles.htModalTitle}>Add External Training Link</h3>
+            <p className={styles.htModalSub}>Link to an outside CPD provider or training site — it appears as a card that opens in a new tab</p>
           </div>
-        )}
-      </Card>
+          <button className={styles.htModalClose} onClick={onClose} aria-label="Close external training dialog">
+            <I name="xcircle" size={20} color="var(--on-surface-variant)" />
+          </button>
+        </div>
 
-      <Card hover={false}>
-        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
-          <I name="checkcircle" size={18} color="var(--primary)" /> Assigned courses
-        </h2>
-        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
-          Courses you've assigned to staff will appear here with completion stats. Empty until you assign your first.
-        </p>
-      </Card>
+        <div className={styles.htModalBody}>
+          <div className={styles.htFormGrid}>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Title *</label>
+              <input
+                className={`${styles.htFieldInput} ${errors.title ? styles.htFieldInputErr : ""}`}
+                placeholder="e.g. BDA Courses & Events"
+                value={title}
+                onChange={e => { setTitle(e.target.value); setErrors(p => ({ ...p, title: "" })); }}
+              />
+              {errors.title && <span className={styles.htFieldErr}>{errors.title}</span>}
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Link (URL) *</label>
+              <input
+                className={`${styles.htFieldInput} ${errors.url ? styles.htFieldInputErr : ""}`}
+                placeholder="e.g. https://www.bda.org/education-events"
+                value={url}
+                onChange={e => { setUrl(e.target.value); setErrors(p => ({ ...p, url: "" })); }}
+              />
+              {errors.url && <span className={styles.htFieldErr}>{errors.url}</span>}
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Description</label>
+              <textarea
+                className={`${styles.htFieldInput} ${styles.htFieldTextarea}`}
+                placeholder="Briefly describe what staff will find at this link…"
+                value={desc}
+                rows={3}
+                onChange={e => setDesc(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Category</label>
+              <select
+                className={styles.htFieldSelect}
+                value={cat}
+                onChange={e => setCat(e.target.value)}
+              >
+                <option value="">General</option>
+                {existingCats.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="__new__">+ Add new category</option>
+              </select>
+              {cat === "__new__" && (
+                <input
+                  className={styles.htFieldInput}
+                  placeholder="New category name"
+                  value={customCat}
+                  onChange={e => setCustomCat(e.target.value)}
+                  style={{ marginTop: 6 }}
+                />
+              )}
+            </div>
+
+            <div className={styles.htFieldFull}>
+              <label className={styles.htFieldLabel}>Counts toward (optional)</label>
+              <select
+                className={styles.htFieldSelect}
+                value={cpdTopic}
+                onChange={e => setCpdTopic(e.target.value)}
+              >
+                <option value="">Not a mandatory CPD topic</option>
+                {MANDATORY_CPD_TOPICS.map(t => (
+                  <option key={t.topic} value={t.topic}>{t.topic} ({t.hrs} hrs)</option>
+                ))}
+              </select>
+              <span className={styles.htFieldHint}>
+                Tag this link if the provider helps satisfy one of the GDC mandatory CPD topics — it shows a "counts toward" badge on the card.
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <div className={styles.htModalFooter}>
+          <BtnSecondary onClick={onClose} style={{ padding: "10px 20px", fontSize: 13 }}>Cancel</BtnSecondary>
+          <BtnPrimary onClick={handleAdd} style={{ padding: "10px 24px", fontSize: 13 }}>
+            <I name="plus" size={14} /> Add Link
+          </BtnPrimary>
+        </div>
+      </div>
     </div>
   );
+};
+
+const LS_TRAINING_MODULES  = "verbilo.training.userModules";
+const LS_TRAINING_HOWTOS   = "verbilo.training.userHowTos";
+const LS_TRAINING_EXTERNAL = "verbilo.training.externalLinks";
+
+function loadListLS(key, fallback) {
+  try { const raw = localStorage.getItem(key); if (raw) return JSON.parse(raw); } catch { /* noop */ }
+  return fallback;
 }
 
 /* ─── Main hub ─── */
-export const TrainingPage = ({ currentUser }) => {
-  if (!isDemoMode()) {
-    return <TenantTrainingPage />;
-  }
-
-  const { tenant } = useTenant();
-  const tenantName = tenant?.name ?? "Practice";
-  const [searchQuery,    setSearchQuery]    = useState("");
+export const TrainingPage = ({ currentUser, onNav }) => {
   const [activeModule,   setActiveModule]   = useState(null);
   const [playingHowTo,   setPlayingHowTo]   = useState(null);
-  const [userInternalModules, setUserInternalModules] = useState([]);
+  const [userInternalModules, setUserInternalModules] = useState(() => loadListLS(LS_TRAINING_MODULES, []));
   const [showAddTraining,     setShowAddTraining]     = useState(false);
-  const [userHowTos,          setUserHowTos]          = useState([]);
+  const [userHowTos,          setUserHowTos]          = useState(() => loadListLS(LS_TRAINING_HOWTOS, []));
+  const [userExternalLinks,   setUserExternalLinks]   = useState(() => loadListLS(LS_TRAINING_EXTERNAL, []));
+  const [showAddExternal,     setShowAddExternal]     = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem(LS_TRAINING_MODULES, JSON.stringify(userInternalModules)); } catch { /* noop */ }
+  }, [userInternalModules]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_TRAINING_HOWTOS, JSON.stringify(userHowTos)); } catch { /* noop */ }
+  }, [userHowTos]);
+  useEffect(() => {
+    try { localStorage.setItem(LS_TRAINING_EXTERNAL, JSON.stringify(userExternalLinks)); } catch { /* noop */ }
+  }, [userExternalLinks]);
   const [showAddHowTo,        setShowAddHowTo]        = useState(false);
   const [howToCategory,       setHowToCategory]       = useState("All");
   const [howToSearch,         setHowToSearch]         = useState("");
+  /* Pinned How-To IDs (Set). Click a pin on any card to promote it
+   * to the "Your Pinned Guides" row at the top of the grid. Lives
+   * in component state for now — production would sync to a per-user
+   * preference table. */
+  const [pinnedHowToIds, setPinnedHowToIds] = useState(() => new Set());
+  const togglePinHowTo = (id) => setPinnedHowToIds((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   const allInternalModules = useMemo(() => [...internalModules, ...userInternalModules], [userInternalModules]);
   const allHowToVideos = useMemo(() => [...howToVideos, ...userHowTos], [userHowTos]);
+  const allExternalLinks = useMemo(() => [...externalTraining, ...userExternalLinks], [userExternalLinks]);
+  const externalCats = useMemo(
+    () => [...new Set(allExternalLinks.map(l => l.cat).filter(Boolean))].sort(),
+    [allExternalLinks],
+  );
+  const removeExternalLink = (id) => setUserExternalLinks(prev => prev.filter(l => l.id !== id));
   const howToCats = useMemo(() => {
     const cats = [...new Set(allHowToVideos.map(v => v.cat))].sort();
     return ["All", ...cats];
@@ -1319,31 +1631,15 @@ export const TrainingPage = ({ currentUser }) => {
     return vids;
   }, [allHowToVideos, howToCategory, howToSearch]);
 
-  // All content flattened for search (internal modules + how-to videos only)
-  const allContent = useMemo(() => [
-    ...allInternalModules.map(m => ({ ...m, _type: "internal", type: "Internal", status: "internal" })),
-    ...allHowToVideos.map(m => ({ ...m, _type: "howto", type: "Video", status: "howto", cpd: 0 })),
-  ], [allInternalModules, allHowToVideos]);
-
-  const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return allContent.filter(item =>
-      item.title.toLowerCase().includes(q) ||
-      item.cat.toLowerCase().includes(q) ||
-      (item.desc  && item.desc.toLowerCase().includes(q)) ||
-      (item.type  && item.type.toLowerCase().includes(q)) ||
-      (item.roles && item.roles.includes(q)) ||
-      (item.role  && item.role.includes(q))
-    );
-  }, [searchQuery, allContent]);
+  /* Split visible videos into pinned + unpinned. Pinned subset
+   * renders in its own "Your Pinned Guides" row at the top. */
+  const [pinnedHowTos, unpinnedHowTos] = useMemo(() => {
+    const pinned = [], rest = [];
+    for (const v of visibleHowTos) (pinnedHowToIds.has(v.id) ? pinned : rest).push(v);
+    return [pinned, rest];
+  }, [visibleHowTos, pinnedHowToIds]);
 
   const launchModule = m => setActiveModule(m);
-
-  const typeMetaMap = {
-    internal: { label: "Inspire Training", bg: "rgba(156,39,176,0.09)", color: "#9C27B0" },
-    howto:    { label: "How To",           bg: "rgba(233,30,99,0.09)",  color: "#E91E63" },
-  };
 
   if (activeModule) {
     return <ModuleViewer activeModule={activeModule} onClose={() => setActiveModule(null)} />;
@@ -1351,85 +1647,128 @@ export const TrainingPage = ({ currentUser }) => {
 
   return (
     <div>
-      <SearchBar
-        placeholder="Search Inspire training modules and how-to guides..."
-        value={searchQuery}
-        onChange={setSearchQuery}
-      />
-
-      {/* ── Page header ── */}
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Educational Excellence</p>
-          <h1 className={styles.title}>Training Hub</h1>
-          <p className={styles.lead}>
-            Role-specific training, mandatory compliance, and clinical CPD — all mapped to GDC and CQC requirements.
-          </p>
-        </div>
-        {currentUser && (
-          <div className={styles.userBlock}>
-            <Avatar name={currentUser.displayName} size={36} />
-            <div>
-              <div className={styles.userName}>{currentUser.displayName}</div>
-              <div className={styles.userRole}>{currentUser.role}</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Search results view ── */}
-      {searchQuery.trim() ? (
-        <div>
-          <p className={styles.searchResultsMeta}>
-            {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} for{" "}
-            <strong>"{searchQuery}"</strong>
-          </p>
-          {searchResults.length === 0 ? (
-            <div className={styles.searchEmpty}>
-              <I name="search" size={36} color="var(--outline)" />
-              <p>No training found matching your search.</p>
-            </div>
-          ) : (
-            <div className={styles.searchResultsList}>
-              {searchResults.map(item => {
-                const meta = typeMetaMap[item._type];
-                return (
-                  <div
-                    key={`${item._type}-${item.id}`}
-                    className={styles.searchResultItem}
-                    onClick={() => launchModule(item)}
-                  >
-                    <div className={styles.searchResultLeft}>
-                      <Pill bg={meta.bg} color={meta.color} small>{meta.label}</Pill>
-                      <div>
-                        <div className={styles.searchResultTitle}>{item.title}</div>
-                        <div className={styles.searchResultMeta}>
-                          {item.cat}{item.dur ? ` · ${item.dur}` : ""}{item.cpd > 0 ? ` · ${item.cpd} CPD hrs` : ""}
-                        </div>
-                      </div>
-                    </div>
-                    <I name="arrow" size={14} color="var(--outline)" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ) : (
         <>
         <div className={styles.layout}>
           {/* ════ Main column ════ */}
           <div>
 
-            {/* ══ SECTION 1: Internal practice training ══ */}
+        {/* ── Page header ── */}
+        <div className={styles.header}>
+          <div>
+            <p className={styles.eyebrow}>Educational Excellence</p>
+            <h1 className={styles.title}>Training Hub</h1>
+            <p className={styles.lead}>
+              Your practice's own training videos — uploaded by the team to sharpen everyday knowledge and skills — alongside links to outside providers for verifiable CPD courses.
+            </p>
+          </div>
+        </div>
+
+        {/* ══ SECTION 1: How To Series ══ */}
+        <div className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeaderIcon} style={{ background: "rgba(233,30,99,0.1)" }}>
+              <I name="play" size={15} color="#E91E63" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span className={styles.sectionHeaderTitleRow}>
+                <span className={styles.sectionHeaderTitle}>How To Series</span>
+                <Pill bg="rgba(0,0,0,0.05)" color="var(--on-surface-variant)" small>Not CPD-verifiable</Pill>
+              </span>
+              <span className={styles.sectionHeaderSub}>Short, quick-reference videos for everyday tasks — fast, grab-and-go answers in a couple of minutes · {allHowToVideos.length} videos</span>
+            </div>
+            <button onClick={() => setShowAddHowTo(true)} className={styles.addVideoBtn}>
+              <I name="upload" size={13} /> Add Video
+            </button>
+          </div>
+
+          {/* Search — full-width, prominent, sits ABOVE the category
+            * chip bar so it's the first thing a mid-shift clinician
+            * lands on when they urgently need a 60-second guide. */}
+          <div className={styles.howToSearchHero}>
+            <I name="search" size={14} color="var(--on-surface-variant)" />
+            <input
+              type="text"
+              className={styles.howToSearchInput}
+              placeholder="Type a task or equipment error (e.g., Autoclave, BPE, FP17)…"
+              value={howToSearch}
+              onChange={(e) => setHowToSearch(e.target.value)}
+            />
+            {howToSearch && (
+              <button type="button" className={styles.howToSearchClear} onClick={() => setHowToSearch("")} aria-label="Clear search">
+                ×
+              </button>
+            )}
+          </div>
+
+          <div className={styles.howToCatBar}>
+            {howToCats.map(cat => (
+              <button
+                key={cat}
+                className={howToCategory === cat ? `${styles.howToCatBtn} ${styles.howToCatBtnActive}` : styles.howToCatBtn}
+                onClick={() => setHowToCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {visibleHowTos.length === 0 ? (
+            <div className={styles.searchEmpty}>
+              <I name="search" size={36} color="var(--outline)" />
+              <p>No videos matching your search.</p>
+            </div>
+          ) : (
+            <>
+              {pinnedHowTos.length > 0 && (
+                <>
+                  <div className={styles.howToPinnedHeader}>
+                    <span aria-hidden="true">📌</span>
+                    Your Pinned Guides
+                    <span className={styles.howToPinnedCount}>{pinnedHowTos.length}</span>
+                  </div>
+                  <div className={styles.howToGrid}>
+                    {pinnedHowTos.map(v => (
+                      <HowToCard
+                        key={`pin-${v.id}`}
+                        video={v}
+                        onPlay={setPlayingHowTo}
+                        isPinned
+                        onTogglePin={togglePinHowTo}
+                      />
+                    ))}
+                  </div>
+                  {unpinnedHowTos.length > 0 && <div className={styles.howToPinnedDivider} />}
+                </>
+              )}
+              {unpinnedHowTos.length > 0 && (
+                <div className={styles.howToGrid}>
+                  {unpinnedHowTos.map(v => (
+                    <HowToCard
+                      key={v.id}
+                      video={v}
+                      onPlay={setPlayingHowTo}
+                      isPinned={false}
+                      onTogglePin={togglePinHowTo}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+            {/* ══ SECTION 2: Dental Group Training ══ */}
             <div className={styles.sectionBlock}>
               <div className={styles.sectionHeader}>
                 <div className={styles.sectionHeaderIcon} style={{ background: "rgba(156,39,176,0.1)" }}>
                   <I name="building" size={15} color="#9C27B0" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <span className={styles.sectionHeaderTitle}>{tenantName} Training</span>
-                  <span className={styles.sectionHeaderSub}>Internal modules created by the {tenantName} team · {allInternalModules.length} modules</span>
+                <div className={styles.sectionHeaderBody}>
+                  <span className={styles.sectionHeaderTitleRow}>
+                    <span className={styles.sectionHeaderTitle}>Dental Group Training</span>
+                    <Pill bg="rgba(0,0,0,0.05)" color="var(--on-surface-variant)" small>Not CPD-verifiable</Pill>
+                  </span>
+                  <span className={styles.sectionHeaderSub}>Longer, lesson-based modules built by the Dental Group team — work through them at your own pace for onboarding and role development · {allInternalModules.length} modules</span>
                 </div>
                 <button onClick={() => setShowAddTraining(true)} className={styles.uploadTrainingBtn}>
                   <I name="upload" size={13} /> Upload Training
@@ -1449,12 +1788,13 @@ export const TrainingPage = ({ currentUser }) => {
               {/* Library overview */}
               <div className={styles.sidebarCpd}>
                 <h3 className={styles.sidebarCpdTitle}>Training Library</h3>
-                <p className={styles.sidebarCpdLead}>{tenantName}</p>
+                <p className={styles.sidebarCpdLead}>Dental Group — {siteName("site-southall")}</p>
                 <div className={styles.cpdMeta} style={{ marginTop: 20 }}>
                   {[
                     { label: "Internal Modules",  val: `${allInternalModules.length} modules`  },
                     { label: "How To Videos",     val: `${allHowToVideos.length} videos`        },
-                    { label: "Total Resources",   val: `${allInternalModules.length + allHowToVideos.length} items` },
+                    { label: "External Links",    val: `${allExternalLinks.length} links`       },
+                    { label: "Total Resources",   val: `${allInternalModules.length + allHowToVideos.length + allExternalLinks.length} items` },
                   ].map(r => (
                     <div key={r.label} className={styles.cpdMetaRow}>
                       <span className={styles.cpdMetaLabel}>{r.label}</span>
@@ -1463,27 +1803,81 @@ export const TrainingPage = ({ currentUser }) => {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Upload shortcuts */}
+        {/* ══ SECTION 3: External Training (CPD context paired on the right) ══ */}
+        <div className={styles.layout}>
+          {/* ════ Main column ════ */}
+          <div>
+        <div className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionHeaderIcon} style={{ background: "rgba(21,101,192,0.1)" }}>
+              <I name="external" size={15} color={EXTERNAL_COLOR} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <span className={styles.sectionHeaderTitleRow}>
+                <span className={styles.sectionHeaderTitle}>External Training</span>
+                <Pill bg="rgba(21,101,192,0.09)" color={EXTERNAL_COLOR} small>Outside providers</Pill>
+              </span>
+              <span className={styles.sectionHeaderSub}>Curated links to outside training and CPD providers — each opens in a new tab; verifiable CPD is set by the provider · {allExternalLinks.length} links</span>
+            </div>
+            <button onClick={() => setShowAddExternal(true)} className={styles.addExternalBtn}>
+              <I name="edit" size={13} /> Add Link
+            </button>
+          </div>
+
+          <div className={styles.externalGrid}>
+            {allExternalLinks.map(l => (
+              <ExternalCard key={l.id} link={l} onRemove={removeExternalLink} />
+            ))}
+            {/* SharePoint-style add tile — always last in the grid */}
+            <button
+              type="button"
+              className={styles.externalAddTile}
+              onClick={() => setShowAddExternal(true)}
+            >
+              <div className={styles.externalAddTileIcon}>
+                <I name="plus" size={20} color={EXTERNAL_COLOR} />
+              </div>
+              <span className={styles.externalAddTileText}>Add a training link</span>
+              <span className={styles.externalAddTileSub}>Opens in a new tab</span>
+            </button>
+          </div>
+        </div>
+          </div>
+
+            {/* ════ CPD context — paired to the right of External Training ════ */}
+            <div>
+              {/* GDC CPD requirements — compact pointer to the full reference
+                * on the CPD page (avoids carrying the whole block here) */}
               <Card hover={false} className={styles.summaryCard}>
-                <h4 className={styles.summaryTitle}>Add Content</h4>
-                <div className={styles.summaryRow} style={{ cursor: "pointer" }} onClick={() => setShowAddTraining(true)}>
-                  <div className={styles.summaryLeft}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(156,39,176,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <I name="upload" size={13} color="#9C27B0" />
-                    </div>
-                    <span className={styles.summaryLabel}>Upload Training Module</span>
-                  </div>
-                  <I name="arrow" size={13} color="var(--outline)" />
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <I name="shield" size={14} color={EXTERNAL_COLOR} />
+                  <h4 className={styles.summaryTitle} style={{ margin: 0 }}>GDC CPD requirements</h4>
                 </div>
-                <div className={styles.summaryRow} style={{ cursor: "pointer" }} onClick={() => setShowAddHowTo(true)}>
-                  <div className={styles.summaryLeft}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(233,30,99,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <I name="upload" size={13} color="#E91E63" />
+                <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.5, marginBottom: 12 }}>
+                  {MANDATORY_CPD_TOPICS.length} mandatory topics · {MANDATORY_CPD_TOTAL} hrs minimum per 5-year cycle
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
+                  {MANDATORY_CPD_TOPICS.map(t => (
+                    <div key={t.topic} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, fontSize: 11.5 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--on-surface)" }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--error)", flexShrink: 0 }} />
+                        {t.topic}
+                      </span>
+                      <span style={{ color: "var(--on-surface-variant)", fontWeight: 700, whiteSpace: "nowrap" }}>{t.hrs} hrs</span>
                     </div>
-                    <span className={styles.summaryLabel}>Upload How To Video</span>
-                  </div>
-                  <I name="arrow" size={13} color="var(--outline)" />
+                  ))}
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onNav?.("cpd")}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNav?.("cpd"); } }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: EXTERNAL_COLOR, cursor: "pointer" }}
+                >
+                  <I name="arrow" size={13} color={EXTERNAL_COLOR} /> View full requirements
                 </div>
               </Card>
 
@@ -1493,62 +1887,19 @@ export const TrainingPage = ({ currentUser }) => {
                 <p style={{ fontSize: 12, color: "var(--on-surface-variant)", lineHeight: 1.6, marginBottom: 14 }}>
                   Attended a BDA course, GDC webinar, or external conference? Log it and track your hours in the CPD Tracker.
                 </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--primary)", cursor: "pointer" }}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onNav?.("cpd")}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onNav?.("cpd"); } }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--primary)", cursor: "pointer" }}
+                >
                   <I name="external" size={13} color="var(--primary)" /> Go to CPD Tracker
                 </div>
               </Card>
             </div>
-          </div>
-
-        {/* ══ SECTION 2: How To Series ══ */}
-        <div className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionHeaderIcon} style={{ background: "rgba(233,30,99,0.1)" }}>
-              <I name="play" size={15} color="#E91E63" />
-            </div>
-            <div style={{ flex: 1 }}>
-              <span className={styles.sectionHeaderTitle}>How To Series</span>
-              <span className={styles.sectionHeaderSub}>Short video guides for everyday tasks · {allHowToVideos.length} videos</span>
-            </div>
-            <button onClick={() => setShowAddHowTo(true)} className={styles.addVideoBtn}>
-              <I name="upload" size={13} /> Add Video
-            </button>
-          </div>
-
-          <div className={styles.howToCatBar}>
-            {howToCats.map(cat => (
-              <button
-                key={cat}
-                className={howToCategory === cat ? `${styles.howToCatBtn} ${styles.howToCatBtnActive}` : styles.howToCatBtn}
-                onClick={() => setHowToCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-            <div className={styles.howToSearch}>
-              <SearchBar
-                placeholder="Search How To videos…"
-                value={howToSearch}
-                onChange={setHowToSearch}
-              />
-            </div>
-          </div>
-
-          {visibleHowTos.length === 0 ? (
-            <div className={styles.searchEmpty}>
-              <I name="search" size={36} color="var(--outline)" />
-              <p>No videos matching your search.</p>
-            </div>
-          ) : (
-            <div className={styles.howToGrid}>
-              {visibleHowTos.map(v => (
-                <HowToCard key={v.id} video={v} onPlay={setPlayingHowTo} />
-              ))}
-            </div>
-          )}
         </div>
         </>
-      )}
 
       {showAddTraining && (
         <AddTrainingModal
@@ -1563,6 +1914,14 @@ export const TrainingPage = ({ currentUser }) => {
           onClose={() => setShowAddHowTo(false)}
           onAdd={video => { setUserHowTos(prev => [...prev, video]); setHowToCategory("All"); }}
           existingCats={howToCats.filter(c => c !== "All")}
+        />
+      )}
+
+      {showAddExternal && (
+        <AddExternalModal
+          onClose={() => setShowAddExternal(false)}
+          onAdd={link => setUserExternalLinks(prev => [...prev, link])}
+          existingCats={externalCats}
         />
       )}
 

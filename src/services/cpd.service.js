@@ -2,20 +2,9 @@ import {
   cpdRolesFixture,
   cpdRoleProfilesFixture,
   practiceStaffFixture,
-} from "../fixtures/demo/cpd";
-import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
+} from "./fixtures/cpd.fixture";
 import { simulateLatency } from "./delay";
-import { fetchJson } from "./http";
-
-// VER-89: starter-template for CPD — returns the sector's regulator
-// framework (GDC / RCVS / GOC / HCPC / GMC) as a single item. Page
-// uses it to label the (otherwise empty) CPD log.
-export async function listCpdStarterTemplates(tenantId) {
-  if (!tenantId) return { items: [] };
-  return fetchJson(
-    `/admin/tenants/${encodeURIComponent(tenantId)}/starter-templates?module=cpd`,
-  );
-}
+// import { fetchJson } from "./http";
 
 let profilesStore = JSON.parse(JSON.stringify(cpdRoleProfilesFixture));
 
