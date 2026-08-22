@@ -1,0 +1,730 @@
+/* ─────────────────────────────────────────────────────────────────────
+   LaptopScroll — canvas-driven MacBook lid open as user scrolls.
+   The section is sized to give the open animation room to breathe, but
+   not so tall that the page feels endless. Hero copy floats above the
+   canvas and fades out across the first ~26% of scroll. Aurora wash and
+   floating evidence chips populate the sides so the open animation never
+   feels visually empty.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Number-typed custom property so calc() can do real math against the
+   scroll-driven --p set by the rAF loop. Without @property, --p is a
+   string and the chip reveals collapse to zero. */
+@property --p {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.scene {
+  position: relative;
+  height: 220vh;
+  background: var(--paper);
+}
+
+.pin {
+  --p: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: block;
+  background: var(--paper);
+}
+
+/* ── Aurora ── soft brand glow that intensifies as the lid opens.
+   Sits behind the canvas; pointer-events: none.
+   The triple radial creates depth without ever clipping the laptop edges. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: calc(0.35 + var(--p) * 0.65);
+  transition: opacity var(--dur-fast) linear;
+  background:
+    radial-gradient(60% 50% at 50% 58%, rgba(0, 154, 168, .14), transparent 70%),
+    radial-gradient(40% 36% at 22% 38%, rgba(0, 154, 168, .10), transparent 70%),
+    radial-gradient(38% 32% at 78% 42%, rgba(0, 93, 104, .09), transparent 70%);
+}
+.aurora::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 60%, var(--paper) 100%);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Floating evidence chips ── peek out from behind the laptop as it opens.
+   Animation is driven entirely by --p (0..1) so it's frame-perfect with the lid. */
+.chips {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── Chip — base card shared by every floating widget ──
+   The chips are decorative (aria-hidden) but they should look like
+   they were lifted directly out of the live product UI. Every chip:
+   - has the same hairline + paper + two-stop shadow recipe
+   - reveals on its own --in threshold via the --p scroll variable
+   - tilts a subtle 1–1.5° on enter for asymmetric energy
+*/
+.chip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: clamp(200px, 18vw, 244px);
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfb 100%);
+  border: 1px solid rgba(7, 72, 86, .12);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .9) inset,
+    0 1px 2px rgba(7, 72, 86, .06),
+    0 18px 44px -18px rgba(7, 72, 86, .25);
+  font-family: var(--font-display);
+  color: var(--ink);
+  letter-spacing: -.005em;
+  --reveal: clamp(0, calc((var(--p) - var(--in)) / 0.16), 1);
+  opacity: var(--reveal);
+  will-change: transform, opacity;
+}
+
+/* Head row — icon plate + label/value column */
+.chipHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.chipHeadWide {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.chipIconPlate {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(7, 72, 86, .14), rgba(7, 72, 86, .06));
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 1px 2px rgba(7,72,86,.06);
+}
+.chipIconPlate svg { width: 18px; height: 18px; }
+
+.chipMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.chipKicker {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.chipValue {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chipValueRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-base);
+}
+.chipValueRow strong { font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.chipTick {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, .14);
+  color: #047857;
+  display: grid;
+  place-items: center;
+}
+.chipTick svg { width: 11px; height: 11px; }
+
+.chipFoot {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.4;
+  color: var(--muted);
+  border-top: 1px dashed rgba(7, 72, 86, .14);
+  padding-top: 8px;
+}
+.chipFoot em { font-style: italic; color: var(--ink-2); }
+
+.chipFootInline {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  color: var(--muted);
+}
+.chipFootInline em { font-style: italic; color: var(--ink-2); }
+
+/* Status pill inline with value */
+.chipPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px 1px 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  font-family: var(--font-display);
+}
+.chipPill::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px currentColor;
+  opacity: .3;
+}
+.chipPill[data-tone="ok"] {
+  background: rgba(16, 185, 129, .12);
+  color: #047857;
+}
+.chipPill[data-tone="ok"]::before {
+  color: #10b981;
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 3px currentColor; opacity: .3; }
+  50%      { box-shadow: 0 0 0 6px currentColor; opacity: .12; }
+}
+
+/* Live dot (reused by toast + ticker) */
+.liveDot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .25);
+  animation: liveDotPulse 1.8s ease-in-out infinite;
+}
+@keyframes liveDotPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, .25); }
+  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, .08); }
+}
+
+/* ── ECG / heartbeat sparkline in the CQC widget ── */
+.ecg {
+  width: 100%;
+  height: 30px;
+  display: block;
+  overflow: visible;
+}
+.ecgPath {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: ecgDraw 2200ms cubic-bezier(.65, .05, .35, 1) forwards,
+             ecgSweep 3.4s linear 2200ms infinite;
+}
+@keyframes ecgDraw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes ecgSweep {
+  0%   { stroke-dasharray: 200 600; stroke-dashoffset: 0; }
+  100% { stroke-dasharray: 200 600; stroke-dashoffset: -800; }
+}
+.ecgPulse {
+  animation: ecgPulse 1.4s var(--ease-out) infinite;
+}
+@keyframes ecgPulse {
+  0%, 100% { r: 2.4; opacity: .65; }
+  50%      { r: 4.2; opacity: 1; }
+}
+
+/* ── Ring fill animation — runs when chip becomes visible ── */
+.ringFill {
+  animation: ringFill 1400ms cubic-bezier(.22, 1, .36, 1) forwards;
+  animation-delay: 200ms;
+}
+@keyframes ringFill {
+  to { stroke-dashoffset: var(--final-offset); }
+}
+
+/* ── Sparkline (team compliance trend) ── */
+.spark {
+  width: 100%;
+  height: 22px;
+  margin: 4px 0 6px;
+  display: block;
+  overflow: visible;
+}
+.sparkArea { opacity: 0; animation: sparkFade 600ms 600ms var(--ease-out) forwards; }
+.sparkLine {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: sparkDraw 1200ms 400ms cubic-bezier(.65, .05, .35, 1) forwards;
+}
+.sparkDot {
+  opacity: 0;
+  animation: sparkDot 400ms 1500ms var(--ease-out) forwards,
+             ecgPulse 1.8s 1900ms ease-in-out infinite;
+}
+@keyframes sparkFade { to { opacity: 1; } }
+@keyframes sparkDraw { to { stroke-dashoffset: 0; } }
+@keyframes sparkDot  { to { opacity: 1; } }
+
+.trendUp {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: #047857;
+  background: rgba(16, 185, 129, .14);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ring gauges */
+.ringSm { width: 44px; height: 44px; flex-shrink: 0; }
+.ringLg { width: 64px; height: 64px; flex-shrink: 0; }
+.ringTextSm {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+.ringTextLg {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em;
+}
+.ringTextLgSub {
+  font-family: var(--font-display);
+  font-size: 6.5px;
+  font-weight: 600;
+  fill: var(--muted);
+  letter-spacing: .14em;
+}
+
+/* Avatar stack */
+.avatars {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+.avatar, .avatarMore {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .02em;
+  border: 1.5px solid #fff;
+  margin-left: -5px;
+  box-shadow: 0 1px 2px rgba(7, 72, 86, .1);
+  font-family: var(--font-display);
+}
+.avatar:first-child { margin-left: 0; }
+.avatar[data-bg="a"] { background: linear-gradient(135deg, #0e7490, #06b6d4); }
+.avatar[data-bg="b"] { background: linear-gradient(135deg, #074856, #16707f); }
+.avatar[data-bg="c"] { background: linear-gradient(135deg, #b45309, #f59e0b); }
+.avatar[data-bg="d"] { background: linear-gradient(135deg, #6d28d9, #a855f7); }
+.avatarMore {
+  background: rgba(7, 72, 86, .08);
+  color: var(--ink-2);
+}
+
+/* Mini certification badges */
+.badgeRow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.miniBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--paper);
+  color: var(--accent);
+  border: 1px solid rgba(7, 72, 86, .22);
+  border-radius: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Position + threshold per chip ──
+   Each enters at a different --p threshold, slides in from off-axis,
+   and lands with a subtle tilt for asymmetric energy. */
+.chipL1 {
+  --in: 0.30;
+  --tilt: -1.2deg;
+  top: 19%;
+  left: clamp(8px, 2.5vw, 48px);
+  transform:
+    translateX(calc((1 - var(--reveal)) * -36px))
+    translateY(calc((1 - var(--reveal)) * 8px))
+    rotate(calc(var(--reveal) * var(--tilt)));
+}
+.chipL2 {
+  --in: 0.48;
+  --tilt: 1.4deg;
+  bottom: 17%;
+  left: clamp(20px, 5vw, 88px);
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: clamp(208px, 19vw, 248px);
+  transform:
+    translateX(calc((1 - var(--reveal)) * -36px))
+    translateY(calc((1 - var(--reveal)) * -8px))
+    rotate(calc(var(--reveal) * var(--tilt)));
+}
+.chipR1 {
+  --in: 0.36;
+  --tilt: 1.0deg;
+  top: 18%;
+  right: clamp(8px, 2.5vw, 48px);
+  width: clamp(240px, 22vw, 296px);
+  transform:
+    translateX(calc((1 - var(--reveal)) * 36px))
+    translateY(calc((1 - var(--reveal)) * 8px))
+    rotate(calc(var(--reveal) * var(--tilt)));
+}
+.chipR2 {
+  --in: 0.54;
+  --tilt: -1.4deg;
+  bottom: 17%;
+  right: clamp(20px, 5vw, 88px);
+  transform:
+    translateX(calc((1 - var(--reveal)) * 36px))
+    translateY(calc((1 - var(--reveal)) * -8px))
+    rotate(calc(var(--reveal) * var(--tilt)));
+}
+
+/* ── Notification toast — top center, slides in first from above ── */
+.toast {
+  --in: 0.20;
+  position: absolute;
+  top: clamp(80px, 11vh, 130px);
+  left: 50%;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  width: clamp(280px, 32vw, 380px);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98) 0%, rgba(249, 251, 251, .96) 100%);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.9) inset,
+    0 2px 6px rgba(7,72,86,.08),
+    0 22px 50px -20px rgba(7,72,86,.32);
+  --reveal: clamp(0, calc((var(--p) - 0.20) / 0.14), 1);
+  opacity: var(--reveal);
+  transform:
+    translate(-50%, calc((1 - var(--reveal)) * -22px))
+    scale(calc(.94 + var(--reveal) * .06));
+}
+.toast .avatar { margin: 0; border: 2px solid var(--paper); }
+.toastBody { flex: 1; min-width: 0; }
+.toastMsg {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toastMsg strong { font-weight: 600; }
+.toastMsg em { font-style: italic; color: var(--accent); font-family: var(--font-serif); }
+.toastTime {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -.005em;
+}
+.toastTick {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, .14);
+  color: #047857;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.toastTick svg { width: 12px; height: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ecgPath, .ringFill, .sparkLine, .sparkDot, .sparkArea,
+  .ecgPulse, .liveDot, .chipPill[data-tone="ok"]::before {
+    animation: none !important;
+  }
+  .ringFill { stroke-dashoffset: var(--final-offset); }
+  .sparkLine { stroke-dashoffset: 0; }
+  .sparkArea, .sparkDot { opacity: 1; }
+  .ecgPath { stroke-dashoffset: 0; }
+}
+
+@media (max-width: 880px) {
+  .chips { display: none; }   /* keep mobile uncluttered — laptop is the hero */
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── Loader overlay ── shown until all frames are decoded ── */
+.loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  z-index: 4;
+  color: var(--muted);
+  font-family: var(--font-display);
+}
+.loaderInner {
+  display: grid;
+  place-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+.loaderPct {
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: var(--tracking-tighter);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.loaderLabel {
+  font-size: var(--text-sm);
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.loaderBar {
+  width: clamp(180px, 24vw, 320px);
+  height: 2px;
+  background: rgba(0, 0, 0, .08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.loaderFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: transform 80ms linear;
+  transform-origin: left;
+}
+
+/* ── Hero copy overlay ── floats above the canvas at the top of the pin ── */
+.hero {
+  position: absolute;
+  top: clamp(80px, 9vh, 120px);
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding-inline: clamp(20px, 4vw, 48px);
+}
+
+.kicker {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px 6px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--r-full);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: -.005em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.kicker:hover { border-color: rgba(0, 0, 0, .14); background: rgba(255,255,255,.92); transform: translateY(-1px); }
+.kickerTag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--paper);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.kickerArrow {
+  font-size: 1.15em;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast);
+}
+.kicker:hover .kickerArrow { transform: translateX(2px); color: var(--ink); }
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--display-hero);
+  line-height: 1.0;
+  letter-spacing: var(--tracking-tighter);
+  color: var(--ink);
+  text-wrap: balance;
+  max-width: 18ch;
+  margin: 0;
+}
+.titleEm {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+  letter-spacing: -.022em;
+}
+
+.sub {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 56ch;
+  text-wrap: pretty;
+  margin: 0;
+}
+
+.cta {
+  pointer-events: auto;
+  margin-top: var(--space-2);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.trialNote {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--muted);
+  margin: -2px 0 0;
+  letter-spacing: -.005em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.trialNote::before, .trialNote::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(7, 72, 86, .25);
+  display: inline-block;
+}
+
+.trust {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  max-width: 44ch;
+  text-align: left;
+}
+.trustText { line-height: 1.45; text-wrap: balance; }
+.trust strong { color: var(--ink); font-weight: 600; }
+.trustDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, .14);
+  display: inline-block;
+  animation: pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14); }
+  50%      { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0.04); }
+}
+
+@media (max-width: 720px) {
+  .hero { top: clamp(80px, 11vh, 110px); gap: var(--space-4); }
+  .sub  { font-size: var(--text-base); }
+  .kicker { font-size: var(--text-xs); padding: 5px 12px 5px 5px; }
+  .kickerTag { height: 20px; padding: 0 8px; font-size: 10px; }
+  .cta { width: 100%; flex-direction: column; }
+  .cta > * { width: 100%; max-width: 320px; }
+  .trust { font-size: var(--text-xs); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trustDot { animation: none; }
+}
