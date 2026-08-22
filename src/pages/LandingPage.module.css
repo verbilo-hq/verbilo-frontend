@@ -10,14 +10,7 @@
   background: #ffffff;
   font-family: 'Inter', sans-serif;
   color: #0a0f1a;
-  /* `hidden` makes this element a scroll container, which silently disables
-     position:sticky inside it - that killed the hero tunnel (ScrollZoom): the
-     hero scrolled away and left ~1400px of blank page before the first
-     feature section. `clip` clips identically WITHOUT creating a scroll
-     container, so sticky keeps working. `hidden` stays first as a fallback
-     for browsers that don't support overflow:clip. */
   overflow-x: hidden;
-  overflow-x: clip;
 }
 
 /* ── Nav ─────────────────────────────────────────────────────────────────── */
