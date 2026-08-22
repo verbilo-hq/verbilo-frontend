@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
@@ -8,25 +8,8 @@ import { SearchBar } from "../components/ui/SearchBar";
 import {
   listAdminSections, listAdminDocs,
   updateAdminDoc, deleteAdminDoc,
-  uploadAdminDoc, downloadAdminDoc,
 } from "../services/admin.service";
-import { OrganisationSettings } from "./admin/OrganisationSettings";
-import { MasterTemplateLibrary } from "./admin/MasterTemplateLibrary";
-import { hasCap, useDevRole } from "../services/devRole";
-import { personName } from "../services/people";
-import { useModalA11y } from "../hooks/useModalA11y";
 import styles from "./AdminPage.module.css";
-
-/* Approver of record for doc approve/reject actions — a real roster person
- * (the clinical lead) instead of an invented name. */
-const DOC_APPROVER = personName("clinical-lead");
-
-/* Top-level Admin Centre areas. "documents" preserves existing behaviour. */
-const ADMIN_AREAS = [
-  { id: "documents",    label: "Documents",                  icon: "file"     },
-  { id: "templates",    label: "SaaS Master Template Library", icon: "layers", cap: "master_template_lib" },
-  { id: "organisation", label: "Organisation Settings",      icon: "settings", cap: "org_settings_edit"   },
-];
 
 const statusConfig = {
   approved: { label: "Approved", color: "var(--success)", icon: "checkcircle" },
@@ -43,40 +26,16 @@ const filterOptions = [
   { key: "rejected", label: "Rejected" },
 ];
 
-const UploadModal = ({ uploadSection, setUploadSection, onClose, onUpload, sections }) => {
-  const dialogRef = useModalA11y(onClose);
+const UploadModal = ({ uploadSection, setUploadSection, onClose, sections }) => {
   const [dragOver, setDragOver] = useState(false);
-  const [files, setFiles] = useState([]);
-  const [description, setDescription] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const fileInputRef = useRef(null);
-
-  const addFiles = (incoming) => {
-    const arr = Array.from(incoming ?? []);
-    if (arr.length) setFiles((prev) => [...prev, ...arr]);
-  };
-
-  const handleSubmit = async () => {
-    if (!files.length || submitting) return;
-    setSubmitting(true);
-    try {
-      for (const file of files) {
-        await onUpload({ file, section: uploadSection, description });
-      }
-      onClose();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <div className={styles.modalScrim} onClick={onClose}>
-      <div ref={dialogRef} onClick={(e) => e.stopPropagation()} className={styles.modalCard} aria-labelledby="upload-document-title">
+      <div onClick={(e) => e.stopPropagation()} className={styles.modalCard}>
         <div className={styles.modalHeader}>
-          <h2 id="upload-document-title" className={styles.modalTitle}>Upload Document</h2>
-          <button type="button" onClick={onClose} className={styles.modalCloser} aria-label="Close upload dialog">
+          <h2 className={styles.modalTitle}>Upload Document</h2>
+          <div onClick={onClose} className={styles.modalCloser}>
             <I name="xcircle" size={22} color="var(--outline)" />
-          </button>
+          </div>
         </div>
 
         <div className={styles.modalBlock}>
@@ -102,20 +61,11 @@ const UploadModal = ({ uploadSection, setUploadSection, onClose, onUpload, secti
           </div>
         </div>
 
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          style={{ display: "none" }}
-          onChange={(e) => { addFiles(e.target.files); e.target.value = ""; }}
-        />
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
-          onClick={() => fileInputRef.current?.click()}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
           className={dragOver ? `${styles.dropZone} ${styles.dropZoneActive}` : styles.dropZone}
-          style={{ cursor: "pointer" }}
         >
           <div className={styles.dropZoneIconWrap}>
             <I name="cloud" size={24} color="var(--primary)" />
@@ -124,37 +74,13 @@ const UploadModal = ({ uploadSection, setUploadSection, onClose, onUpload, secti
           <p className={styles.dropZoneHelp}>
             or <span className={styles.dropZoneLink}>browse from your device</span>
           </p>
-          <p className={styles.dropZoneFormats}>PDF, DOCX, XLSX, PPTX, ZIP — stored locally in your browser</p>
+          <p className={styles.dropZoneFormats}>PDF, DOCX, XLSX, PPTX, ZIP up to 25MB</p>
         </div>
-
-        {files.length > 0 && (
-          <div className={styles.modalBlock}>
-            <label className={styles.modalLabel}>Selected files ({files.length})</label>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {files.map((f, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "var(--surface-container)", borderRadius: 8 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                    <I name="file" size={14} color="var(--outline)" />
-                    {f.name} <span style={{ color: "var(--on-surface-variant)" }}>· {(f.size / 1024).toFixed(0)} KB</span>
-                  </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setFiles((prev) => prev.filter((_, j) => j !== i)); }}
-                    style={{ background: "none", border: "none", cursor: "pointer" }}
-                  >
-                    <I name="xcircle" size={16} color="var(--outline)" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className={styles.modalBlock}>
           <label className={styles.modalLabel}>Description</label>
           <textarea
             rows={2}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description of the document..."
             className={styles.modalTextarea}
           />
@@ -163,18 +89,13 @@ const UploadModal = ({ uploadSection, setUploadSection, onClose, onUpload, secti
         <div className={styles.modalNotice}>
           <I name="shieldalert" size={16} color="var(--primary)" />
           <span className={styles.modalNoticeText}>
-            Files are stored in your browser's local storage — no cloud upload needed for dev.
+            Documents require approval before they become visible to staff.
           </span>
         </div>
 
         <div className={styles.modalActions}>
-          <BtnPrimary
-            onClick={handleSubmit}
-            disabled={!files.length || submitting}
-            style={{ flex: 1, justifyContent: "center", opacity: !files.length || submitting ? 0.6 : 1 }}
-          >
-            <I name="upload" size={16} color="var(--on-primary)" />
-            {submitting ? "Uploading…" : "Upload & Submit for Review"}
+          <BtnPrimary onClick={onClose} style={{ flex: 1, justifyContent: "center" }}>
+            <I name="upload" size={16} color="var(--on-primary)" /> Upload & Submit for Review
           </BtnPrimary>
           <BtnSecondary onClick={onClose} style={{ padding: "14px 20px" }}>Cancel</BtnSecondary>
         </div>
@@ -183,7 +104,7 @@ const UploadModal = ({ uploadSection, setUploadSection, onClose, onUpload, secti
   );
 };
 
-const DetailPanel = ({ doc, currentSection, onClose, onApprove, onReject, onDelete, onDownload }) => {
+const DetailPanel = ({ doc, currentSection, onClose, onApprove, onReject, onDelete }) => {
   const sc = statusConfig[doc.status];
   const meta = [
     { label: "Uploaded by", value: doc.uploadedBy, icon: "person" },
@@ -244,10 +165,7 @@ const DetailPanel = ({ doc, currentSection, onClose, onApprove, onReject, onDele
         )}
 
         <div className={styles.panelActions}>
-          <BtnPrimary
-            onClick={() => onDownload?.(doc.id)}
-            style={{ width: "100%", justifyContent: "center" }}
-          >
+          <BtnPrimary onClick={() => {}} style={{ width: "100%", justifyContent: "center" }}>
             <I name="download" size={16} color="var(--on-primary)" /> Download
           </BtnPrimary>
           {(doc.status === "pending" || doc.status === "in_review") && (
@@ -270,10 +188,8 @@ const DetailPanel = ({ doc, currentSection, onClose, onApprove, onReject, onDele
 };
 
 export const AdminPage = () => {
-  const [adminArea, setAdminArea] = useState("documents");
   const [activeSection, setActiveSection] = useState("clinical");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [query, setQuery] = useState("");
   const [showUpload, setShowUpload] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [uploadSection, setUploadSection] = useState("clinical");
@@ -286,11 +202,8 @@ export const AdminPage = () => {
   }, []);
 
   const sectionDocs = docs.filter((d) => d.section === activeSection);
-  const q = query.trim().toLowerCase();
   const filtered = sectionDocs.filter(
-    (d) =>
-      (filterStatus === "all" || d.status === filterStatus) &&
-      (!q || `${d.name} ${d.uploadedBy} ${d.type}`.toLowerCase().includes(q))
+    (d) => filterStatus === "all" || d.status === filterStatus
   );
   const sectionStats = {
     total: sectionDocs.length,
@@ -304,7 +217,7 @@ export const AdminPage = () => {
   const handleApprove = async (id) => {
     const updated = await updateAdminDoc(id, {
       status: "approved",
-      approvedBy: DOC_APPROVER,
+      approvedBy: "Dr. Alexander Chen",
       approvedDate: new Date().toISOString().split("T")[0],
     });
     setDocs((prev) => prev.map((d) => (d.id === id ? updated : d)));
@@ -314,7 +227,7 @@ export const AdminPage = () => {
   const handleReject = async (id) => {
     const updated = await updateAdminDoc(id, {
       status: "rejected",
-      rejectedBy: DOC_APPROVER,
+      rejectedBy: "Dr. Alexander Chen",
       rejectedReason: "Needs revision — see comments.",
     });
     setDocs((prev) => prev.map((d) => (d.id === id ? updated : d)));
@@ -327,17 +240,6 @@ export const AdminPage = () => {
     setSelectedDoc(null);
   };
 
-  const handleUpload = async ({ file, section, description }) => {
-    const created = await uploadAdminDoc({ file, section, description });
-    setDocs((prev) => [created, ...prev]);
-    if (section !== activeSection) setActiveSection(section);
-  };
-
-  const handleDownload = async (id) => {
-    const ok = await downloadAdminDoc(id);
-    if (!ok) alert("This demo doc has no attached file. Upload one to download.");
-  };
-
   const statTiles = [
     { label: "Total", value: sectionStats.total, icon: "layers", color: currentSection.color },
     { label: "Approved", value: sectionStats.approved, icon: "checkcircle", color: "var(--success)" },
@@ -345,59 +247,13 @@ export const AdminPage = () => {
     { label: "Rejected", value: sectionStats.rejected, icon: "xcircle", color: "var(--error)" },
   ];
 
-  /* Top-level area tab strip — switches between Documents (existing) and
-     Organisation Settings (new). Master Templates comes in Slice 1B. */
-  const [devRole] = useDevRole();
-  const visibleAreas = ADMIN_AREAS.filter((a) => !a.cap || hasCap(devRole, a.cap));
-  // If the current area got hidden by a role switch, fall back to documents.
-  useEffect(() => {
-    if (!visibleAreas.some((a) => a.id === adminArea)) setAdminArea("documents");
-  }, [adminArea, devRole]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const AreaTabs = (
-    <div className={styles.adminAreaTabs}>
-      {visibleAreas.map((a) => {
-        const active = adminArea === a.id;
-        return (
-          <button
-            key={a.id}
-            onClick={() => setAdminArea(a.id)}
-            className={active ? `${styles.adminAreaTab} ${styles.adminAreaTabActive}` : styles.adminAreaTab}
-          >
-            <I name={a.icon} size={14} color={active ? "var(--primary)" : "var(--on-surface-variant)"} />
-            <span>{a.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  if (adminArea === "organisation") {
-    return (
-      <div>
-        {AreaTabs}
-        <OrganisationSettings />
-      </div>
-    );
-  }
-  if (adminArea === "templates") {
-    return (
-      <div>
-        {AreaTabs}
-        <MasterTemplateLibrary />
-      </div>
-    );
-  }
-
   return (
     <div>
-      {AreaTabs}
       {showUpload && (
         <UploadModal
           uploadSection={uploadSection}
           setUploadSection={setUploadSection}
           onClose={() => setShowUpload(false)}
-          onUpload={handleUpload}
           sections={sections}
         />
       )}
@@ -409,21 +265,14 @@ export const AdminPage = () => {
           onApprove={handleApprove}
           onReject={handleReject}
           onDelete={handleDelete}
-          onDownload={handleDownload}
         />
       )}
 
-      <SearchBar
-        placeholder="Search this section by document, uploader or type…"
-        value={query}
-        onChange={setQuery}
-      />
+      <SearchBar placeholder="Search documents across all sections..." />
 
       <div className={styles.header}>
         <div>
-          {/* Title matches the sidebar nav label — the page covers documents,
-              master templates AND org settings, not just document upload. */}
-          <h1 className={styles.title}>Admin Centre</h1>
+          <h1 className={styles.title}>Document Upload Centre</h1>
           <p className={styles.lead}>
             Manage documents, control approvals, and maintain the clinical knowledge base.
           </p>
@@ -535,10 +384,7 @@ export const AdminPage = () => {
               </div>
               <span className={styles.dateCell}>{doc.date}</span>
               <div className={styles.rowActions}>
-                <div
-                  className={styles.rowActionBtn}
-                  onClick={(e) => { e.stopPropagation(); handleDownload(doc.id); }}
-                >
+                <div className={styles.rowActionBtn} onClick={(e) => e.stopPropagation()}>
                   <I name="download" size={14} color="var(--outline)" />
                 </div>
                 <div className={styles.rowActionBtn} onClick={(e) => e.stopPropagation()}>
@@ -560,13 +406,11 @@ export const AdminPage = () => {
         <div className={styles.cloudInfo}>
           <I name="cloud" size={16} color="var(--primary)" />
           <span className={styles.cloudInfoText}>
-            {import.meta.env.DEV
-              ? <><span className={styles.cloudInfoBold}>Local development storage</span> · Browser-only sample data</>
-              : <><span className={styles.cloudInfoBold}>Storage status unavailable</span> · Connect the authenticated storage health API</>}
+            Cloud Storage: <span className={styles.cloudInfoBold}>4.8 GB</span> of 50 GB used • AWS S3 (eu-west-2)
           </span>
         </div>
         <span className={styles.cloudSync}>
-          <I name="refresh" size={12} color="var(--outline)" /> Not cloud-synchronised
+          <I name="refresh" size={12} color="var(--outline)" /> Last synced: 2 mins ago
         </span>
       </div>
     </div>

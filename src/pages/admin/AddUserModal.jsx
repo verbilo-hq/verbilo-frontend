@@ -1,0 +1,348 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { createTenantUser } from "../../services/users.service";
+import { userRoleLabel } from "../../lib/sector";
+import { assignableCustomerRoles } from "../../lib/roleRank";
+import styles from "./AdminCreateTenantPage.module.css";
+
+// VER-65: "Add user" form. Used from the Users section on both the
+// admin-portal AdminTenantSettingsPage and the tenant-surface
+// TenantSettingsPage (the section is shared). Backend enforces all of
+// these rules; the modal just shapes the UX:
+//   - role dropdown filtered to roles ≤ the actor's rank (so we don't
+//     offer something the backend will 403 on)
+//   - on success, the one-time temp password is surfaced once with a
+//     copy button. Backend doesn't store it in plaintext and won't
+//     return it again — closing the modal loses it.
+//
+// `actorRole` is the signed-in user's role (from useAuth().permissions).
+// `sector` drives the sector-aware role labels (VER-60).
+export const AddUserModal = ({
+  tenantId,
+  sector,
+  actorRole,
+  onCreated,
+  onClose,
+}) => {
+  const [username, setUsername]       = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail]             = useState("");
+  const [role, setRole]               = useState("");
+  const [submitting, setSubmitting]   = useState(false);
+  const [error, setError]             = useState(null);
+  // VER-74: `created` is one of two shapes from the backend:
+  //   - { user, temporaryPassword }      manual-share path
+  //   - { user, invitationEmailedTo }    Cognito-emailed-invite path
+  // The success view branches on which key is present.
+  const [created, setCreated]         = useState(null);
+  const [copied, setCopied]           = useState(false);
+
+  // VER-74: opt into Cognito-managed invite email. Defaults to checked
+  // when an email is provided (the most common case for tenants whose
+  // staff all have email); auto-disables + unchecks when the email
+  // field is empty so the checkbox state always tracks reality.
+  const [sendInvitationEmail, setSendInvitationEmail] = useState(false);
+
+  const allowedRoles = assignableCustomerRoles(actorRole);
+
+  // Pick a default role on first render — lowest-rank assignable role
+  // ("employee" usually). If the actor can't create anyone (caller
+  // shouldn't have opened this), keep the field empty so submit
+  // disables itself.
+  if (!role && allowedRoles.length > 0) {
+    setRole(allowedRoles[0]);
+  }
+
+  const trimmedUsername    = username.trim();
+  const trimmedDisplayName = displayName.trim();
+  const trimmedEmail       = email.trim();
+
+  const usernameOk = /^[a-z0-9][a-z0-9._-]{2,31}$/.test(trimmedUsername);
+  const displayNameOk = trimmedDisplayName.length >= 1 && trimmedDisplayName.length <= 80;
+  const emailOk = trimmedEmail === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+  const roleOk = allowedRoles.includes(role);
+
+  // VER-74: email-invite can only fire when there's a valid email to
+  // send it to. Keep the checkbox state honest with the email field.
+  const canEmailInvite = trimmedEmail !== "" && emailOk;
+  // Default to checked the first time the operator types a valid email
+  // — most clinics will want this on once it's available. If they
+  // clear the email afterwards we force-uncheck so the form can never
+  // submit `sendInvitationEmail: true` without an email (backend 400s
+  // that anyway, but better not to bother round-tripping).
+  useEffect(() => {
+    if (!canEmailInvite && sendInvitationEmail) {
+      setSendInvitationEmail(false);
+    } else if (canEmailInvite && !sendInvitationEmail && !created) {
+      setSendInvitationEmail(true);
+    }
+    // `created` guard: don't flip the checkbox back on after we've
+    // shown the success state — it'd be a confusing flicker.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canEmailInvite]);
+
+  const canSubmit = usernameOk && displayNameOk && emailOk && roleOk && !submitting;
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
+    // VER-65 hotfix #2: the previous stopPropagation attempt didn't
+    // help because the modal was mounted inside the admin-portal's
+    // outer <form>. A submit button inside a nested form ends up
+    // associated with the OUTER form by Chrome's form-owner rules, so
+    // the inner form's onSubmit never even fires — the tenant-save
+    // handler fires directly. Two changes here:
+    //   1. The whole modal is rendered via createPortal at document.body
+    //      level so it's not a DOM descendant of any parent form.
+    //   2. Submission is driven by a plain `type="button"` + onClick,
+    //      not a `type="submit"` inside a `<form>` — no implicit
+    //      form-submission semantics involved.
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await createTenantUser(tenantId, {
+        username: trimmedUsername,
+        displayName: trimmedDisplayName,
+        role,
+        ...(trimmedEmail ? { email: trimmedEmail } : {}),
+        // VER-74: opt-in flag. Backend 400s if true without an email,
+        // but we already gate the checkbox on email presence above so
+        // that should never reach the server.
+        ...(sendInvitationEmail ? { sendInvitationEmail: true } : {}),
+      });
+      setCreated(result);
+      onCreated?.();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const copyTemporaryPassword = async () => {
+    if (!created?.temporaryPassword) return;
+    try {
+      await navigator.clipboard.writeText(created.temporaryPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard write blocked — fall back to a manual select via the
+      // input; nothing else to do
+    }
+  };
+
+  // Backdrop click + Escape close the modal — but only if no in-flight
+  // request and no success state (we don't want to lose the temp password
+  // banner on a stray click).
+  const handleBackdropClick = () => {
+    if (submitting) return;
+    onClose?.();
+  };
+
+  const modal = (
+    <div
+      className={styles.modalBackdrop}
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-user-title"
+    >
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="add-user-title" className={styles.modalTitle}>
+          {created ? "User created" : "Add user"}
+        </h2>
+
+        {created ? (
+          <>
+            <div className={styles.modalBody}>
+              {/* VER-74: success view branches on the discriminated
+                  response. Cognito-emailed path needs no password
+                  display; manual-share path keeps the existing
+                  "copy this once" UX. */}
+              {created.invitationEmailedTo ? (
+                <p>
+                  <strong>{created.user.username}</strong> can now sign in.
+                  An invitation email with their temporary password has
+                  been sent to <strong>{created.invitationEmailedTo}</strong>.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    <strong>{created.user.username}</strong> can now sign in.
+                    Share this temporary password securely — they'll be prompted
+                    to set their own on first login.
+                  </p>
+                  <div className={styles.field} style={{ marginTop: 16 }}>
+                    <label className={styles.label}>Temporary password</label>
+                    <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+                      <input
+                        className={styles.input}
+                        value={created.temporaryPassword}
+                        readOnly
+                        onFocus={(e) => e.target.select()}
+                        style={{
+                          flex: 1,
+                          fontFamily: "var(--font-mono, ui-monospace, monospace)",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className={styles.btnSecondary}
+                        onClick={copyTemporaryPassword}
+                      >
+                        {copied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <p className={styles.sectionBody} style={{ marginTop: 8 }}>
+                      This password won't be shown again. If you lose it, reset
+                      it for the user separately.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={onClose}
+              >
+                Done
+              </button>
+            </div>
+          </>
+        ) : (
+          <div>
+            <div className={styles.field}>
+              <label className={styles.label}>Username</label>
+              <input
+                className={styles.input}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="s.jenkins"
+                autoFocus
+                disabled={submitting}
+                autoComplete="off"
+                spellCheck="false"
+              />
+              {username && !usernameOk && (
+                <p className={styles.submitError} style={{ marginTop: 4 }}>
+                  3–32 chars: lowercase letters, numbers, dot, dash, underscore.
+                </p>
+              )}
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Display name</label>
+              <input
+                className={styles.input}
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Sarah Jenkins"
+                disabled={submitting}
+                maxLength={80}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Email (optional)</label>
+              <input
+                className={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="sarah@example.co.uk"
+                type="email"
+                disabled={submitting}
+                autoComplete="off"
+              />
+              {email && !emailOk && (
+                <p className={styles.submitError} style={{ marginTop: 4 }}>
+                  Doesn't look like a valid email address.
+                </p>
+              )}
+            </div>
+
+            {/* VER-74: opt into Cognito-managed invite email. Disabled
+                until there's a valid email to send to; auto-checks
+                once one is filled (most clinics will want this). */}
+            <div className={styles.field}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: canEmailInvite ? "pointer" : "default" }}>
+                <input
+                  type="checkbox"
+                  checked={sendInvitationEmail}
+                  disabled={!canEmailInvite || submitting}
+                  onChange={(e) => setSendInvitationEmail(e.target.checked)}
+                />
+                <span>Email invitation to user</span>
+              </label>
+              <p className={styles.helperMuted} style={{ marginTop: 4, fontSize: 12 }}>
+                {canEmailInvite
+                  ? "Cognito sends the temporary password directly to this email."
+                  : "Add an email above to enable email invites."}
+              </p>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Role</label>
+              <select
+                className={styles.input}
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={submitting || allowedRoles.length === 0}
+              >
+                {allowedRoles.map((id) => (
+                  <option key={id} value={id}>{userRoleLabel(id, sector)}</option>
+                ))}
+              </select>
+              {allowedRoles.length === 0 && (
+                <p className={styles.submitError} style={{ marginTop: 4 }}>
+                  You don't have permission to assign any roles.
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <p className={styles.submitError} style={{ marginTop: 12 }}>
+                {error.code === "CONFLICT"
+                  ? "A user with that username already exists in Cognito."
+                  : error.code === "FORBIDDEN"
+                  ? "You don't have permission to create that role."
+                  : error.code === "VALIDATION"
+                  ? "One or more fields failed validation. Check the values above."
+                  : `Couldn't create the user (${error.status ?? error.code ?? "error"}).`}
+              </p>
+            )}
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={onClose}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={styles.btnPrimary}
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+              >
+                {submitting ? "Creating…" : "Create user"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Portal the whole thing to document.body so it's not a DOM
+  // descendant of any ancestor <form> on the page.
+  return typeof document !== "undefined"
+    ? createPortal(modal, document.body)
+    : modal;
+};

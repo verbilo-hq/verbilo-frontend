@@ -13,7 +13,7 @@
 
 .heading {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -54,7 +54,7 @@
 
 .assetTileDark .assetWordmark { color: #fff; }
 .assetTileDark .assetCaption  { color: rgba(255,255,255,0.6); }
-.assetTileDark .assetDims     { color: rgba(255,255,255,0.72); }
+.assetTileDark .assetDims     { color: rgba(255,255,255,0.35); }
 
 .assetTileMono { filter: grayscale(1); }
 
@@ -88,7 +88,7 @@
   letter-spacing: 0.02em;
 }
 
-.assetTilePrimary .assetDims { color: rgba(255, 255, 255, 0.82); }
+.assetTilePrimary .assetDims { color: rgba(255, 255, 255, 0.55); }
 
 .assetFormats {
   display: flex;
@@ -109,7 +109,7 @@
 }
 
 .assetFormatPillWhite {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.18);
   color: var(--on-primary);
 }
 
@@ -257,7 +257,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -511,7 +511,7 @@
   color: var(--on-surface-variant);
   background: var(--surface-container);
   padding: 2px 7px;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   white-space: nowrap;
 }
 
@@ -569,19 +569,14 @@
 
 .swatchHex {
   font-size: 9px;
+  opacity: 0.75;
   font-family: monospace;
-}
-
-.swatchContrastPlate {
-  width: fit-content;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.48);
 }
 
 .swatchHint {
   font-size: 10px;
   color: var(--on-surface-variant);
+  opacity: 0.7;
 }
 
 .typographyRow {
@@ -644,28 +639,4 @@
   font-size: 11px;
   color: var(--on-surface-variant);
   line-height: 1.5;
-}
-
-@media (max-width: 900px) {
-  .midRow { grid-template-columns: minmax(0, 1fr); }
-  .midRow > * { min-width: 0; }
-}
-
-@media (max-width: 620px) {
-  .logosCard { padding: 20px; }
-  .cardHeader { flex-direction: column; gap: 14px; }
-  .headerBtns { width: 100%; flex-wrap: wrap; }
-  .headerBtns > * { flex: 1 1 180px; }
-  .assetGrid { grid-template-columns: minmax(0, 1fr); }
-  .templateRow { align-items: flex-start; flex-wrap: wrap; }
-  .templateActions { width: 100%; padding-left: 52px; }
-  .editCodes { min-width: 0; }
-}
-
-@media (max-width: 420px) {
-  .logosCard { padding: 16px; }
-  .templateActions { padding-left: 0; }
-  .editRow { align-items: flex-start; flex-wrap: wrap; }
-  .editFields { flex-basis: calc(100% - 52px); }
-  .editCodes { flex-basis: 100%; }
 }

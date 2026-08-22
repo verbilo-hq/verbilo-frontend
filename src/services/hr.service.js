@@ -3,26 +3,21 @@ import {
   mandatoryTrainingFixture,
   noticesFixture,
   hrQuickLinksFixture,
-} from "./fixtures/hr.fixture";
+} from "../fixtures/demo/hr";
+import { isDemoMode } from "../lib/mode"; // VER-83: future tenant-mode branches (VER-86+) gate on this; currently unused, fixture imports above are returned unconditionally.
 import { simulateLatency } from "./delay";
-import { putFile, downloadFile, deleteFile } from "./clientFileStore";
-// import { fetchJson } from "./http";
+import { fetchJson } from "./http";
 
-const LS_KEY = "verbilo.hr.policies";
-
-function loadPolicies() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* fall through */ }
-  return [...policiesFixture];
+// VER-88: starter-template library for HR Hub. Backed by
+// /admin/tenants/:id/starter-templates?module=hr from VER-85.
+export async function listHrStarterTemplates(tenantId) {
+  if (!tenantId) return { items: [] };
+  return fetchJson(
+    `/admin/tenants/${encodeURIComponent(tenantId)}/starter-templates?module=hr`,
+  );
 }
 
-function savePolicies(list) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch { /* noop */ }
-}
-
-let policiesStore = loadPolicies();
+let policiesStore = [...policiesFixture];
 
 export async function listPolicies() {
   await simulateLatency();
@@ -32,37 +27,9 @@ export async function listPolicies() {
 
 export async function addPolicy(policy) {
   await simulateLatency();
-  const next = { ...policy, id: policy.id ?? Date.now() };
-  policiesStore = [next, ...policiesStore];
-  savePolicies(policiesStore);
-  return next;
+  policiesStore = [policy, ...policiesStore];
+  return policy;
   // return fetchJson("/hr/policies", { method: "POST", body: policy });
-}
-
-/** Upload a real file as a policy and persist locally. */
-export async function uploadPolicyFile(file) {
-  if (!file) throw new Error("uploadPolicyFile: missing file");
-  const { key } = await putFile("hr", file);
-  const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-  const now = new Date();
-  const updated = `Updated ${now.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
-  return addPolicy({ name, updated, fileKey: key, fileName: file.name });
-}
-
-export async function downloadPolicy(name) {
-  const p = policiesStore.find((x) => x.name === name);
-  if (!p?.fileKey) return false;
-  await downloadFile(p.fileKey, p.fileName ?? `${name}.pdf`);
-  return true;
-}
-
-export async function deletePolicy(name) {
-  const p = policiesStore.find((x) => x.name === name);
-  policiesStore = policiesStore.filter((x) => x.name !== name);
-  savePolicies(policiesStore);
-  if (p?.fileKey) {
-    try { await deleteFile(p.fileKey); } catch { /* best effort */ }
-  }
 }
 
 export async function listMandatoryTraining() {

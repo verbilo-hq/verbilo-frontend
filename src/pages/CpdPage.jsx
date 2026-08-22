@@ -3,17 +3,15 @@ import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
-import { CpdDraftInbox } from "./cpd/CpdDraftInbox";
 import { ProgressBar } from "../components/ui/ProgressBar";
+import { TopBar } from "../components/layout/TopBar";
 import { formatDate } from "../lib/formatDate";
 import {
   listCpdRoles, getCpdProfile, addCpdLogEntry, listPracticeStaffCpd,
+  listCpdStarterTemplates,
 } from "../services/cpd.service";
-import { putFile, downloadFile } from "../services/clientFileStore";
-import { siteName } from "../services/sites";
-import { defaultSiteFor } from "../services/scope";
-import { escapeHtml } from "../utils/escapeHtml";
-import { useModalA11y } from "../hooks/useModalA11y";
+import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./CpdPage.module.css";
 
 
@@ -25,7 +23,7 @@ const getStaffStatus = (s) => {
 
 const STATUS_META = {
   "on-track":        { label: "On Track",        bg: "rgba(46,125,50,0.1)",    color: "var(--success)" },
-  "needs-attention": { label: "Needs Attention",  bg: "rgba(147,75,0,0.1)",     color: "#934b00"        },
+  "needs-attention": { label: "Needs Attention",  bg: "rgba(245,124,0,0.1)",    color: "#F57C00"        },
   "critical":        { label: "Critical",          bg: "rgba(229,57,53,0.1)",    color: "var(--error)"   },
 };
 
@@ -58,7 +56,7 @@ const StaffCpdCard = ({ staff, onClick }) => {
 };
 
 /* ── Manager overview ─────────────────────────────────────────────────────── */
-const ManagerOverview = ({ onViewStaff, onViewOwn, practiceStaff, siteLabel }) => {
+const ManagerOverview = ({ onViewStaff, onViewOwn, practiceStaff }) => {
   const [filter, setFilter] = useState("all");
 
   const statuses      = practiceStaff.map(getStaffStatus);
@@ -78,7 +76,7 @@ const ManagerOverview = ({ onViewStaff, onViewOwn, practiceStaff, siteLabel }) =
         <div>
           <p className={styles.eyebrow}>Practice Manager View</p>
           <h1 className={styles.title}>CPD Overview</h1>
-          <p className={styles.lead}>{siteLabel} · {practiceStaff.length} staff members · Review each team member's progress and flag any gaps before their renewal deadline.</p>
+          <p className={styles.lead}>London Flagship · {practiceStaff.length} staff members · Review each team member's progress and flag any gaps before their renewal deadline.</p>
         </div>
         <BtnSecondary onClick={onViewOwn} style={{ padding: "11px 18px", fontSize: 13, flexShrink: 0 }}>
           <I name="person" size={14} /> My CPD
@@ -155,7 +153,6 @@ const typeColors = {
 
 const EMPTY_FORM = {
   title: "", provider: "", date: "", type: "Workshop", hrs: "", evidence: "Certificate",
-  pdpGoalId: "",
   learningNeed: "", relationToPractice: "", gdcOutcomes: [], benefit: "", reflection: "",
 };
 
@@ -167,7 +164,6 @@ const GDC_OUTCOMES = [
 ];
 
 const LogModal = ({ onClose, onSubmit, isGdc }) => {
-  const dialogRef = useModalA11y(onClose);
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [certFile, setCertFile] = useState(null);
@@ -200,14 +196,9 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
     return e;
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
-    let certFileKey = null;
-    if (certFile) {
-      const { key } = await putFile("cpd", certFile);
-      certFileKey = key;
-    }
     onSubmit({
       id:                 Date.now(),
       date:               formatDate(form.date),
@@ -217,11 +208,7 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
       hrs:                Number(form.hrs),
       evidence:           form.evidence,
       certFileName:       certFile ? certFile.name : null,
-      certFileKey,
-      // Link to a PDP goal — "__new__" means the user picked "create new goal";
-      // for now we just persist that sentinel and treat it as "unlinked until
-      // they create the goal in PDP". Empty string = explicitly not linked.
-      pdpGoalId:          form.pdpGoalId && form.pdpGoalId !== "__new__" ? form.pdpGoalId : null,
+      certFileUrl:        certFile ? URL.createObjectURL(certFile) : null,
       learningNeed:       form.learningNeed,
       relationToPractice: form.relationToPractice,
       gdcOutcomes:        form.gdcOutcomes,
@@ -233,13 +220,13 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div ref={dialogRef} className={styles.modal} onClick={e => e.stopPropagation()} aria-labelledby="log-cpd-title">
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
-            <h3 id="log-cpd-title" className={styles.modalTitle}>Log CPD Activity</h3>
+            <h3 className={styles.modalTitle}>Log CPD Activity</h3>
             <p className={styles.modalSub}>Add a new entry to your CPD record</p>
           </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Close CPD activity dialog">
+          <button className={styles.modalClose} onClick={onClose}>
             <I name="xcircle" size={20} color="var(--on-surface-variant)" />
           </button>
         </div>
@@ -313,25 +300,10 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
           </div>
         </div>
 
-        {/* ── PDP Link & Reflection ── */}
+        {/* ── Personal Development Plan ── */}
         <div className={styles.pdpSection}>
-          <p className={styles.pdpSectionTitle}>PDP Link &amp; Reflection</p>
+          <p className={styles.pdpSectionTitle}>Personal Development Plan</p>
           <div className={styles.formGrid}>
-            <div className={`${styles.formField} ${styles.formSpanFull}`}>
-              <label className={styles.formLabel}>
-                Link to PDP Goal
-                <span className={styles.formOptional}> (optional — pick an existing goal or leave blank)</span>
-              </label>
-              <select className={styles.formSelect} value={form.pdpGoalId ?? ""}
-                onChange={(e) => set("pdpGoalId", e.target.value)}>
-                <option value="">— not linked to a PDP goal —</option>
-                {PDP_GOALS_MOCK.map((g) => (
-                  <option key={g.id} value={g.id}>{g.title}</option>
-                ))}
-                <option value="__new__">+ Create a new goal in PDP…</option>
-              </select>
-            </div>
-
             <div className={`${styles.formField} ${styles.formSpanFull}`}>
               <label className={styles.formLabel}>Learning / Maintenance Need <span className={styles.req}>*</span></label>
               <textarea className={`${styles.formTextarea} ${errors.learningNeed ? styles.inputErr : ""}`} rows={2} placeholder="What gap or need prompted this CPD activity?" value={form.learningNeed} onChange={e => set("learningNeed", e.target.value)} />
@@ -387,17 +359,16 @@ const LogModal = ({ onClose, onSubmit, isGdc }) => {
 
 /* ── Certificates viewer modal ─────────────────────────────────────────────── */
 const CertificatesModal = ({ entries, onClose }) => {
-  const dialogRef = useModalA11y(onClose);
-  const certs = entries.filter(e => e.certFileKey);
+  const certs = entries.filter(e => e.certFileUrl);
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div ref={dialogRef} className={styles.modal} onClick={e => e.stopPropagation()} aria-labelledby="cpd-certificates-title">
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <div>
-            <h3 id="cpd-certificates-title" className={styles.modalTitle}>Uploaded Certificates</h3>
+            <h3 className={styles.modalTitle}>Uploaded Certificates</h3>
             <p className={styles.modalSub}>{certs.length} certificate{certs.length !== 1 ? "s" : ""} attached to your CPD log</p>
           </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Close certificates dialog">
+          <button className={styles.modalClose} onClick={onClose}>
             <I name="xcircle" size={20} color="var(--on-surface-variant)" />
           </button>
         </div>
@@ -420,13 +391,15 @@ const CertificatesModal = ({ entries, onClose }) => {
                   <span className={styles.certsMeta}>{e.date} · {e.provider}</span>
                   <span className={styles.certsFile}>{e.certFileName}</span>
                 </div>
-                <button
-                  type="button"
+                <a
+                  href={e.certFileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className={styles.certsViewBtn}
-                  onClick={(ev) => { ev.stopPropagation(); downloadFile(e.certFileKey, e.certFileName); }}
+                  onClick={ev => ev.stopPropagation()}
                 >
                   <I name="external" size={13} /> View
-                </button>
+                </a>
               </div>
             ))}
           </div>
@@ -440,341 +413,81 @@ const CertificatesModal = ({ entries, onClose }) => {
   );
 };
 
-/* ─── Internal tabs for CPD Hub ───────────────────────────────────────────── */
-const CPD_TABS = [
-  { id: "overview", label: "Overview",     icon: "barchart"  },
-  { id: "activity", label: "Activity Log", icon: "clipboard" },
-  { id: "pdp",      label: "PDP",          icon: "target"    },
-  { id: "certs",    label: "Certificates", icon: "award"     },
-  { id: "reports",  label: "Reports",      icon: "download"  },
-];
+/* VER-89: Tenant-mode CPD Hub.
+ *
+ * Shows the sector's regulator framework (GDC / RCVS / GOC / HCPC /
+ * GMC) header card + an empty "Your CPD log" card with a CTA. No
+ * fake CPD points, no fake activities. Demo path (existing ~870
+ * LoC of role profiles + fake staff CPD) lives below. */
+function TenantCpdPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [framework, setFramework] = useState(null);
 
-/* ─── PDP mock data + meta ────────────────────────────────────────────────── */
-const PDP_STATUS_META = {
-  planned:     { label: "Planned",     color: "#586161" },
-  in_progress: { label: "In Progress", color: "#1565c0" },
-  on_track:    { label: "On Track",    color: "#2e7d32" },
-  completed:   { label: "Completed",   color: "#006974" },
-  review_due:  { label: "Review Due",  color: "#f57c00" },
-};
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listCpdStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        const items = Array.isArray(data?.items) ? data.items : [];
+        setFramework(items[0] ?? null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setFramework(null);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
 
-const PDP_GOALS_MOCK = [
-  { id: "g1", title: "Maintain medical emergency competence",  learningNeed: "Maintain confidence with emergency drug protocols and team response.",   targetDate: "2025-12-31", topicArea: "Medical emergencies",          linkedActivityIds: ["a1", "a3"], status: "in_progress", lastReviewed: "2025-05-12", notes: "" },
-  { id: "g2", title: "Improve radiography confidence",         learningNeed: "Strengthen knowledge of IRMER, justification and image quality.",        targetDate: "2026-03-31", topicArea: "Radiography",                  linkedActivityIds: ["a2"],       status: "on_track",    lastReviewed: "2025-05-12", notes: "" },
-  { id: "g3", title: "Strengthen consent and communication",   learningNeed: "Improve patient communication and informed consent documentation.",     targetDate: "2026-07-31", topicArea: "Consent and communication",    linkedActivityIds: ["a1"],       status: "planned",     lastReviewed: null,         notes: "" },
-];
+  return (
+    <div>
+      <TopBar
+        title="CPD Hub"
+        subtitle="Log your continuing professional development against the right framework."
+      />
 
-const LINKED_ACTIVITIES_MOCK = [
-  { id: "a1", date: "2025-11-14", title: "BDA Annual Conference 2025",            provider: "British Dental Association", goalId: "g3", hours: 8, evidence: "Certificate",    reflection: "complete" },
-  { id: "a2", date: "2025-10-22", title: "IRMER 2017 Online Update",              provider: "FGDP UK",                     goalId: "g2", hours: 3, evidence: "Certificate",    reflection: "missing"  },
-  { id: "a3", date: "2025-09-10", title: "In-House Medical Emergencies Refresher", provider: "Dental Group",     goalId: "g1", hours: 2, evidence: "Attendance Log", reflection: "complete" },
-];
+      {framework && (
+        <Card hover={false} style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+            <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
+              <I name="award" size={18} color="var(--primary)" /> {framework.title}
+            </h2>
+            <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Framework</Pill>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+            {framework.summary}
+          </p>
+        </Card>
+      )}
 
-const SUGGESTED_AREAS = [
-  { topicArea: "Medical emergencies",                    learningNeed: "Maintain confidence with emergency drug protocols, BLS technique and team response in a real incident." },
-  { topicArea: "Radiography and radiation protection",   learningNeed: "Strengthen IRMER understanding, justification of exposures, image quality and waste-of-dose review." },
-  { topicArea: "Consent and communication",              learningNeed: "Improve informed-consent documentation, treatment-plan discussion and managing patient expectations." },
-  { topicArea: "Leadership and team management",         learningNeed: "Develop coaching, feedback and meeting-chairing skills to lead clinical and support teams more effectively." },
-  { topicArea: "Safeguarding",                           learningNeed: "Refresh recognition of safeguarding indicators (children and adults), local escalation routes and record-keeping standards." },
-];
-
-const UPCOMING_ACTIONS = [
-  "Review goal: Improve radiography confidence",
-  "Add reflection to IRMER 2017 Online Update",
-  "Review PDP before annual CPD statement",
-  "Link recent CPD activity to a PDP goal",
-];
-
-const ADD_GOAL_EMPTY = {
-  title: "",
-  learningNeed: "",
-  targetDate: "",
-  topicArea: "",
-  status: "planned",
-  notes: "",
-};
-
-function formatGbDate(d) {
-  if (!d) return "—";
-  const dt = new Date(d);
-  if (!Number.isFinite(dt.getTime())) return d;
-  return dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="clock" size={18} color="var(--primary)" /> Your CPD log
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Your logged activities will appear here with the running points total. Nothing yet.
+        </p>
+        <BtnPrimary disabled title="Coming soon">
+          <I name="plus" size={14} /> Add first CPD activity
+        </BtnPrimary>
+      </Card>
+    </div>
+  );
 }
 
-/* ─── PDP summary card primitive ─────────────────────────────────────────── */
-const PdpSummaryCard = ({ icon, color, num, label }) => (
-  <Card hover={false} className={styles.pdpSummaryCard}>
-    <span className={styles.pdpSummaryIcon} style={{ background: `color-mix(in srgb, ${color} 12%, transparent)` }}>
-      <I name={icon} size={18} color={color} />
-    </span>
-    <div>
-      <div className={styles.pdpSummaryNum} style={{ color }}>{num}</div>
-      <div className={styles.pdpSummaryLabel}>{label}</div>
-    </div>
-  </Card>
-);
-
-/* ─── PDP main view ──────────────────────────────────────────────────────── */
-const PdpView = ({ onAddGoal, onExport }) => {
-  const goals = PDP_GOALS_MOCK;
-  const activities = LINKED_ACTIVITIES_MOCK;
-  const goalById = Object.fromEntries(goals.map((g) => [g.id, g]));
-  const counts = {
-    active:           goals.filter((g) => g.status === "in_progress" || g.status === "on_track").length,
-    completed:        goals.filter((g) => g.status === "completed").length,
-    reviewDue:        goals.filter((g) => g.status === "review_due" || !g.lastReviewed).length,
-    linkedActivities: activities.length,
-  };
-
-  return (
-    <div className={styles.layout}>
-      {/* ── Left / main column ── */}
-      <div>
-        <div className={styles.pdpSummaryGrid}>
-          <PdpSummaryCard icon="target"      color="#1565c0" num={counts.active}           label="Active Goals" />
-          <PdpSummaryCard icon="checkcircle" color="#2e7d32" num={counts.completed}        label="Completed Goals" />
-          <PdpSummaryCard icon="clock3"      color="#f57c00" num={counts.reviewDue}        label="Goals Due for Review" />
-          <PdpSummaryCard icon="external"    color="#006974" num={counts.linkedActivities} label="Linked CPD Activities" />
-        </div>
-
-        <Card hover={false} className={styles.pdpCard}>
-          <div className={styles.pdpCardHead}>
-            <h3 className={styles.sectionHeading}>
-              <I name="target" size={17} /> Personal Development Goals
-            </h3>
-            <BtnPrimary onClick={onAddGoal} style={{ padding: "8px 16px", fontSize: 12 }}>
-              <I name="plus" size={13} color="var(--on-primary)" /> Add Goal
-            </BtnPrimary>
-          </div>
-          {goals.length > 0 && (
-            <div className={styles.pdpGoalsHead}>
-              <span>Goal</span>
-              <span>Learning Need</span>
-              <span>Target</span>
-              <span className={styles.pdpCenter}>Linked</span>
-              <span>Status</span>
-              <span>Last Reviewed</span>
-              <span></span>
-            </div>
-          )}
-          {goals.length === 0 && (
-            <div className={styles.pdpEmpty}>
-              <I name="clipboard" size={26} color="var(--outline-variant)" />
-              <h4>No development goals yet</h4>
-              <p>Set your first goal to start tracking learning needs across your CPD cycle. Each goal can have CPD activities linked to it.</p>
-              <BtnPrimary onClick={() => setShowAddGoal(true)} style={{ padding: "10px 18px", fontSize: 13 }}>
-                <I name="plus" size={14} color="var(--on-primary)" /> Add your first goal
-              </BtnPrimary>
-            </div>
-          )}
-          {goals.map((g) => {
-            const sm = PDP_STATUS_META[g.status] ?? PDP_STATUS_META.planned;
-            return (
-              <div key={g.id} className={styles.pdpGoalsRow}>
-                <span className={styles.pdpGoalTitle}>{g.title}</span>
-                <span className={styles.pdpDim}>{g.learningNeed}</span>
-                <span>{formatGbDate(g.targetDate)}</span>
-                <span className={styles.pdpCenter}>{g.linkedActivityIds.length}</span>
-                <span>
-                  <Pill bg={`color-mix(in srgb, ${sm.color} 14%, transparent)`} color={sm.color} small>
-                    {sm.label}
-                  </Pill>
-                </span>
-                <span className={styles.pdpDim}>{g.lastReviewed ? formatGbDate(g.lastReviewed) : "Not reviewed"}</span>
-                <button type="button" className={styles.pdpRowActionBtn} title="Goal actions">
-                  <I name="more" size={14} color="var(--outline)" />
-                </button>
-              </div>
-            );
-          })}
-        </Card>
-
-        <Card hover={false} className={styles.pdpCard}>
-          <div className={styles.pdpCardHead}>
-            <h3 className={styles.sectionHeading}>
-              <I name="clipboard" size={17} /> Linked CPD Activities
-            </h3>
-          </div>
-          <div className={styles.pdpActivitiesHead}>
-            <span>Date</span>
-            <span>Activity</span>
-            <span>Provider</span>
-            <span>PDP Goal</span>
-            <span className={styles.pdpCenter}>Hours</span>
-            <span>Evidence</span>
-            <span>Reflection</span>
-          </div>
-          {activities.map((a) => {
-            const goal = goalById[a.goalId];
-            const reflectionOk = a.reflection === "complete";
-            return (
-              <div key={a.id} className={styles.pdpActivitiesRow}>
-                <span className={styles.pdpDim}>{formatGbDate(a.date)}</span>
-                <span className={styles.pdpGoalTitle}>{a.title}</span>
-                <span className={styles.pdpDim}>{a.provider}</span>
-                <span className={styles.pdpDim}>{goal?.title ?? "—"}</span>
-                <span className={styles.pdpCenter} style={{ fontWeight: 700 }}>{a.hours}</span>
-                <span>{a.evidence}</span>
-                <span style={{ color: reflectionOk ? "#2e7d32" : "#c66600", fontWeight: 600 }}>
-                  {reflectionOk ? "Complete" : "Missing"}
-                </span>
-              </div>
-            );
-          })}
-        </Card>
-      </div>
-
-      {/* ── Right / sidebar column ── */}
-      <div>
-        <Card hover={false} className={styles.reqCard}>
-          <h4 className={styles.reqTitle}>
-            <I name="lightbulb" size={15} color="var(--primary)" /> Suggested Learning Areas
-          </h4>
-          {SUGGESTED_AREAS.map((a) => (
-            <button
-              key={a.topicArea}
-              type="button"
-              className={styles.pdpSuggestedRow}
-              onClick={() => onAddGoal({
-                topicArea: a.topicArea,
-                learningNeed: a.learningNeed,
-                title: a.topicArea,
-              })}
-              title={`Start a new goal in ${a.topicArea}`}
-            >
-              <span className={styles.reqLabel}>{a.topicArea}</span>
-              <I name="arrow" size={11} color="var(--outline)" />
-            </button>
-          ))}
-        </Card>
-
-        <Card hover={false} className={styles.reqCard}>
-          <h4 className={styles.reqTitle}>
-            <I name="clock3" size={15} color="var(--primary)" /> Upcoming PDP Actions
-          </h4>
-          {UPCOMING_ACTIONS.map((a, i) => (
-            <div key={i} className={styles.pdpUpcomingItem}>
-              <I name="check" size={11} color="var(--outline)" />
-              <span>{a}</span>
-            </div>
-          ))}
-        </Card>
-
-        {[
-          { icon: "eye",      label: "Review PDP",   onClick: undefined },
-          { icon: "download", label: "Export PDP",   onClick: onExport  },
-        ].map((a) => (
-          <Card key={a.label} className={styles.quickAction} onClick={a.onClick}>
-            <div className={styles.quickIcon}>
-              <I name={a.icon} size={15} color="var(--primary)" />
-            </div>
-            <span className={styles.quickLabel}>{a.label}</span>
-            <I name="arrow" size={14} color="var(--outline)" />
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-/* ─── Add Goal modal ──────────────────────────────────────────────────────── */
-const AddGoalModal = ({ onClose, onSave, prefill }) => {
-  const dialogRef = useModalA11y(onClose);
-  const [form, setForm] = useState(() => ({ ...ADD_GOAL_EMPTY, ...(prefill ?? {}) }));
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const valid = form.title.trim() && form.learningNeed.trim();
-
-  return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div ref={dialogRef} className={styles.modal} onClick={(e) => e.stopPropagation()} aria-labelledby="add-development-goal-title">
-        <div className={styles.modalHeader}>
-          <div>
-            <h3 id="add-development-goal-title" className={styles.modalTitle}>Add Development Goal</h3>
-            <p className={styles.modalSub}>Set a new goal for your Personal Development Plan</p>
-          </div>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Close development goal dialog">
-            <I name="xcircle" size={20} color="var(--on-surface-variant)" />
-          </button>
-        </div>
-
-        <div className={styles.pdpSection}>
-          <p className={styles.pdpSectionTitle}>Goal Details</p>
-          <div className={styles.formGrid}>
-            <div className={`${styles.formField} ${styles.formSpanFull}`}>
-              <label className={styles.formLabel}>Goal title <span className={styles.req}>*</span></label>
-              <input className={styles.formInput} placeholder="e.g. Improve radiography confidence"
-                value={form.title} onChange={(e) => set("title", e.target.value)} />
-            </div>
-
-            <div className={`${styles.formField} ${styles.formSpanFull}`}>
-              <label className={styles.formLabel}>Learning need <span className={styles.req}>*</span></label>
-              <textarea className={styles.formInput} rows={2} placeholder="What development need does this goal address?"
-                value={form.learningNeed} onChange={(e) => set("learningNeed", e.target.value)} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>Target date</label>
-              <input type="date" className={styles.formInput} value={form.targetDate}
-                onChange={(e) => set("targetDate", e.target.value)} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>Role / topic area</label>
-              <input className={styles.formInput} placeholder="e.g. Radiography"
-                value={form.topicArea} onChange={(e) => set("topicArea", e.target.value)} />
-            </div>
-
-            <div className={styles.formField}>
-              <label className={styles.formLabel}>Status</label>
-              <select className={styles.formSelect} value={form.status}
-                onChange={(e) => set("status", e.target.value)}>
-                <option value="planned">Planned</option>
-                <option value="in_progress">In Progress</option>
-                <option value="on_track">On Track</option>
-                <option value="completed">Completed</option>
-                <option value="review_due">Review Due</option>
-              </select>
-            </div>
-
-            <div className={`${styles.formField} ${styles.formSpanFull}`}>
-              <label className={styles.formLabel}>Notes <span className={styles.formOptional}>(optional)</span></label>
-              <textarea className={styles.formInput} rows={2} placeholder="Any context or planning notes…"
-                value={form.notes} onChange={(e) => set("notes", e.target.value)} />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.modalFooter}>
-          <BtnSecondary onClick={onClose} style={{ padding: "10px 20px", fontSize: 13 }}>Cancel</BtnSecondary>
-          <BtnPrimary onClick={() => onSave(form)} disabled={!valid}
-            style={{ padding: "10px 24px", fontSize: 13, opacity: valid ? 1 : 0.5 }}>
-            <I name="check" size={14} color="var(--on-primary)" /> Save Goal
-          </BtnPrimary>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* Roles that have a CPD profile in the data layer. Anyone whose role isn't one
- * of these has no personal CPD record, so we must resolve them to a role that
- * DOES — otherwise getCpdProfile() returns null and the page hangs forever on
- * "Loading CPD profile…". */
-const CPD_PROFILE_ROLES = new Set(["dentist", "nurse", "hygienist", "manager"]);
-/* Oversight roles see the practice-wide CPD overview (the "manager" view).
- * Includes the management/admin tiers, none of which have their own CPD. */
-const CPD_OVERSIGHT_ROLES = new Set([
-  "manager", "group_admin", "company_management", "area_manager",
-  "practice_manager", "clinical_director", "governance_lead",
-]);
-
 export const CpdPage = ({ currentUser }) => {
-  const role0 = currentUser?.role;
-  // Oversight/admin tiers get the manager overview; clinicians with a profile
-  // get their own; everything else (receptionist, staff, unknown) falls back to
-  // a safe personal view. Guarantees activeRole always has a profile.
-  const isManager = CPD_OVERSIGHT_ROLES.has(role0);
-  const userRole  = isManager ? "manager" : (CPD_PROFILE_ROLES.has(role0) ? role0 : "dentist");
+  if (!isDemoMode()) {
+    return <TenantCpdPage />;
+  }
+
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "Verbilo";
+  const isManager = currentUser?.role === "manager";
+  // Fallback when the user object has no role yet (e.g. first paint before
+  // /users/me enrichment). Uses the generic clinician role so the page
+  // doesn't assume a dental tenant.
+  const userRole  = currentUser?.role || "clinician";
 
   // pmView: "overview" | "own" | "drill"
   const [pmView,        setPmView]        = useState("overview");
@@ -782,18 +495,6 @@ export const CpdPage = ({ currentUser }) => {
   const [activeRole,    setActiveRole]    = useState(isManager ? "manager" : userRole);
   const [showModal,     setShowModal]     = useState(false);
   const [showCerts,     setShowCerts]     = useState(false);
-  const [showAddGoal,   setShowAddGoal]   = useState(false);
-  // Optional prefill payload passed into AddGoalModal — set by Suggested
-  // Learning Areas clicks so the modal opens with topic + need seed text.
-  const [addGoalPrefill, setAddGoalPrefill] = useState(null);
-  // Internal CPD Hub tab — "overview" keeps the existing 2-col layout intact.
-  const [cpdTab,        setCpdTab]        = useState("overview");
-
-  // Open Add Goal modal with optional prefill from Suggested Learning Areas.
-  const openAddGoal = (prefill = null) => {
-    setAddGoalPrefill(prefill);
-    setShowAddGoal(true);
-  };
   const [extraEntries,  setExtraEntries]  = useState({});
   const [roles,         setRoles]         = useState([]);
   const [profileMap,    setProfileMap]    = useState({});
@@ -846,11 +547,11 @@ export const CpdPage = ({ currentUser }) => {
     const totalHrs  = allLog.reduce((s, e) => s + e.hrs, 0);
     const rows = allLog.map(e => `
       <tr>
-        <td>${escapeHtml(e.date)}</td>
-        <td><strong>${escapeHtml(e.title)}</strong><br/><span style="color:#586161;font-size:11px">${escapeHtml(e.provider)}</span></td>
-        <td>${escapeHtml(e.type)}</td>
-        <td style="text-align:center;font-weight:700">${escapeHtml(e.hrs)}</td>
-        <td>${escapeHtml(e.evidence)}</td>
+        <td>${e.date}</td>
+        <td><strong>${e.title}</strong><br/><span style="color:#586161;font-size:11px">${e.provider}</span></td>
+        <td>${e.type}</td>
+        <td style="text-align:center;font-weight:700">${e.hrs}</td>
+        <td>${e.evidence}</td>
       </tr>`).join("");
 
     const topicRows = profile.mandatoryTopics.map(t => {
@@ -858,16 +559,16 @@ export const CpdPage = ({ currentUser }) => {
       const status = pct === 100 ? "✓ Completed" : pct > 0 ? "In Progress" : "Not started";
       const color  = pct === 100 ? "#4caf50" : pct > 0 ? "#ff9800" : "#a83836";
       return `<tr>
-        <td>${escapeHtml(t.name)}</td>
-        <td style="text-align:center">${escapeHtml(t.logged)} hrs</td>
-        <td style="text-align:center">${escapeHtml(t.required)} hrs</td>
+        <td>${t.name}</td>
+        <td style="text-align:center">${t.logged} hrs</td>
+        <td style="text-align:center">${t.required} hrs</td>
         <td style="text-align:center;color:${color};font-weight:600">${status}</td>
       </tr>`;
     }).join("");
 
     const win = window.open("", "_blank");
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>CPD Log – ${escapeHtml(roleName)} – Dental Group</title>
+      <title>CPD Log – ${roleName} – ${tenantName}</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; font-size: 13px; color: #2b3435; margin: 40px; }
         h1   { font-size: 22px; color: #006974; margin-bottom: 4px; }
@@ -887,8 +588,8 @@ export const CpdPage = ({ currentUser }) => {
     </head><body>
       <h1>CPD Activity Log</h1>
       <div class="meta">
-        <strong>${escapeHtml(roleName)}</strong> &nbsp;·&nbsp; ${escapeHtml(profile.scheme)} &nbsp;·&nbsp; ${escapeHtml(profile.cyclePeriod)}
-        &nbsp;·&nbsp; Dental Group &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
+        <strong>${roleName}</strong> &nbsp;·&nbsp; ${profile.scheme} &nbsp;·&nbsp; ${profile.cyclePeriod}
+        &nbsp;·&nbsp; ${tenantName} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}
       </div>
       <div class="stats">
         <div class="stat"><span class="val">${totalHrs}</span><span class="lbl">Hours Logged</span></div>
@@ -902,7 +603,7 @@ export const CpdPage = ({ currentUser }) => {
       <h2>CPD Activity Log (${allLog.length} entries)</h2>
       <table><thead><tr><th>Date</th><th>Activity</th><th>Type</th><th style="text-align:center">Hrs</th><th>Evidence</th></tr></thead>
       <tbody>${rows}</tbody></table>
-      <div class="footer">Dental Group &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
+      <div class="footer">${tenantName} &nbsp;·&nbsp; CPD Tracker &nbsp;·&nbsp; This document is for internal record-keeping purposes.</div>
     </body></html>`);
     win.document.close();
     win.focus();
@@ -916,7 +617,6 @@ export const CpdPage = ({ currentUser }) => {
         onViewStaff={handleViewStaff}
         onViewOwn={handleViewOwn}
         practiceStaff={practiceStaff}
-        siteLabel={siteName(defaultSiteFor(currentUser))}
       />
     );
   }
@@ -930,138 +630,25 @@ export const CpdPage = ({ currentUser }) => {
         </button>
       )}
 
-      {/* ── Header (tab-aware) ── */}
+      {/* ── Header ── */}
       <div className={styles.header}>
         <div>
           <p className={styles.eyebrow}>{drillPerson ? drillPerson.name : "Professional Development"}</p>
-          <h1 className={styles.title}>
-            {cpdTab === "pdp"      ? "Personal Development Plan"
-              : cpdTab === "activity" ? "Activity Log"
-              : cpdTab === "certs"    ? "Certificates"
-              : cpdTab === "reports"  ? "Reports"
-              : "CPD Tracker"}
-          </h1>
+          <h1 className={styles.title}>CPD Tracker</h1>
           <p className={styles.lead}>
             {drillPerson
               ? `Viewing CPD record for ${drillPerson.name} · ${drillPerson.roleLabel}.`
-              : cpdTab === "pdp"      ? "Set development goals, link CPD activities, review learning needs and track progress across your CPD cycle."
-              : cpdTab === "activity" ? "Your complete CPD activity history with hours, types and evidence per entry."
-              : cpdTab === "certs"    ? "Your CPD evidence library — download certificates linked to logged activities."
-              : cpdTab === "reports"  ? "Export your CPD log and PDP for GDC submission or internal records."
               : "Log external CPD from courses, webinars, and conferences here. Track your GDC hours, mandatory topics, and cycle progress."}
           </p>
         </div>
-        {cpdTab === "reports" ? (
-          <BtnPrimary onClick={exportLog} style={{ padding: "12px 20px", fontSize: 13, flexShrink: 0 }}>
-            <I name="download" size={15} /> Export CPD Log
-          </BtnPrimary>
-        ) : (
-          <BtnPrimary onClick={() => setShowModal(true)} style={{ padding: "12px 20px", fontSize: 13, flexShrink: 0 }}>
-            <I name="plus" size={15} /> Log CPD Activity
-          </BtnPrimary>
-        )}
+        <BtnPrimary onClick={() => setShowModal(true)} style={{ padding: "12px 20px", fontSize: 13, flexShrink: 0 }}>
+          <I name="plus" size={15} /> Log CPD Activity
+        </BtnPrimary>
       </div>
 
-      {/* ── CPD Draft Inbox — auto-generated from completed audits ──
-       *    Reads from /cpd?status=draft. Shows a card listing drafts
-       *    awaiting reflective notes + GDC outcomes; opens a modal on
-       *    "Reflect & submit". Self-hides when there are no drafts so
-       *    the card doesn't shout when there's nothing to do. */}
-      {!drillPerson && (
-        <CpdDraftInbox onSubmitted={() => { /* re-fetch hook for future totals */ }} />
-      )}
+      {/* ── Role Tabs: only shown for PM when browsing all roles (not used now) ── */}
 
-      {/* ── Internal CPD Hub tab strip ── */}
-      <div className={styles.cpdTabRow}>
-        {CPD_TABS.map((t) => {
-          const active = cpdTab === t.id;
-          // PDP tab gets subtle teal-tinted promotion + an attention badge
-          // so it reads as "important and has items waiting" without competing
-          // with the page's primary Log CPD Activity CTA.
-          const isPdp = t.id === "pdp";
-          const pdpAttentionCount = isPdp
-            ? PDP_GOALS_MOCK.filter((g) => g.status === "in_progress" || g.status === "on_track").length
-            : 0;
-          const cls = [
-            styles.cpdTab,
-            active ? styles.cpdTabActive : "",
-            isPdp && !active ? styles.cpdTabPromoted : "",
-          ].filter(Boolean).join(" ");
-          const iconColor = isPdp
-            ? "var(--primary)"
-            : (active ? "var(--primary)" : "var(--on-surface-variant)");
-          return (
-            <button
-              key={t.id}
-              type="button"
-              className={cls}
-              onClick={() => setCpdTab(t.id)}
-            >
-              <I name={t.icon} size={13} color={iconColor} />
-              <span>{t.label}</span>
-              {isPdp && pdpAttentionCount > 0 && (
-                <span className={styles.cpdTabBadge}>{pdpAttentionCount}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ── PDP tab ── */}
-      {cpdTab === "pdp" && (
-        <PdpView
-          onAddGoal={(prefill) => openAddGoal(prefill)}
-          onExport={exportLog}
-        />
-      )}
-
-      {/* ── Reports tab ── */}
-      {cpdTab === "reports" && (
-        <Card hover={false} className={styles.pdpCard}>
-          <div className={styles.pdpCardHead}>
-            <h3 className={styles.sectionHeading}>
-              <I name="download" size={17} /> Export options
-            </h3>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12, padding: 8 }}>
-            <Card className={styles.quickAction} onClick={exportLog}>
-              <div className={styles.quickIcon}><I name="download" size={15} color="var(--primary)" /></div>
-              <span className={styles.quickLabel}>Export CPD Log (PDF)</span>
-              <I name="arrow" size={14} color="var(--outline)" />
-            </Card>
-            <Card className={styles.quickAction} onClick={() => setCpdTab("pdp")}>
-              <div className={styles.quickIcon}><I name="target" size={15} color="var(--primary)" /></div>
-              <span className={styles.quickLabel}>Open Development Plan</span>
-              <I name="arrow" size={14} color="var(--outline)" />
-            </Card>
-            <Card className={styles.quickAction} onClick={() => setShowCerts(true)}>
-              <div className={styles.quickIcon}><I name="award" size={15} color="var(--primary)" /></div>
-              <span className={styles.quickLabel}>View Certificates</span>
-              <I name="arrow" size={14} color="var(--outline)" />
-            </Card>
-          </div>
-        </Card>
-      )}
-
-      {/* ── Certificates tab — opens existing modal ── */}
-      {cpdTab === "certs" && (
-        <Card hover={false} className={styles.pdpCard}>
-          <div className={styles.pdpCardHead}>
-            <h3 className={styles.sectionHeading}>
-              <I name="award" size={17} /> Certificates
-            </h3>
-            <BtnSecondary onClick={() => setShowCerts(true)} style={{ padding: "7px 14px", fontSize: 12 }}>
-              <I name="eye" size={13} /> Open viewer
-            </BtnSecondary>
-          </div>
-          <div style={{ padding: 16, fontSize: 13, color: "var(--on-surface-variant)" }}>
-            {allLog.filter((e) => e.certFileKey).length} certificate(s) on file. Click <strong>Open viewer</strong> to browse and download.
-          </div>
-        </Card>
-      )}
-
-      {/* ── Overview + Activity Log tabs share the existing 2-col layout ── */}
-      {(cpdTab === "overview" || cpdTab === "activity") && (
+      {/* ── Main 2-column layout ── */}
       <div className={styles.layout}>
 
         {/* ════ Left / Main column ════ */}
@@ -1200,25 +787,13 @@ export const CpdPage = ({ currentUser }) => {
             </div>
 
             <div className={styles.logTableWrap}>
-              {allLog.length > 0 && (
-                <div className={styles.logTableHead}>
-                  <span className={styles.logColDate}>Date</span>
-                  <span className={styles.logColTitle}>Activity</span>
-                  <span className={styles.logColType}>Type</span>
-                  <span className={styles.logColHrs}>Hrs</span>
-                  <span className={styles.logColEv}>Evidence</span>
-                </div>
-              )}
-              {allLog.length === 0 && (
-                <div className={styles.pdpEmpty}>
-                  <I name="clipboard" size={26} color="var(--outline-variant)" />
-                  <h4>No CPD activities logged yet</h4>
-                  <p>Log your first CPD activity — a course, webinar, in-house session or conference. Hours and evidence count towards your GDC cycle.</p>
-                  <BtnPrimary onClick={() => setShowModal(true)} style={{ padding: "10px 18px", fontSize: 13 }}>
-                    <I name="plus" size={14} color="var(--on-primary)" /> Log first activity
-                  </BtnPrimary>
-                </div>
-              )}
+              <div className={styles.logTableHead}>
+                <span className={styles.logColDate}>Date</span>
+                <span className={styles.logColTitle}>Activity</span>
+                <span className={styles.logColType}>Type</span>
+                <span className={styles.logColHrs}>Hrs</span>
+                <span className={styles.logColEv}>Evidence</span>
+              </div>
               {allLog.map(entry => (
                 <div key={entry.id} className={`${styles.logRow} ${entry.isNew ? styles.logRowNew : ""}`}>
                   <span className={styles.logColDate}>
@@ -1242,15 +817,17 @@ export const CpdPage = ({ currentUser }) => {
                   </span>
                   <span className={styles.logColEv}>
                     <span className={styles.logEvidence}>{entry.evidence}</span>
-                    {entry.certFileKey && (
-                      <button
-                        type="button"
+                    {entry.certFileUrl && (
+                      <a
+                        href={entry.certFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className={styles.certViewBtn}
-                        title={entry.certFileName || "Download certificate"}
-                        onClick={(e) => { e.stopPropagation(); downloadFile(entry.certFileKey, entry.certFileName); }}
+                        title={entry.certFileName || "View certificate"}
+                        onClick={e => e.stopPropagation()}
                       >
                         <I name="file" size={12} color="var(--primary)" />
-                      </button>
+                      </a>
                     )}
                   </span>
                 </div>
@@ -1289,41 +866,6 @@ export const CpdPage = ({ currentUser }) => {
                 <span>Ensure your PDP is reviewed and updated annually before GDC renewal.</span>
               </div>
             )}
-          </Card>
-
-          {/* PDP Status — visible summary + entry points into the PDP tab */}
-          <Card hover={false} className={styles.reqCard}>
-            <h4 className={styles.reqTitle}>
-              <I name="target" size={15} color="var(--primary)" /> PDP Status
-            </h4>
-            <p style={{ fontSize: 11, color: "var(--on-surface-variant)", lineHeight: 1.55, marginBottom: 12 }}>
-              Your personal development plan helps you identify learning needs and track progress.
-            </p>
-            {(() => {
-              const goals = PDP_GOALS_MOCK;
-              const active = goals.filter((g) => g.status === "in_progress" || g.status === "on_track").length;
-              const reviewDates = goals.map((g) => g.lastReviewed).filter(Boolean).sort();
-              const lastReviewed = reviewDates.length ? reviewDates[reviewDates.length - 1] : null;
-              const linked = LINKED_ACTIVITIES_MOCK.length;
-              const actions = UPCOMING_ACTIONS.length;
-              const rows = [
-                { label: "Active goals",            value: String(active) },
-                { label: "Last reviewed",           value: lastReviewed ? formatGbDate(lastReviewed) : "Not reviewed" },
-                { label: "Linked CPD activities",   value: String(linked) },
-                { label: "Actions required",        value: String(actions) },
-              ];
-              return rows.map((r) => (
-                <div key={r.label} className={styles.reqRow}>
-                  <span className={styles.reqLabel}>{r.label}</span>
-                  <span className={styles.reqVal}>{r.value}</span>
-                </div>
-              ));
-            })()}
-            <div style={{ marginTop: 12 }}>
-              <BtnSecondary onClick={() => setCpdTab("pdp")} style={{ width: "100%", padding: "8px 10px", fontSize: 11, justifyContent: "center" }}>
-                <I name="eye" size={12} /> View PDP
-              </BtnSecondary>
-            </div>
           </Card>
 
           {/* Mandatory topics summary */}
@@ -1389,26 +931,11 @@ export const CpdPage = ({ currentUser }) => {
         </div>
       </div>
 
-      )}
-
       {showModal && (
         <LogModal onClose={() => setShowModal(false)} onSubmit={handleLogSubmit} isGdc={profile.isGdc} />
       )}
       {showCerts && (
         <CertificatesModal entries={allLog} onClose={() => setShowCerts(false)} />
-      )}
-      {showAddGoal && (
-        <AddGoalModal
-          prefill={addGoalPrefill}
-          onClose={() => { setShowAddGoal(false); setAddGoalPrefill(null); }}
-          onSave={(g) => {
-            // Mock save — would call addPdpGoal(g) in real impl.
-            // eslint-disable-next-line no-console
-            console.info("[pdp] new goal (mock save):", g);
-            setShowAddGoal(false);
-            setAddGoalPrefill(null);
-          }}
-        />
       )}
     </div>
   );

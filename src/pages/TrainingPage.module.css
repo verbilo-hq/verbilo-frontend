@@ -22,7 +22,7 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 800;
   color: var(--on-surface);
   margin: 0;
@@ -59,13 +59,13 @@
   margin-bottom: 24px;
   padding: 6px;
   background: var(--gradient-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
 }
 
 .roleTab {
   flex: 1;
   padding: 12px 8px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   font-family: var(--font-display);
@@ -147,7 +147,7 @@
 .trackerStatus {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,7 +221,7 @@
   color: white;
   font-size: 10px;
   padding: 3px 8px;
-  border-radius: var(--radius-lg);
+  border-radius: 6px;
 }
 
 .skillMediaPill {
@@ -339,7 +339,7 @@
 .moduleStatus {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: 9px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -419,7 +419,7 @@
 /* ----- Right sidebar ----- */
 .sidebarCpd {
   background: var(--gradient-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   padding: 28px;
   color: var(--on-primary);
   margin-bottom: 20px;
@@ -528,7 +528,7 @@
 .quickActionIcon {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: 9px;
   background: rgba(150, 241, 255, 0.25);
   display: flex;
   align-items: center;
@@ -560,7 +560,7 @@
 .viewerBackBtn {
   width: 38px;
   height: 38px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   background: var(--surface-low);
   display: flex;
   align-items: center;
@@ -699,7 +699,7 @@
   height: 100%;
   width: 35%;
   background: var(--primary-container);
-  border-radius: var(--radius-md);
+  border-radius: 2px;
 }
 
 .lessonCard {
@@ -759,7 +759,7 @@
 .quizIcon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   background: rgba(150, 241, 255, 0.19);
   display: flex;
   align-items: center;
@@ -781,7 +781,7 @@
   margin-bottom: 24px;
   padding: 20px;
   background: var(--surface-low);
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   border: 2px solid transparent;
 }
 
@@ -808,7 +808,7 @@
 
 .option {
   padding: 12px 16px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   cursor: pointer;
   background: var(--surface-lowest);
   border: 1.5px solid rgba(171, 180, 180, 0.13);
@@ -927,7 +927,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s;
   border: 1.5px solid transparent;
@@ -1039,23 +1039,11 @@
 .sectionHeaderIcon {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-}
-
-.sectionHeaderBody {
-  flex: 1;
-  min-width: 0;
-}
-
-.sectionHeaderTitleRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .sectionHeaderTitle {
@@ -1080,12 +1068,10 @@
   gap: 12px;
 }
 
-/* Accent-strip-bearing card — LEFT corners flush square so the
- * purple .internalCardAccent runs perpendicular. Platform rule. */
 .internalCard {
   display: flex;
   background: var(--surface-container);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
   border: 1px solid rgba(171, 180, 180, 0.08);
@@ -1154,138 +1140,6 @@
   color: var(--outline);
 }
 
-/* ══ External training quick-link cards ══ */
-.externalGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-/* Accent-strip-bearing card — LEFT corners flush square so the blue
- * .externalCardAccent runs perpendicular. Platform rule. */
-.externalCard {
-  display: flex;
-  background: var(--surface-container);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid rgba(171, 180, 180, 0.08);
-  transition: box-shadow 0.2s, transform 0.15s;
-}
-
-.externalCard:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-}
-
-.externalCardAccent {
-  width: 4px;
-  background: linear-gradient(180deg, #1E88E5, #1565C0);
-  flex-shrink: 0;
-}
-
-.externalCardHost {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: var(--on-surface-variant);
-  min-width: 0;
-}
-
-.externalCardHost svg { flex-shrink: 0; }
-
-.externalCardOpen {
-  font-size: 11px;
-  font-weight: 700;
-  color: #1565C0;
-  flex-shrink: 0;
-}
-
-/* Contextual "counts toward <mandatory topic>" chip — only renders when a
- * link is mapped to a GDC mandatory CPD topic. Green = "this counts". */
-.externalCardCpdTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 12px;
-  padding: 3px 8px;
-  border-radius: var(--radius-lg);
-  background: rgba(37, 111, 42, 0.09);
-  color: #256f2a;
-  font-size: 10.5px;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.externalCardCpdTag svg { flex-shrink: 0; }
-
-/* Remove button — pushed to the right of the pill row, only on user links */
-.externalCardRemove {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-lg);
-  border: none;
-  background: transparent;
-  color: var(--outline);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-
-.externalCardRemove:hover {
-  background: rgba(198, 40, 40, 0.1);
-  color: var(--error);
-}
-
-/* SharePoint-style dashed "add a link" tile */
-.externalAddTile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 120px;
-  padding: 16px;
-  border-radius: var(--radius-md);
-  border: 1.5px dashed rgba(21, 101, 192, 0.4);
-  background: rgba(21, 101, 192, 0.03);
-  color: #1565C0;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-}
-
-.externalAddTile:hover {
-  background: rgba(21, 101, 192, 0.08);
-  border-color: #1565C0;
-  transform: translateY(-1px);
-}
-
-.externalAddTileIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: rgba(21, 101, 192, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2px;
-}
-
-.externalAddTileText {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.externalAddTileSub {
-  font-size: 11px;
-  color: var(--on-surface-variant);
-}
-
 /* ══ How To video cards ══ */
 .howToGrid {
   display: grid;
@@ -1336,7 +1190,7 @@
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.3);
   padding: 2px 6px;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
 }
 
 .howToSampleBadge {
@@ -1350,7 +1204,7 @@
   color: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.3);
   padding: 2px 6px;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
 }
 
 .howToBody {
@@ -1441,7 +1295,7 @@
   top: 6px;
   right: 8px;
   background: rgba(0, 0, 0, 0.3);
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   padding: 2px 5px;
   display: flex;
   align-items: center;
@@ -1486,14 +1340,14 @@
 }
 
 .howToCatBtn:hover {
-  border-color: #ad1457;
-  color: #ad1457;
+  border-color: #E91E63;
+  color: #E91E63;
 }
 
 .howToCatBtnActive {
   background: rgba(233, 30, 99, 0.09);
-  border-color: #ad1457;
-  color: #ad1457;
+  border-color: #E91E63;
+  color: #E91E63;
 }
 
 .howToEmpty {
@@ -1509,7 +1363,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.45);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -1596,15 +1450,14 @@
 }
 
 .htFieldInput {
-  padding: 9px 12px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border: 1.5px solid rgba(171, 180, 180, 0.25);
+  border-radius: 8px;
   font-size: 13px;
-  background-color: var(--surface);
+  background: var(--surface-low);
   color: var(--on-surface);
   outline: none;
   font-family: inherit;
-  transition: border-color 0.15s;
 }
 
 .htFieldInput:focus {
@@ -1612,16 +1465,15 @@
 }
 
 .htFieldSelect {
-  padding: 9px 12px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border: 1.5px solid rgba(171, 180, 180, 0.25);
+  border-radius: 8px;
   font-size: 13px;
-  background-color: var(--surface);
+  background: var(--surface-low);
   color: var(--on-surface);
   outline: none;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.15s;
 }
 
 .htFieldSelect:focus {
@@ -1637,18 +1489,10 @@
   color: var(--error);
 }
 
-.htFieldHint {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--on-surface-variant);
-}
-
 /* ══ Upload zone ══ */
 .uploadZone {
   border: 2px dashed rgba(171, 180, 180, 0.3);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   padding: 28px 20px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -1687,7 +1531,7 @@
 .uploadIcon {
   width: 52px;
   height: 52px;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   background: rgba(233, 30, 99, 0.1);
   display: flex;
   align-items: center;
@@ -1734,7 +1578,7 @@
 
 .uploadChangeBtn {
   padding: 5px 12px;
-  border-radius: var(--radius-lg);
+  border-radius: 6px;
   border: 1.5px solid rgba(171, 180, 180, 0.3);
   background: var(--surface-container);
   font-size: 11px;
@@ -1753,7 +1597,7 @@
 .uploadIconPurple {
   width: 52px;
   height: 52px;
-  border-radius: var(--radius-lg);
+  border-radius: 14px;
   background: rgba(156, 39, 176, 0.1);
   display: flex;
   align-items: center;
@@ -1773,7 +1617,7 @@
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   border: 1.5px solid #9C27B0;
   background: rgba(156, 39, 176, 0.08);
   color: #9C27B0;
@@ -1800,10 +1644,10 @@
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid #ad1457;
+  border-radius: 8px;
+  border: 1.5px solid #E91E63;
   background: rgba(233, 30, 99, 0.08);
-  color: #ad1457;
+  color: #E91E63;
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
@@ -1818,33 +1662,6 @@
 }
 
 .addVideoBtn:active {
-  transform: none;
-}
-
-/* ══ Add External Link button ══ */
-.addExternalBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid #1565C0;
-  background: rgba(21, 101, 192, 0.08);
-  color: #1565C0;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: inherit;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s;
-}
-
-.addExternalBtn:hover {
-  background: rgba(21, 101, 192, 0.16);
-  transform: translateY(-1px);
-}
-
-.addExternalBtn:active {
   transform: none;
 }
 
@@ -1918,14 +1735,9 @@
   background: var(--surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  /* Claim a full target width so EVERY video opens at the same
-   * large size, regardless of whether the video element has loaded
-   * its intrinsic dimensions yet. Aspect-ratio (set inline) still
-   * shapes the box once metadata arrives; until then the modal
-   * occupies its claimed width + a 16/9 fallback height.
-   * Was: max-width only (caused tiny modal when src failed). */
-  width: min(92vw, 1200px);
-  max-height: 92vh;
+  width: 92vw;
+  max-width: 1200px;
+  height: 88vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 32px 100px rgba(0, 0, 0, 0.5);
@@ -1983,345 +1795,4 @@
   display: block;
   object-fit: contain;
   background: #000;
-}
-
-/* ── Local-asset video first-frame thumbnail on the How-To card ────────── */
-.howToThumbVideo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-/* ════════════════════════════════════════════════════════════════════
- * How To Series — search hero, pin system, pinned-row header
- * Mid-shift utility refresh per UX brief.
- * ════════════════════════════════════════════════════════════════════ */
-
-/* Full-width search bar sits dominantly above the category chips. */
-.howToSearchHero {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  margin: 14px 0 12px;
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-}
-.howToSearchInput {
-  flex: 1;
-  appearance: none;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--on-surface);
-  padding: 2px 0;
-  outline: none;
-}
-.howToSearchInput::placeholder {
-  color: var(--on-surface-variant);
-  font-weight: 400;
-}
-.howToSearchClear {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  width: 22px; height: 22px;
-  border-radius: var(--radius-sm);
-  font-size: 18px;
-  color: var(--on-surface-variant);
-  cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  line-height: 1;
-}
-.howToSearchClear:hover { background: var(--surface-low); color: var(--on-surface); }
-
-/* Pin button — top-right of each thumb. Subtle at rest, lights up
- * on hover, fills with primary teal when pinned. */
-.howToPinBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
-  appearance: none;
-  border: 0;
-  width: 24px; height: 24px;
-  border-radius: var(--radius-sm);
-  background: rgba(15, 23, 42, 0.32);
-  color: rgba(255, 255, 255, 0.78);
-  display: inline-flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.15s, background 0.15s, color 0.15s, transform 0.08s;
-}
-.howToCard:hover .howToPinBtn { opacity: 1; }
-.howToPinBtn:hover { background: rgba(15, 23, 42, 0.45); color: white; transform: scale(1.06); }
-.howToPinBtnOn {
-  background: var(--primary);
-  color: white;
-  opacity: 1;
-}
-.howToPinBtnOn:hover { background: color-mix(in srgb, var(--primary) 85%, black); }
-
-/* Pinned Guides row header — soft accent strip the eye lands on. */
-.howToPinnedHeader {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 12px;
-  padding: 6px 12px;
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  color: var(--primary);
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-.howToPinnedCount {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 18px; height: 18px;
-  padding: 0 5px;
-  background: var(--primary);
-  color: white;
-  border-radius: var(--radius-pill);
-  font-size: 10px;
-  font-weight: 800;
-}
-.howToPinnedDivider {
-  height: 1px;
-  background: var(--outline-variant);
-  margin: 16px 0;
-}
-
-/* Crisper card hover — gentle elevation + slight rise, no border. */
-.howToCard {
-  transition: box-shadow 0.18s ease, transform 0.08s ease;
-}
-.howToCard:hover {
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
-  transform: translateY(-2px);
-}
-
-/* Category text — tighter weight, slightly desaturated brand tone. */
-.howToCat {
-  display: inline-block;
-  padding: 3px 8px;
-  background: color-mix(in srgb, var(--on-surface) 5%, transparent);
-  color: var(--on-surface-variant);
-  border-radius: var(--radius-sm);
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ════════════════════════════════════════════════════════════════════
- * Course Player Hub refresh — Slice
- *   • Real <video> for video lessons + onEnded countdown overlay
- *   • Distinct Assessment row with lock / unlock state
- * ════════════════════════════════════════════════════════════════════ */
-
-/* Real video element sized to fill the player area. */
-.playerVideo {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  background: #000;
-  object-fit: cover;
-  z-index: 1;
-}
-
-/* Countdown overlay sits above the video, soft-dim scrim, big number,
- * cancel + skip-now buttons. */
-.playerCountdown {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  background: rgba(15, 23, 42, 0.78);
-  color: white;
-  backdrop-filter: blur(4px);
-  animation: countdownFadeIn 0.2s ease-out;
-}
-@keyframes countdownFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.playerCountdownNum {
-  font-family: var(--font-display);
-  font-size: 96px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: white;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-}
-.playerCountdownLabel {
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.85);
-}
-.playerCountdownActions {
-  display: inline-flex;
-  gap: 10px;
-  margin-top: 6px;
-}
-.playerCountdownCancel {
-  appearance: none;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: white;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-}
-.playerCountdownCancel:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: white;
-}
-.playerCountdownGo {
-  appearance: none;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--primary);
-  border: 0;
-  color: white;
-  font: inherit;
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 8px 18px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: opacity 0.12s, transform 0.08s;
-}
-.playerCountdownGo:hover { transform: translateY(-1px); opacity: 0.94; }
-
-/* Assessment row — distinct styling differentiates from regular lessons */
-.outlineQuizRow {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--outline-variant);
-}
-.outlineQuizRowLocked {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-.outlineQuizRowLocked:hover {
-  background: transparent;
-}
-.outlineQuizRowUnlocked {
-  background: color-mix(in srgb, #2e7d32 4%, transparent);
-  border-left: 3px solid #2e7d32;
-  padding-left: 9px;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-}
-.outlineQuizRowUnlocked:hover {
-  background: color-mix(in srgb, #2e7d32 9%, transparent);
-}
-
-/* Lock / unlock icon next to the Assessment label. */
-.outlineQuizLockIcon {
-  margin-left: 6px;
-  font-size: 12px;
-  vertical-align: -1px;
-}
-
-/* Active (current) lesson badge — high-contrast solid teal so the
- * eye lands on it immediately. (Was: same colour as background tint.) */
-.outlineBadgeCurrent {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 1px 4px rgba(0, 105, 116, 0.35);
-}
-
-/* Completed badge — crisp green/teal tint with white check. */
-.outlineBadgeDone {
-  background: #2e7d32;
-  color: white;
-}
-
-/* Hub reflow: the desktop sidebar and three-card rows become a single readable
- * content stream on tablets and phones. Module-viewer rules remain unchanged. */
-@media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .skillsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .internalGrid,
-  .externalGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 620px) {
-  .header,
-  .trackerHeader,
-  .trackerRow {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .roleTabs {
-    max-width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-
-  .roleTab {
-    flex: 0 0 132px;
-  }
-
-  .tracker,
-  .sidebarCpd {
-    padding: 20px;
-  }
-
-  .trackerActions {
-    flex-wrap: wrap;
-    width: 100%;
-  }
-
-  .sectionHeader {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .sectionHeaderBody {
-    flex-basis: calc(100% - 48px);
-  }
-
-  .uploadTrainingBtn {
-    margin-left: 48px;
-  }
-
-  .skillsGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .internalGrid,
-  .externalGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .internalCardTop {
-    flex-wrap: wrap;
-  }
 }

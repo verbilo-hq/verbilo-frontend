@@ -17,11 +17,11 @@
 
 .pageTitle {
   font-family: var(--font-display);
-  /* 28px/800 — the site-wide page-title standard. */
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--on-surface);
   margin: 0 0 4px;
+  letter-spacing: -0.5px;
 }
 
 .pageSubtitle {
@@ -34,7 +34,7 @@
 
 .gaugeCard {
   background: var(--surface-lowest);
-  border: 1px solid transparent;
+  border: 1px solid var(--surface-high);
   padding: 24px;
 }
 
@@ -208,55 +208,25 @@
 
 /* ── Audit card grid ─────────────────────────────────────────────────────── */
 
-/* Responsive card grid — 1 column on phone, 2 on tablet, 4 on desktop.
- * Explicit breakpoints (instead of auto-fill) so the lower category rows
- * line up cleanly with the upper rows and card titles don't ride into
- * each other at mid-width. 24px gap matches Tailwind gap-6 for spacing
- * parity with the rest of the dashboard. */
 .auditGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-}
-@media (min-width: 640px) {
-  .auditGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .auditGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (min-width: 1280px) {
-  .auditGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .auditCard {
-  box-shadow: var(--shadow-card);
-  background: var(--surface-lowest);
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 18px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
-  border: 1px solid transparent;
-}
-
-/* Read-only variant — the CQC Compliance Hub is dashboard-only, so the
- * card is no longer clickable as a whole; all interaction routes through
- * the explicit "View History" / "Go to Logbook" / "View SOP" button. */
-.auditCardReadOnly {
-  cursor: default;
+  border: 1.5px solid var(--surface-high);
 }
 
 .auditCardDone {
   border-color: rgba(76, 175, 80, 0.35);
   background: rgba(76, 175, 80, 0.03);
-}
-
-/* Overdue / action-required tint — gives the dashboard an at-a-glance
- * "this needs attention" surface without firing a data-entry modal. */
-.auditCardOverdue {
-  border-color: rgba(168, 56, 54, 0.35);
-  background: rgba(168, 56, 54, 0.03);
 }
 
 .auditCardTop {
@@ -267,302 +237,52 @@
 
 .auditTitle {
   font-family: var(--font-display);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--on-surface);
   margin: 0;
-  /* Slightly more generous leading + a min-height anchor so two-line
-   * titles like "Antibiotic Prescribing Audit" and
-   * "Patient Record-Keeping Audit" never visually run into each other
-   * across adjacent grid columns. */
-  line-height: 1.35;
-  min-height: calc(1.35em * 2);
-  /* Break long words gracefully rather than overflowing the card. */
-  overflow-wrap: anywhere;
-  word-break: normal;
+  line-height: 1.3;
 }
 
 .auditDesc {
   font-size: 12.5px;
   color: var(--on-surface-variant);
-  line-height: 1.55;
+  line-height: 1.5;
   margin: 0;
   flex: 1;
 }
 
-/* Action row pinned to bottom-left of the card.
- * .auditCard is `display: flex; flex-direction: column` with .auditDesc
- * carrying `flex: 1` — that pushes this action row to the bottom edge
- * regardless of how long the title or description happens to be, so
- * every card in the grid keeps its button on the same baseline. */
 .auditAction {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  margin-top: 4px;
 }
 
-/* ─── Action button shell ──────────────────────────────────────────────
- * Small, elegant pill — Tailwind-equivalent:
- *   px-3 py-1 text-xs rounded-full font-medium
- *
- * Roughly: 4px vertical / 12px horizontal padding, 11.5px text, pill
- * radius, 500 weight. Compact + premium-looking, not the chunky CTA
- * we were rendering before. Icon + label live in their own spans so
- * the emoji can never crowd the text. */
 .auditBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 5px 12px;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
   border-radius: var(--radius-pill);
-  line-height: 1.2;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-  transition: background 0.15s, color 0.12s, border-color 0.12s, transform 0.08s, box-shadow 0.15s;
+  transition: background 0.15s;
 }
 
-.auditBtnIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  font-size: 11px;
-  line-height: 1;
-}
-
-.auditBtnLabel {
-  /* Own column so the emoji can never collide with the text. */
-  display: inline-block;
-  white-space: nowrap;
-}
-
-/* Legacy variants kept for backward compatibility — no longer rendered
- * by the CQC Hub but still imported by older callers. */
-.auditBtnPending { background: var(--primary); color: var(--on-primary); }
-.auditBtnDone    { background: var(--surface-container); color: var(--on-surface-variant); }
-
-/* ─── Read-only action buttons (CQC dashboard refactor) ───────────────
- * Three-way semantics:
- *
- *   .auditBtnAlert      — overdue card with a Logbook target. The card
- *                         already carries the red border + tint; the
- *                         button only needs to *whisper* the same tone,
- *                         not shout it. Soft amber/rust tint on a near-
- *                         transparent background reads as "attention
- *                         needed" without screaming "system failure".
- *
- *   .auditBtnSecondary  — overdue + SOP target, or any compliant card
- *                         (View Ledger). Slate-200-equivalent border,
- *                         clear text contrast, calm corporate tone. */
-
-/* Alert variant — desaturated amber/rust tint, NOT solid red.
- * Sits on a barely-tinted background so the red message comes from
- * the card border + Overdue pill, not a chunky button.
- *
- * Palette anchor: same hue family as the .freqMonthly / overdue pill
- * (#a83836 → #8a2d2c), faded to ~10% bg + ~32% border. */
-.auditBtnAlert {
-  appearance: none;
-  border: 1px solid color-mix(in srgb, #a83836 35%, transparent);
-  font: inherit;
-  cursor: pointer;
-  background: color-mix(in srgb, #a83836 8%, var(--surface));
-  color: #8a2d2c;
-}
-.auditBtnAlert:hover {
-  background: color-mix(in srgb, #a83836 14%, var(--surface));
-  border-color: color-mix(in srgb, #a83836 55%, transparent);
-  color: #6f1f1d;
-  transform: translateY(-1px);
-}
-.auditBtnAlert:focus-visible {
-  outline: 2px solid rgba(168, 56, 54, 0.45);
-  outline-offset: 2px;
-}
-
-/* Primary variant — corporate accent (same hue as the brand primary
- * but tinted, not solid). Used by "Start Audit" on overdue SOP-target
- * cards so the call-to-action reads as "open the assessment form"
- * without screaming alert red. Sits visually between the alert tint
- * and the secondary outline. */
-.auditBtnPrimary {
-  appearance: none;
-  border: 1px solid color-mix(in srgb, var(--primary) 38%, transparent);
-  font: inherit;
-  cursor: pointer;
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
-  color: var(--primary);
-}
-.auditBtnPrimary:hover {
-  background: color-mix(in srgb, var(--primary) 18%, var(--surface));
-  border-color: color-mix(in srgb, var(--primary) 60%, transparent);
-  transform: translateY(-1px);
-}
-.auditBtnPrimary:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
-  outline-offset: 2px;
-}
-
-/* Secondary variant — slate-200-equivalent border + clear on-surface
- * text. Sized identically to the alert variant so they sit at the same
- * baseline on adjacent cards in the grid. */
-.auditBtnSecondary {
-  appearance: none;
-  font: inherit;
-  cursor: pointer;
-  background: var(--surface);
-  color: var(--on-surface);
-  border: 1px solid var(--outline-variant);
-}
-.auditBtnSecondary:hover {
-  background: var(--surface-container);
-  border-color: var(--primary);
-  color: var(--primary);
-}
-.auditBtnSecondary:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
-  outline-offset: 2px;
-}
-
-/* ─── HistoryModal ────────────────────────────────────────────────────
- * Read-only modal opened from "View History" on a compliant card.
- * Sits inside the shared .overlay scrim for animation consistency. */
-
-.historyModal {
-  width: 100%;
-  max-width: 640px;
-  max-height: calc(100vh - 48px);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.32);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.historyHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 18px 22px 14px;
-  border-bottom: 1px solid var(--outline-variant);
-}
-.historyEyebrow {
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--on-surface-variant);
-}
-.historyTitle {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--on-surface);
-  margin: 3px 0 4px;
-  line-height: 1.25;
-}
-.historySub {
-  font-size: 12.5px;
-  color: var(--on-surface-variant);
-  margin: 0;
-  line-height: 1.5;
-}
-.historyClose {
-  appearance: none;
-  background: transparent;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: var(--on-surface-variant);
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s, color 0.12s;
-}
-.historyClose:hover {
-  background: var(--surface-container);
-  color: var(--on-surface);
-}
-.historyBody {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 22px;
-}
-.historyEmpty {
-  font-size: 13px;
-  color: var(--on-surface-variant);
-  margin: 12px 0;
-  font-style: italic;
-}
-.historyTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.historyTable th,
-.historyTable td {
-  text-align: left;
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--outline-variant);
-}
-.historyTable th {
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--on-surface-variant);
-  background: var(--surface-container);
-}
-.historyTable tbody tr:last-child td { border-bottom: none; }
-.historyRoleCell {
-  text-transform: capitalize;
-  color: var(--on-surface-variant);
-}
-.historyFooter {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 22px;
-  background: var(--surface);
-  border-top: 1px solid var(--outline-variant);
-}
-.historyHint {
-  flex: 1;
-  font-size: 11.5px;
-  color: var(--on-surface-variant);
-  line-height: 1.5;
-}
-.historyCloseBtn {
-  appearance: none;
+.auditBtnPending {
   background: var(--primary);
-  color: var(--on-primary, #fff);
-  border: none;
-  padding: 9px 20px;
-  border-radius: var(--radius-md);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.08s;
+  color: var(--on-primary);
 }
-.historyCloseBtn:hover { transform: translateY(-1px); }
+
+.auditBtnDone {
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+}
 
 /* ── Modal overlay ───────────────────────────────────────────────────────── */
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(43, 52, 53, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -601,7 +321,7 @@
 
 .modalTitle {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--on-surface);
   margin: 0 0 4px;
@@ -686,13 +406,13 @@
 }
 
 .fieldInput {
-  padding: 9px 12px;
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-family: var(--font-body);
   color: var(--on-surface);
-  background-color: var(--surface);
+  background: var(--surface-lowest);
   transition: border-color 0.15s;
   outline: none;
 }
@@ -744,7 +464,7 @@
 .checkBox {
   width: 20px;
   height: 20px;
-  border-radius: var(--radius-md);
+  border-radius: 5px;
   border: 2px solid var(--outline-variant);
   background: var(--surface-lowest);
   flex-shrink: 0;
@@ -876,7 +596,7 @@
 
 .successTitle {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--on-surface);
   margin: 0;
@@ -937,8 +657,8 @@
 
 .incidentCard {
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  background: var(--surface-lowest);
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
   overflow: hidden;
   padding: 0 !important;
 }
@@ -963,21 +683,10 @@
   gap: 12px;
   padding: 14px 18px;
   border-bottom: 1px solid var(--outline-variant);
-  background: var(--surface);
   transition: background 0.12s;
 }
 .incidentRow:last-child { border-bottom: none; }
-/* Zebra striping — every other row gets a subtle tint so the register
- * reads like an immutable tracking ledger. The alt tint uses the same
- * token as the table head, giving a head → row → tinted row → row
- * rhythm that anchors the eye down the page. */
-.incidentRowAlt {
-  background: var(--surface-lowest);
-}
-.incidentRow:hover,
-.incidentRowAlt:hover {
-  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
-}
+.incidentRow:hover { background: var(--surface-container-low); }
 
 .incidentType {
   font-size: 13px;
@@ -1053,153 +762,3 @@
 }
 .severityBtn:hover { background: var(--surface-container-low); }
 .severityBtnActive { font-weight: 700; }
-
-/* ── Incident escalation panel ──────────────────────────────────────────── */
-
-.escPill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.incidentExpand {
-  background: var(--surface-container-low);
-  border-top: 1px solid var(--outline-variant);
-  padding: 18px 22px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.incidentExpandSection h4 {
-  margin: 0 0 8px 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--on-surface-variant);
-}
-
-.incidentExpandSection p {
-  margin: 0;
-  font-size: 13px;
-  color: var(--on-surface);
-  line-height: 1.5;
-}
-
-.escCard {
-  background: var(--surface);
-  border: 1px solid var(--outline-variant);
-  border-left: 4px solid var(--primary);
-  border-radius: var(--radius-md);
-  padding: 14px 16px;
-}
-
-.escHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.escTitle {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-}
-
-.escRationale {
-  font-size: 12px;
-  color: var(--on-surface-variant);
-  line-height: 1.45;
-  margin-top: 4px;
-}
-
-.escRequired {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.escDone {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  background: rgba(46, 125, 50, 0.12);
-  color: #2e7d32;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.escDetail {
-  background: var(--surface-container-low);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  font-size: 12px;
-  color: var(--on-surface);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.escRecordBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--outline-variant);
-  background: var(--surface);
-  color: var(--on-surface);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-}
-.escRecordBtn:hover {
-  background: var(--surface-container);
-  border-color: var(--primary);
-}
-
-.escForm {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-@media (max-width: 720px) {
-  .page { padding: 0; gap: 20px; min-width: 0; }
-  .pageHeaderLeft { min-width: 0; }
-  .headerControls { width: 100%; flex-wrap: wrap; }
-  .headerControls label { flex: 1 1 100%; min-width: 0; flex-wrap: wrap; }
-  .headerControls select { width: 100%; min-width: 0 !important; }
-  .gaugeCard { padding: 20px; min-width: 0; }
-  .gaugeLayout { justify-content: center; gap: 24px; }
-  .gaugeContent { min-width: 0; flex-basis: 100%; }
-  .gaugeStats { width: 100%; padding: 12px 8px; }
-  .gaugeStat { flex: 1; min-width: 0; padding: 0 8px; }
-  .gaugeStatLab { font-size: 9px; text-align: center; overflow-wrap: anywhere; }
-  .incidentSectionHeader { flex-wrap: wrap; }
-  .incidentTableHead { display: none; }
-  .incidentRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; }
-  .incidentRow > :nth-child(2) { grid-column: 1 / -1; }
-  .incidentReporter { align-self: auto; }
-  .severityBtnGroup { flex-wrap: wrap; }
-  .escHead { flex-wrap: wrap; }
-}

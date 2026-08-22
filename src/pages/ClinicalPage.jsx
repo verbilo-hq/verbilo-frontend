@@ -1,27 +1,18 @@
 import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
-import { BtnSecondary } from "../components/ui/Buttons";
+import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
+import { Pill } from "../components/ui/Pill";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TopBar } from "../components/layout/TopBar";
-import { useModalA11y } from "../hooks/useModalA11y";
 import {
   listClinicalTabs, listEmergencyDrugs, listLaDrugs, listAntibiotics,
-  listProtocolCategories, listPils, listPilCategories, getPil,
-  listConsents, listConsentCategories, getConsent,
-  listReferralSpecialties, getReferralDocument,
+  listProtocolCategories, listPils,
   listSafeguardingContacts, listSafeguardingDocs,
-  listPerioQuickRef, listEndoQuickRef, listIosQuickRef, listWhiteningQuickRef,
-  listDeconQuickRef, listRadiographyQuickRef, listMedEmergQuickRef,
+  listClinicalStarterTemplates,
 } from "../services/clinical.service";
-import { PilViewer } from "./PilViewer";
-import { ConsentViewer } from "./ConsentViewer";
-import { ReferralDocViewer } from "./ReferralDocViewer";
-import { PilBrandingAdmin } from "./PilBrandingAdmin";
-import { useAuth } from "../auth/AuthContext";
-import { listSites } from "../services/governance/sites.service";
-import { ensureSeed } from "../services/governance/seed";
-import { brandingFor, ensureDemoBranding } from "../services/governance/practiceBranding.service";
+import { useTenant } from "../auth/TenantContext";
+import { isDemoMode } from "../lib/mode";
 import styles from "./ClinicalPage.module.css";
 
 /* ── Domain reference data (consent forms, guideline orgs, referral pathways)
@@ -148,10 +139,31 @@ const referralPathways = [
     { name: "Stage III / IV Referral Criteria",         type: "PDF",  updated: "Dec 2023" },
     { name: "Peri-Implantitis Specialist Pathway",      type: "PDF",  updated: "Oct 2023" },
   ]},
-  { label: "Restorative & Implants", icon: "award", docs: [
-    { name: "Implant Referral Form",                    type: "PDF",  updated: "Feb 2024" },
-    { name: "Complex Restorative Referral Form",        type: "PDF",  updated: "Jan 2024" },
-    { name: "Implant Pre-Assessment Criteria",          type: "PDF",  updated: "Nov 2023" },
+  // VER-46: nested-accordion shape — when a pathway has `sections` instead of
+  // `docs`, the panel renders each section as its own sub-accordion. Backward
+  // compatible with the flat `docs` shape used by the other entries above.
+  { label: "Restorative, Prosthodontics & Implants", icon: "award", sections: [
+    { label: "General Restorative Referrals", docs: [
+      { name: "Restorative Dentistry Referral Criteria",            type: "PDF",  updated: "Feb 2024" },
+      { name: "Restorative Referral Form",                          type: "PDF",  updated: "Jan 2024" },
+      { name: "Restorative Treatment Planning Advice Request Form", type: "DOCX", updated: "Nov 2023" },
+    ]},
+    { label: "Prosthodontics & Dentures", docs: [
+      { name: "Prosthodontics Referral Criteria",        type: "PDF",  updated: "Feb 2024" },
+      { name: "Complex Denture Referral Guidance",       type: "PDF",  updated: "Jan 2024" },
+    ]},
+    { label: "Tooth Wear, Trauma & Developmental Anomalies", docs: [
+      { name: "Tooth Wear / Tooth Surface Loss Referral Pathway",     type: "PDF",  updated: "Feb 2024" },
+      { name: "Dental Trauma Restorative Referral Pathway",           type: "PDF",  updated: "Jan 2024" },
+      { name: "Developmental Dental Anomalies Referral Criteria",     type: "PDF",  updated: "Nov 2023" },
+    ]},
+    { label: "Implants", docs: [
+      { name: "Implant Referral Criteria",                  type: "PDF",  updated: "Feb 2024" },
+      { name: "NHS Implant Funding / Eligibility Guidance", type: "PDF",  updated: "Jan 2024" },
+    ]},
+    // Supporting Records / Requirements — intentionally left empty for now;
+    // structure kept so we can wire materials in later without re-shaping the data.
+    { label: "Supporting Records / Requirements", placeholder: true, docs: [] },
   ]},
 ];
 
@@ -173,322 +185,20 @@ const DocRow = ({ name, reviewed, pages, type = "PDF" }) => (
   </div>
 );
 
-/* ── Chairside Quick Reference cards ───────────────────────────────────────── */
-
-/* Auto-tag short cells that match a known severity / risk keyword so clinicians
- * can scan tables for the row that matters rather than reading every cell.
- * Long cells stay as prose — they carry context. */
-const CHIP_RULES = [
-  { match: /^(emergency|999.*)$/i,                          tone: "danger" },
-  { match: /^(stop|stop\.?|stop whitening\.?)$/i,           tone: "danger" },
-  { match: /^higher$/i,                                     tone: "danger" },
-  { match: /^not lawful\.?$/i,                              tone: "danger" },
-  { match: /^avoid\.?$/i,                                   tone: "danger" },
-  { match: /^(refer|refer to omfs)\.?$/i,                   tone: "danger" },
-  { match: /^same-day$/i,                                   tone: "warn"   },
-  { match: /^caution\.?$/i,                                 tone: "warn"   },
-  { match: /^pause\.?$/i,                                   tone: "warn"   },
-  { match: /^defer\.?$/i,                                   tone: "warn"   },
-  { match: /^counsel(\s\+\splan)?\.?$/i,                    tone: "warn"   },
-  { match: /^stabilise first\.?$/i,                         tone: "warn"   },
-  { match: /^same-week$/i,                                  tone: "info"   },
-  { match: /^within 1 week$/i,                              tone: "info"   },
-  { match: /^refer within 1 week$/i,                        tone: "info"   },
-  { match: /^days(\s\/\ssame-day)?$/i,                      tone: "info"   },
-  { match: /^low$/i,                                        tone: "ok"     },
-  { match: /^continue\.?$/i,                                tone: "ok"     },
-];
-
-const chipFor = (text) => {
-  if (typeof text !== "string") return null;
-  const t = text.trim();
-  if (t.length === 0 || t.length > 26) return null;
-  for (const r of CHIP_RULES) if (r.match.test(t)) return { tone: r.tone, label: t.replace(/\.$/, "") };
-  return null;
-};
-
-const QuickRefChip = ({ tone, children }) => (
-  <span className={`${styles.qrefChip} ${styles[`qrefChip-${tone}`]}`}>{children}</span>
-);
-
-const Cell = ({ value }) => {
-  const chip = chipFor(value);
-  return chip ? <QuickRefChip tone={chip.tone}>{chip.label}</QuickRefChip> : <>{value}</>;
-};
-
-const QuickRefSourcesFoot = ({ sources }) => {
-  const [open, setOpen] = useState(false);
-  if (!sources?.length) return null;
-  return (
-    <div className={styles.qrefFoot}>
-      <button type="button" className={styles.qrefFootToggle} onClick={() => setOpen((v) => !v)}>
-        <I name="external" size={11} color="var(--on-surface-variant)" />
-        <span>Sources ({sources.length})</span>
-        <I name="chevrondown" size={11} color="var(--on-surface-variant)"
-           style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-      </button>
-      {open && (
-        <div className={styles.qrefFootSources}>
-          {sources.map((s, i) => (
-            s.url
-              ? <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className={styles.qrefSourceLink}>
-                  <I name="external" size={10} color="var(--primary)" /> {s.name}
-                </a>
-              : <span key={i} className={styles.qrefSourceLinkPlain}>{s.name}</span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const QuickRefNotesFoot = ({ notes }) => {
-  const [open, setOpen] = useState(false);
-  if (!notes?.length) return null;
-  return (
-    <div className={styles.qrefFoot}>
-      <button type="button" className={`${styles.qrefFootToggle} ${styles.qrefFootToggleWatch}`} onClick={() => setOpen((v) => !v)}>
-        <I name="alert" size={11} color="#b36000" />
-        <span>Watch-outs ({notes.length})</span>
-        <I name="chevrondown" size={11} color="#b36000"
-           style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-      </button>
-      {open && (
-        <ul className={styles.qrefFootNotes}>
-          {notes.map((n, i) => <li key={i}>{n}</li>)}
-        </ul>
-      )}
-    </div>
-  );
-};
-
-const QuickRefTableBody = ({ card }) => (
-  <>
-    {card.columns && card.rows && (
-      <table className={styles.qrefTable}>
-        <thead>
-          <tr>{card.columns.map((c) => <th key={c}>{c}</th>)}</tr>
-        </thead>
-        <tbody>
-          {card.rows.map((row, i) => (
-            <tr key={i}>
-              {row.map((cell, j) => <td key={j}><Cell value={cell} /></td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    )}
-
-    {card.subTables && (
-      <div className={styles.qrefSubTables}>
-        {card.subTables.map((t) => (
-          <div key={t.title} className={styles.qrefSubTable}>
-            <div className={styles.qrefSubTableTitle}>{t.title}</div>
-            <table className={styles.qrefTable} style={{ marginTop: 0 }}>
-              <thead>
-                <tr>{t.columns.map((c) => <th key={c}>{c}</th>)}</tr>
-              </thead>
-              <tbody>
-                {t.rows.map((row, i) => (
-                  <tr key={i}>
-                    {row.map((cell, j) => <td key={j}><Cell value={cell} /></td>)}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
-      </div>
-    )}
-  </>
-);
-
-/** Compute Stage / Grade from clinician inputs per BSP 2018 + S3 2021. */
-function deriveStaging({ interdentalCAL, boneLossPct, ageYears, toothLossDueToPerio }) {
-  const cal = Number(interdentalCAL);
-  const bone = Number(boneLossPct);
-  const age = Number(ageYears);
-  const lost = Number(toothLossDueToPerio);
-
-  if (!cal || !bone || !age) return { stage: null, grade: null, severity: "" };
-
-  // Stage
-  let stage;
-  if (cal >= 5 && lost >= 5) stage = "IV";
-  else if (cal >= 5) stage = "III";
-  else if (cal >= 3) stage = "II";
-  else stage = "I";
-
-  // Grade (bone loss % / age)
-  const ratio = bone / age;
-  let grade;
-  if (ratio < 0.25) grade = "A";
-  else if (ratio <= 1.0) grade = "B";
-  else grade = "C";
-
-  const severityMap = {
-    I:   "Initial periodontitis",
-    II:  "Moderate periodontitis",
-    III: "Severe — potential for additional tooth loss",
-    IV:  "Severe — potential for loss of dentition",
-  };
-  return { stage, grade, severity: severityMap[stage] };
-}
-
-const QuickRefDecisionBody = ({ card }) => {
-  const [values, setValues] = useState({});
-  const result = deriveStaging(values);
-  const set = (id, v) => setValues((p) => ({ ...p, [id]: v }));
-
-  return (
-    <>
-      <div className={styles.qrefDecisionInputs}>
-        {card.inputs.map((inp) => (
-          <div key={inp.id} className={styles.qrefInputField}>
-            <label className={styles.qrefInputLabel}>{inp.label}</label>
-            <input
-              type={inp.type}
-              min={inp.min} max={inp.max} step={inp.step}
-              className={styles.qrefInputBox}
-              value={values[inp.id] ?? ""}
-              onChange={(e) => set(inp.id, e.target.value)}
-            />
-            {inp.hint && <span className={styles.qrefInputHint}>{inp.hint}</span>}
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.qrefResult}>
-        {result.stage ? (
-          <>
-            <div className={styles.qrefResultBlock}>
-              <span className={styles.qrefResultLabel}>Stage</span>
-              <span className={styles.qrefResultValue}>{result.stage}</span>
-              <span className={styles.qrefResultSeverity}>{result.severity}</span>
-            </div>
-            <div className={styles.qrefResultBlock}>
-              <span className={styles.qrefResultLabel}>Grade</span>
-              <span className={styles.qrefResultValue}>{result.grade}</span>
-              <span className={styles.qrefResultSeverity}>
-                {result.grade === "A" ? "Slow progression" :
-                 result.grade === "B" ? "Moderate progression" :
-                 "Rapid progression"}
-              </span>
-            </div>
-          </>
-        ) : (
-          <span className={styles.qrefResultPlaceholder}>Enter all four values to compute Stage & Grade.</span>
-        )}
-      </div>
-
-      <div className={styles.qrefSubsectionTitle}>Modifiers</div>
-      <ul className={styles.qrefModifiers}>
-        {card.modifiers.map((m, i) => <li key={i}>{m}</li>)}
-      </ul>
-    </>
-  );
-};
-
-const QuickRefFlowBody = ({ card }) => {
-  const [openStep, setOpenStep] = useState(1);
-  return (
-    <div className={styles.qrefFlow}>
-      {card.steps.map((s) => {
-        const open = openStep === s.n;
-        return (
-          <div key={s.n} className={styles.qrefFlowStep}>
-            <button
-              className={styles.qrefFlowStepHead}
-              onClick={() => setOpenStep(open ? null : s.n)}
-            >
-              <div className={styles.qrefFlowStepNum}>{s.n}</div>
-              <div style={{ flex: 1 }}>
-                <div className={styles.qrefFlowStepTitle}>{s.title}</div>
-                <div className={styles.qrefFlowStepTargets}>{s.targets.join(" · ")}</div>
-              </div>
-              <I name="chevrondown" size={14} color="var(--on-surface-variant)"
-                 style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-            </button>
-            {open && (
-              <div className={styles.qrefFlowStepBody}>
-                <ul className={styles.qrefFlowActions}>
-                  {s.actions.map((a, i) => <li key={i}>{a}</li>)}
-                </ul>
-                <div className={styles.qrefFlowEndpoint}>
-                  <span className={styles.qrefFlowEndpointTag}>Endpoint</span>
-                  <span>{s.endpoint}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-const QuickRefAccordionCard = ({ card, open, onToggle }) => {
-  const body =
-    card.format === "decision" ? <QuickRefDecisionBody card={card} /> :
-    card.format === "flow"     ? <QuickRefFlowBody     card={card} /> :
-                                  <QuickRefTableBody    card={card} />;
-  return (
-    <div className={`${styles.qrefAccordion} ${open ? styles.qrefAccordionOpen : ""}`}>
-      <button type="button" className={styles.qrefAccordionHead} onClick={onToggle} aria-expanded={open}>
-        <div className={styles.qrefCardIcon}>
-          <I name={card.icon} size={15} color="var(--primary)" />
-        </div>
-        <div className={styles.qrefAccordionMeta}>
-          <div className={styles.qrefCardTitle}>{card.label}</div>
-          <p className={styles.qrefCardSummary}>{card.summary}</p>
-        </div>
-        <I name="chevrondown" size={14} color="var(--on-surface-variant)"
-           style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }} />
-      </button>
-      {open && (
-        <div className={styles.qrefAccordionBody}>
-          {body}
-          <div className={styles.qrefFootRow}>
-            <QuickRefNotesFoot notes={card.notes} />
-            <QuickRefSourcesFoot sources={card.sources} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ChairsideQuickRef = ({ cards }) => {
-  const [openId, setOpenId] = useState(cards[0]?.id ?? null);
-  return (
-    <div className={styles.qrefList}>
-      {cards.map((card) => (
-        <QuickRefAccordionCard
-          key={card.id}
-          card={card}
-          open={openId === card.id}
-          onToggle={() => setOpenId(openId === card.id ? null : card.id)}
-        />
-      ))}
-    </div>
-  );
-};
-
 /* ── Emergency reference modal ─────────────────────────────────────────────── */
 
-const EmergencyModal = ({ type, emergencyDrugs, laDrugs, antibiotics, laWeight, onWeightChange, onClose }) => {
-  const dialogRef = useModalA11y(onClose);
+const EmergencyModal = ({ type, laWeight, onWeightChange, onClose }) => {
   const titles = { drugs: "Emergency Drugs — Doses & Routes", la: "Local Anaesthetic Maximum Doses", antibiotics: "Antibiotic Prescribing Guide" };
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div ref={dialogRef} className={styles.emergencyModal} onClick={e => e.stopPropagation()} aria-labelledby="emergency-modal-title">
+      <div className={styles.emergencyModal} onClick={e => e.stopPropagation()}>
         <div className={styles.emergencyModalHeader}>
           <div>
             <span className={styles.emergencyModalEyebrow}>Quick Reference</span>
-            <h3 id="emergency-modal-title" className={styles.emergencyModalTitle}>{titles[type]}</h3>
+            <h3 className={styles.emergencyModalTitle}>{titles[type]}</h3>
           </div>
-          <button className={styles.modalCloseBtn} onClick={onClose} aria-label="Close emergency reference"><I name="xcircle" size={22} /></button>
+          <button className={styles.modalCloseBtn} onClick={onClose}><I name="xcircle" size={22} /></button>
         </div>
 
         {type === "drugs" && (
@@ -527,7 +237,7 @@ const EmergencyModal = ({ type, emergencyDrugs, laDrugs, antibiotics, laWeight, 
             </div>
             <div className={styles.emergencyTableWrap}>
               <div className={styles.emergencyTableHead}>
-                <span style={{ flex: 3 }}>Agent (2.2 mL cartridge)</span>
+                <span style={{ flex: 3 }}>Agent (1.8 mL cartridge)</span>
                 <span style={{ flex: 1, textAlign: "center" }}>mg/cartridge</span>
                 <span style={{ flex: 1, textAlign: "center" }}>Max mg/kg</span>
                 <span style={{ flex: 1, textAlign: "center" }}>Max dose (abs.)</span>
@@ -574,119 +284,116 @@ const EmergencyModal = ({ type, emergencyDrugs, laDrugs, antibiotics, laWeight, 
   );
 };
 
-/* ── Patient leaflet icon mapping ──────────────────────────────────────────
-   Each leaflet id maps to a Lucide icon name registered in components/Icon.jsx.
-   Category fall-back is used if a leaflet id is missing from this table. */
-const PIL_ICONS = {
-  "diet-oral-health":       "apple",
-  "pregnancy":              "baby",
-  "smoking":                "nosmoking",
-  "oral-cancer":            "ribbon",
-  "children-0-5":           "baby",
-  "tooth-whitening":        "sparkles",
-  "gum-disease":            "shieldalert",
-  "children-6-12":          "smile",
-  "teenagers":              "training",
-  "thumb-sucking":          "heart",
-  "white-fillings":         "wrench",
-  "veneers":                "smile",
-  "crown-bridge":           "crown",
-  "implants":               "anchor",
-  "dentures":               "smile",
-  "replace-missing-tooth":  "plus",
-  "wisdom-teeth":           "brain",
-  "after-extraction":       "heart",
-  "sinus-lift-graft":       "bone",
-  "frenectomy":             "scissors",
-  "root-canal":             "activity",
-  "hygienist-visits":       "sparkles",
-  "bad-breath":             "wind",
-  "mouth-ulcers":           "alert",
-  "cold-sores":             "droplets",
-  "sensitive-teeth":        "zap",
-  "bruxism":                "moon",
-  "tmd":                    "activity",
-  "sports-mouthguards":     "shield",
-  "sleep-apnoea":           "bed",
-  "fissure-sealants":       "shield",
-  "diabetes":               "heartpulse",
-  "heart-conditions":       "heartpulse",
-  "cancer-treatment":       "pill",
-  "dry-mouth":              "droplets",
-  "eating-disorders":       "heart",
-  "carers-mouth-care":      "hearthandshake",
-  "first-visit":            "building",
-  "nhs-vs-private":         "creditcard",
-  "dental-xrays":           "scan",
-  "new-filling-crown":      "wrench",
-  "travelling":             "plane",
-  "dental-emergencies":     "alert",
-  "dental-anxiety":         "brain",
-  "seniors":                "sun",
-};
-
-const PIL_CATEGORY_ICONS = {
-  preventive: "shield",
-  children:   "baby",
-  cosmetic:   "sparkles",
-  surgery:    "clinical",
-  gum:        "activity",
-  function:   "moon",
-  groups:     "person",
-  practical:  "book",
-  other:      "bookmark",
-};
-
-const resolvePilIcon = (id, catSlug) => PIL_ICONS[id] || PIL_CATEGORY_ICONS[catSlug] || "book";
-
-/* ── Consent form icon mapping ─────────────────────────────────────────────
-   Mirrors the PIL approach. id → Lucide icon, with category fall-back. */
-const CONSENT_ICONS = {
-  // Core
-  "general-treatment":       "clipboard",
-  "private-treatment-plan":  "creditcard",
-  "medical-history":         "heartpulse",
-  "data-protection":         "lock",
-  "photography":             "camera",
-  "electronic-comms":        "mail",
-  "child-consent":           "baby",
-  "mental-capacity":         "brain",
-  "nhs-supplement":          "file",
-  // Treatment
-  "filling":                 "wrench",
-  "composite-bonding":       "sparkles",
-  "crown-onlay-inlay":       "crown",
-  "veneer":                  "smile",
-  "bridge":                  "construction",
-  "denture":                 "smile",
-  "extraction":              "scissors",
-  "surgical-extraction":     "microscope",
-  "root-canal":              "activity",
-  "periodontal":             "shieldalert",
-  "whitening":               "sparkles",
-  "implant":                 "anchor",
-  "bone-graft":              "bone",
-  "orthodontic":             "construction",
-  "sedation":                "pill",
-  "direct-access":           "hearthandshake",
-  "minor-oral-surgery":      "scissors",
-  "bite-splint":             "moon",
-};
-
-const CONSENT_CATEGORY_ICONS = {
-  core:      "file",
-  treatment: "clinical",
-};
-
-const resolveConsentIcon = (id, catSlug) => CONSENT_ICONS[id] || CONSENT_CATEGORY_ICONS[catSlug] || "file";
-
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
+/* VER-87: Tenant-mode Clinical Resources.
+ *
+ * Renders the starter-template library from VER-85's endpoint + an
+ * empty state for tenant-authored resources. No demo protocols, no
+ * fake emergency-drug doses, no fake LA reference data — those live
+ * in the demo path below.
+ *
+ * The static SDCEP / BDA links inside the demo path are legitimately
+ * useful clinical reference. A future ticket can split those out into
+ * "external references" and surface them in tenant mode too; for v1
+ * we just lead with the starter templates the operator can adopt. */
+function TenantClinicalPage() {
+  const { tenant } = useTenant();
+  const tenantId = tenant?.id;
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    let cancelled = false;
+    listClinicalStarterTemplates(tenantId)
+      .then((data) => {
+        if (cancelled) return;
+        setItems(Array.isArray(data?.items) ? data.items : []);
+        setError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err);
+        setItems([]);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
+
+  return (
+    <div>
+      <TopBar
+        title="Clinical Resources"
+        subtitle="Protocols, consent forms, clinical guidelines, and referral pathways."
+      />
+
+      <Card hover={false} style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 18, color: "var(--on-surface)" }}>
+            <I name="file" size={18} color="var(--primary)" /> Starter templates
+          </h2>
+          <Pill bg="rgba(0,105,116,0.10)" color="var(--primary)" small>Verbilo</Pill>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          A sector-appropriate starter pack. Review, edit, publish, or delete — these aren't visible to your staff until you choose to publish them.
+        </p>
+
+        {items === null ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>Loading…</p>
+        ) : error && items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--error)" }}>
+            Couldn't load starter templates ({error?.status ?? error?.code ?? "error"}).
+          </p>
+        ) : items.length === 0 ? (
+          <p style={{ fontSize: 13, color: "var(--on-surface-variant)" }}>
+            No starter templates available for this sector yet.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+            {items.map((item) => (
+              <Card key={item.id} hover style={{ padding: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <Pill bg="rgba(0,0,0,0.08)" color="var(--on-surface-variant)" small>
+                    Verbilo starter template
+                  </Pill>
+                </div>
+                <h3 style={{ margin: "0 0 6px 0", fontSize: 15, color: "var(--on-surface)" }}>{item.title}</h3>
+                <p style={{ margin: 0, fontSize: 13, color: "var(--on-surface-variant)", lineHeight: 1.5 }}>
+                  {item.summary}
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card hover={false}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
+          <I name="upload" size={18} color="var(--primary)" /> Your resources
+        </h2>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 16px 0" }}>
+          Anything you upload or publish appears here. Empty for now.
+        </p>
+        <BtnPrimary disabled title="Coming soon — adopt a starter template above for now">
+          <I name="plus" size={14} /> Upload your own resource
+        </BtnPrimary>
+      </Card>
+    </div>
+  );
+}
+
 export const ClinicalPage = () => {
+  if (!isDemoMode()) {
+    return <TenantClinicalPage />;
+  }
+
   const [activeTab,         setActiveTab]         = useState("protocols");
   const [activeProtoCat,    setActiveProtoCat]    = useState("emergency");
   const [activeGuideline,   setActiveGuideline]   = useState(null);
   const [activeReferral,    setActiveReferral]    = useState(null);
+  // VER-46: tracks which sub-accordion is open within a `sections`-shaped referral
+  // (currently only "Restorative, Prosthodontics & Implants"). Keyed by section label.
+  const [activeReferralSection, setActiveReferralSection] = useState(null);
   const [activeConsentCat,  setActiveConsentCat]  = useState(null);
   const [emergencyModal,    setEmergencyModal]    = useState(null);
   const [laWeight,          setLaWeight]          = useState(70);
@@ -698,31 +405,8 @@ export const ClinicalPage = () => {
   const [antibiotics,           setAntibiotics]           = useState([]);
   const [protocolCategories,    setProtocolCategories]    = useState([]);
   const [pils,                  setPils]                  = useState([]);
-  const [pilCats,               setPilCats]               = useState([]);
-  const [activePil,             setActivePil]             = useState(null);
-  const [pilQuery,              setPilQuery]              = useState("");
-  const [pilFilter,             setPilFilter]             = useState("all");
-  const [pilSites,              setPilSites]              = useState([]);
-  const [pilSiteId,             setPilSiteId]             = useState(() => localStorage.getItem("verbilo.pil.siteId") || null);
-  const [consents,              setConsents]              = useState([]);
-  const [consentCats,           setConsentCats]           = useState([]);
-  const [activeConsent,         setActiveConsent]         = useState(null);
-  const [consentQuery,          setConsentQuery]          = useState("");
-  const [consentFilter,         setConsentFilter]         = useState("all");
-  const [referralSpecs,         setReferralSpecs]         = useState([]);
-  const [activeRefDoc,          setActiveRefDoc]          = useState(null);
-  const [brandingOpen,          setBrandingOpen]          = useState(false);
-  const [brandingTick,          setBrandingTick]          = useState(0); // bump to refresh after save
-  const { user } = useAuth();
   const [safeguardingContacts,  setSafeguardingContacts]  = useState([]);
   const [safeguardingDocs,      setSafeguardingDocs]      = useState([]);
-  const [perioQuickRef,         setPerioQuickRef]         = useState([]);
-  const [endoQuickRef,          setEndoQuickRef]          = useState([]);
-  const [iosQuickRef,           setIosQuickRef]           = useState([]);
-  const [whiteningQuickRef,     setWhiteningQuickRef]     = useState([]);
-  const [deconQuickRef,         setDeconQuickRef]         = useState([]);
-  const [radiographyQuickRef,   setRadiographyQuickRef]   = useState([]);
-  const [medEmergQuickRef,      setMedEmergQuickRef]      = useState([]);
 
   useEffect(() => {
     listClinicalTabs().then(setTabs);
@@ -731,65 +415,13 @@ export const ClinicalPage = () => {
     listAntibiotics().then(setAntibiotics);
     listProtocolCategories().then(setProtocolCategories);
     listPils().then(setPils);
-    listPilCategories().then(setPilCats);
-    listConsents().then(setConsents);
-    listConsentCategories().then(setConsentCats);
-    listReferralSpecialties().then(setReferralSpecs);
     listSafeguardingContacts().then(setSafeguardingContacts);
     listSafeguardingDocs().then(setSafeguardingDocs);
-    listPerioQuickRef().then(setPerioQuickRef);
-    listEndoQuickRef().then(setEndoQuickRef);
-    listIosQuickRef().then(setIosQuickRef);
-    listWhiteningQuickRef().then(setWhiteningQuickRef);
-    listDeconQuickRef().then(setDeconQuickRef);
-    listRadiographyQuickRef().then(setRadiographyQuickRef);
-    listMedEmergQuickRef().then(setMedEmergQuickRef);
   }, []);
-
-  // Sites + branding seed (only needed for PIL letterhead). Mirror the
-  // GovernanceShell pattern: fall back to a demo tenant when the auth user
-  // hasn't been enriched yet, so the leaflet UI works in dev / demo flows.
-  const pilUser = user ? {
-    id: user.id ?? user.cognitoId ?? "00000000-0000-0000-0000-000000000001",
-    tenantId: user.tenantId ?? "demo-tenant",
-    siteId:   user.siteId ?? null,
-    username: user.username ?? "dev",
-    role:     user.role ?? "super_admin",
-  } : null;
-
-  useEffect(() => {
-    if (!pilUser) return;
-    ensureSeed(pilUser);
-    ensureDemoBranding(pilUser);
-    setPilSites(listSites(pilUser.tenantId));
-  }, [pilUser?.tenantId, brandingTick]);
-
-  const pilBranding = pilUser ? brandingFor(pilUser.tenantId, pilSiteId) : null;
-  const setActiveSite = (id) => {
-    setPilSiteId(id);
-    if (id) localStorage.setItem("verbilo.pil.siteId", id);
-    else    localStorage.removeItem("verbilo.pil.siteId");
-  };
 
   const activeProto = protocolCategories.find(c => c.id === activeProtoCat);
 
   /* ── Search index ── */
-  const searchableText = (value) => {
-    if (value == null) return "";
-    if (typeof value === "string" || typeof value === "number") return String(value);
-    if (Array.isArray(value)) return value.map(searchableText).join(" ");
-    if (typeof value === "object") return Object.values(value).map(searchableText).join(" ");
-    return "";
-  };
-  const quickReferenceGroups = [
-    { categoryId: "perio", label: "Periodontology", cards: perioQuickRef },
-    { categoryId: "endo", label: "Endodontics", cards: endoQuickRef },
-    { categoryId: "surgery", label: "Oral Surgery", cards: iosQuickRef },
-    { categoryId: "whitening", label: "Whitening", cards: whiteningQuickRef },
-    { categoryId: "ipc", label: "Decontamination & IPC", cards: deconQuickRef },
-    { categoryId: "radiology", label: "Radiography", cards: radiographyQuickRef },
-    { categoryId: "emergency", label: "Medical Emergencies", cards: medEmergQuickRef },
-  ];
   const searchIndex = [
     ...protocolCategories.flatMap(cat => cat.items.map(p => ({
       section: "Protocols", label: cat.label, name: p.name, desc: p.desc,
@@ -807,26 +439,29 @@ export const ClinicalPage = () => {
       section: "Guidelines", label: g.org, name: item.name, desc: item.summary,
       action: () => { setActiveTab("guidelines"); setSearchQuery(""); },
     }))),
-    ...referralPathways.flatMap(r => r.docs.map(d => ({
-      section: "Referrals", label: r.label, name: d.name, desc: `${d.type} · Updated ${d.updated}`,
-      action: () => { setActiveTab("referrals"); setActiveReferral(r.label); setSearchQuery(""); },
-    }))),
+    // VER-46: flatten both shapes — flat `docs` and nested `sections.docs`.
+    ...referralPathways.flatMap((r) => {
+      const flatDocs = r.docs ?? [];
+      const nested = (r.sections ?? []).flatMap((s) =>
+        (s.docs ?? []).map((d) => ({ ...d, _section: s.label })),
+      );
+      return [...flatDocs, ...nested].map((d) => ({
+        section: "Referrals",
+        label: d._section ? `${r.label} → ${d._section}` : r.label,
+        name: d.name,
+        desc: `${d.type} · Updated ${d.updated}`,
+        action: () => {
+          setActiveTab("referrals");
+          setActiveReferral(r.label);
+          if (d._section) setActiveReferralSection(`${r.label}::${d._section}`);
+          setSearchQuery("");
+        },
+      }));
+    }),
     ...safeguardingDocs.map(d => ({
       section: "Safeguarding", label: "Policy Document", name: d.name, desc: `Reviewed ${d.reviewed}`,
       action: () => { setActiveTab("safeguarding"); setSearchQuery(""); },
     })),
-    ...quickReferenceGroups.flatMap(group => group.cards.map(card => ({
-      section: "Chairside Quick Reference",
-      label: group.label,
-      name: card.label,
-      desc: card.summary ?? "",
-      searchText: searchableText(card),
-      action: () => {
-        setActiveTab("protocols");
-        setActiveProtoCat(group.categoryId);
-        setSearchQuery("");
-      },
-    }))),
   ];
 
   const q = searchQuery.trim().toLowerCase();
@@ -834,15 +469,14 @@ export const ClinicalPage = () => {
     ? searchIndex.filter(item =>
         item.name.toLowerCase().includes(q) ||
         item.desc.toLowerCase().includes(q) ||
-        item.label.toLowerCase().includes(q) ||
-        item.searchText?.toLowerCase().includes(q)
+        item.label.toLowerCase().includes(q)
       )
     : [];
 
   return (
     <div>
       <SearchBar
-        placeholder="Search protocols, quick references, consent forms, guidelines..."
+        placeholder="Search protocols, consent forms, guidelines, referral forms..."
         value={searchQuery}
         onChange={setSearchQuery}
       />
@@ -930,25 +564,7 @@ export const ClinicalPage = () => {
             ))}
           </div>
 
-          {/* Chairside Quick Reference cards for clinical specialties.
-              Controlled SOPs live in the Clinical Governance pack — these
-              tabs surface evergreen lookup content for the clinician
-              mid-treatment (no version control, no acknowledgement). */}
-          {activeProtoCat === "perio" ? (
-            <ChairsideQuickRef cards={perioQuickRef} />
-          ) : activeProtoCat === "endo" ? (
-            <ChairsideQuickRef cards={endoQuickRef} />
-          ) : activeProtoCat === "surgery" ? (
-            <ChairsideQuickRef cards={iosQuickRef} />
-          ) : activeProtoCat === "whitening" ? (
-            <ChairsideQuickRef cards={whiteningQuickRef} />
-          ) : activeProtoCat === "ipc" ? (
-            <ChairsideQuickRef cards={deconQuickRef} />
-          ) : activeProtoCat === "radiology" ? (
-            <ChairsideQuickRef cards={radiographyQuickRef} />
-          ) : activeProtoCat === "emergency" ? (
-            <ChairsideQuickRef cards={medEmergQuickRef} />
-          ) : activeProto && (
+          {activeProto && (
             <Card hover={false} className={styles.protoCard}>
               <div className={styles.protoCardHeader}>
                 <div className={styles.protoCardTitleWrap}>
@@ -958,7 +574,7 @@ export const ClinicalPage = () => {
                     <p className={styles.protoCardCount}>{activeProto.items.length} protocols</p>
                   </div>
                 </div>
-                <BtnSecondary style={{ fontSize: 12, padding: "7px 14px" }} disabled title="Bulk protocol download is not available yet">
+                <BtnSecondary style={{ fontSize: 12, padding: "7px 14px" }}>
                   <I name="download" size={13} /> Download All
                 </BtnSecondary>
               </div>
@@ -983,324 +599,100 @@ export const ClinicalPage = () => {
       )}
 
       {/* ══════════════ PATIENT INFORMATION LEAFLETS tab ══════════════ */}
-      {!q && activeTab === "consent" && (() => {
-        const queryLc = pilQuery.trim().toLowerCase();
-        const filtered = pils.filter((p) => {
-          if (pilFilter !== "all" && p.category !== pilFilter) return false;
-          if (!queryLc) return true;
-          const catLabel = pilCats.find((c) => c.slug === p.category)?.label ?? "";
-          return (
-            p.title.toLowerCase().includes(queryLc) ||
-            (p.summary ?? "").toLowerCase().includes(queryLc) ||
-            catLabel.toLowerCase().includes(queryLc)
-          );
-        });
-        return (
+      {!q && activeTab === "consent" && (
         <div className={styles.tabContent}>
-          <div className={styles.pilTopBar}>
-            <p className={styles.guidelineIntro} style={{ margin: 0, flex: 1 }}>
-              <I name="info" size={14} /> A complete library of plain-English patient leaflets, grouped by topic. Click any card to open the leaflet, then print on practice letterhead or save as PDF.
-            </p>
-            {pilSites.length > 0 && (
-              <label className={styles.pilSitePicker} title="Print under this site’s letterhead">
-                <span className={styles.pilSitePickerLabel}>Letterhead</span>
-                <select className={styles.pilSitePickerSelect} value={pilSiteId ?? ""} onChange={(e) => setActiveSite(e.target.value || null)}>
-                  <option value="">Group default</option>
-                  {pilSites.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
-                </select>
-              </label>
-            )}
-            <button className={styles.pilActionBtn} onClick={() => setBrandingOpen(true)}>
-              <I name="settings" size={13} /> Manage branding
-            </button>
-          </div>
-
-          <div className={styles.pilSearchRow}>
-            <div className={styles.pilSearchField}>
-              <I name="search" size={16} color="var(--on-surface-variant)" />
-              <input
-                type="search"
-                className={styles.pilSearchInput}
-                placeholder="Search leaflets by title, topic or description…"
-                value={pilQuery}
-                onChange={(e) => setPilQuery(e.target.value)}
-              />
-              {pilQuery && (
-                <button type="button" className={styles.pilSearchClear} onClick={() => setPilQuery("")} title="Clear search">
-                  <I name="close" size={14} />
-                </button>
-              )}
+          <p className={styles.guidelineIntro}>
+            <I name="info" size={14} /> Consent forms are managed electronically within your practice management software. The leaflets below are for printing or emailing to patients before or after treatment.
+          </p>
+          <Card hover={false} className={styles.pilCard} style={{ maxWidth: 780 }}>
+            <div className={styles.pilHeader}>
+              <h3 className={styles.pilTitle}>Patient Information Leaflets</h3>
+              <span className={styles.pilCount}>{pils.length} leaflets</span>
             </div>
-          </div>
-
-          <div className={styles.pilFilterChips}>
-            <button
-              type="button"
-              className={`${styles.pilChip} ${pilFilter === "all" ? styles.pilChipActive : ""}`}
-              onClick={() => setPilFilter("all")}
-            >
-              All
-              <span className={styles.pilChipCount}>{pils.length}</span>
-            </button>
-            {pilCats.map((cat) => {
-              const count = pils.filter((p) => p.category === cat.slug).length;
-              if (count === 0) return null;
-              const active = pilFilter === cat.slug;
-              return (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  className={`${styles.pilChip} ${active ? styles.pilChipActive : ""}`}
-                  onClick={() => setPilFilter(cat.slug)}
-                  style={active ? { background: cat.color, borderColor: cat.color } : { color: cat.color }}
-                >
-                  <I name={PIL_CATEGORY_ICONS[cat.slug] || "book"} size={13} />
-                  {cat.label}
-                  <span className={styles.pilChipCount}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {filtered.length === 0 && (
-            <div className={styles.pilEmpty}>
-              <div className={styles.pilEmptyTitle}>No leaflets match that search.</div>
-              <div>Try clearing the filters or searching by topic, e.g. "smoking", "implant", "anxiety".</div>
+            <div className={styles.pilList}>
+              {pils.map(p => (
+                <div key={p.name} className={styles.pilRow}>
+                  <div className={styles.pilRowLeft}>
+                    <span className={styles.pilName}>{p.name}</span>
+                    <span className={styles.pilCategory}>{p.category}</span>
+                  </div>
+                  <div className={styles.docActions}>
+                    <button className={styles.docBtn} title="Download"><I name="download" size={13} color="var(--primary)" /></button>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-
-          {pilCats.map((cat) => {
-            const leaflets = filtered.filter((p) => p.category === cat.slug);
-            if (leaflets.length === 0) return null;
-            const catIcon = PIL_CATEGORY_ICONS[cat.slug] || "book";
-            return (
-              <div key={cat.slug} className={styles.pilCategoryGroup}>
-                <div className={styles.pilCategoryHead}>
-                  <span
-                    className={styles.pilCategoryIcon}
-                    style={{ background: `color-mix(in srgb, ${cat.color} 12%, transparent)`, color: cat.color }}
-                  >
-                    <I name={catIcon} size={18} color={cat.color} />
-                  </span>
-                  <span className={styles.pilCategoryNum} style={{ color: cat.color }}>{cat.number}</span>
-                  <span className={styles.pilCategoryLabelLg} style={{ color: cat.color }}>{cat.label}</span>
-                  <span className={styles.pilCategoryCount}>{leaflets.length} leaflet{leaflets.length === 1 ? "" : "s"}</span>
-                </div>
-                <div className={styles.pilGrid}>
-                  {leaflets.map((p) => {
-                    const iconName = resolvePilIcon(p.id, p.category);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className={styles.pilTileBtn}
-                        onClick={async () => { const full = await getPil(p.id); setActivePil(full); }}
-                      >
-                        <div className={styles.pilTileTop}>
-                          <span
-                            className={styles.pilTileIcon}
-                            style={{ background: `color-mix(in srgb, ${cat.color} 12%, transparent)` }}
-                          >
-                            <I name={iconName} size={22} color={cat.color} />
-                          </span>
-                          <div className={styles.pilTileBody}>
-                            <span className={styles.pilTileNum}>Leaflet {p.num}</span>
-                            <div className={styles.pilTileTitle}>{p.title}</div>
-                            {p.summary && <div className={styles.pilTileSummary}>{p.summary}</div>}
-                          </div>
-                        </div>
-                        <div className={styles.pilTileFoot}>
-                          <span className={styles.pilTileFootLabel} style={{ color: cat.color }}>{cat.label}</span>
-                          <span className={styles.pilTileIconBtn} title="View leaflet">
-                            <I name="eye" size={14} />
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-          {activePil && (
-            <PilViewer
-              leaflet={activePil}
-              category={pilCats.find((c) => c.slug === activePil.category)}
-              branding={pilBranding}
-              sites={pilSites}
-              currentSiteId={pilSiteId}
-              onSiteChange={setActiveSite}
-              onManageBranding={() => setBrandingOpen(true)}
-              onClose={() => setActivePil(null)}
-            />
-          )}
-          {brandingOpen && pilUser && (
-            <PilBrandingAdmin
-              user={pilUser}
-              sites={pilSites}
-              onClose={() => setBrandingOpen(false)}
-              onSaved={() => setBrandingTick((n) => n + 1)}
-            />
-          )}
+          </Card>
         </div>
-      );})()}
+      )}
 
       {/* ══════════════ CONSENT FORMS tab ══════════════ */}
-      {!q && activeTab === "consentforms" && (() => {
-        const queryLc = consentQuery.trim().toLowerCase();
-        const filtered = consents.filter((c) => {
-          if (consentFilter !== "all" && c.category !== consentFilter) return false;
-          if (!queryLc) return true;
-          const catLabel = consentCats.find((x) => x.slug === c.category)?.label ?? "";
-          return (
-            c.title.toLowerCase().includes(queryLc) ||
-            (c.summary ?? "").toLowerCase().includes(queryLc) ||
-            (c.documentType ?? "").toLowerCase().includes(queryLc) ||
-            (c.ref ?? "").toLowerCase().includes(queryLc) ||
-            catLabel.toLowerCase().includes(queryLc)
-          );
-        });
-        return (
+      {!q && activeTab === "consentforms" && (
         <div className={styles.tabContent}>
-          <div className={styles.pilTopBar}>
-            <p className={styles.guidelineIntro} style={{ margin: 0, flex: 1 }}>
-              <I name="info" size={14} /> Practice-ready consent forms — click any card to open the fill-and-print version on your practice letterhead.
-            </p>
-            {pilSites.length > 0 && (
-              <label className={styles.pilSitePicker} title="Print under this site's letterhead">
-                <span className={styles.pilSitePickerLabel}>Letterhead</span>
-                <select className={styles.pilSitePickerSelect} value={pilSiteId ?? ""} onChange={(e) => setActiveSite(e.target.value || null)}>
-                  <option value="">Group default</option>
-                  {pilSites.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
-                </select>
-              </label>
-            )}
-            <button className={styles.pilActionBtn} onClick={() => setBrandingOpen(true)}>
-              <I name="settings" size={13} /> Manage branding
-            </button>
-          </div>
-
-          <div className={styles.pilSearchRow}>
-            <div className={styles.pilSearchField}>
-              <I name="search" size={16} color="var(--on-surface-variant)" />
-              <input
-                type="search"
-                className={styles.pilSearchInput}
-                placeholder="Search consent forms by title, treatment or reference…"
-                value={consentQuery}
-                onChange={(e) => setConsentQuery(e.target.value)}
-              />
-              {consentQuery && (
-                <button type="button" className={styles.pilSearchClear} onClick={() => setConsentQuery("")} title="Clear search">
-                  <I name="close" size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.pilFilterChips}>
-            <button
-              type="button"
-              className={`${styles.pilChip} ${consentFilter === "all" ? styles.pilChipActive : ""}`}
-              onClick={() => setConsentFilter("all")}
-            >
-              All
-              <span className={styles.pilChipCount}>{consents.length}</span>
-            </button>
-            {consentCats.map((cat) => {
-              const count = consents.filter((c) => c.category === cat.slug).length;
-              if (count === 0) return null;
-              const active = consentFilter === cat.slug;
+          <p className={styles.guidelineIntro}>
+            <I name="info" size={14} /> These are backup paper consent forms for use when electronic consent via your practice management software is unavailable. Templates are sourced from UK professional bodies — click the source badge to access the originals.
+          </p>
+          <div className={styles.referralGrid}>
+            {consentCategories.map(cat => {
+              const isOpen = activeConsentCat === cat.label;
               return (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  className={`${styles.pilChip} ${active ? styles.pilChipActive : ""}`}
-                  onClick={() => setConsentFilter(cat.slug)}
-                  style={active ? { background: cat.color, borderColor: cat.color } : { color: cat.color }}
-                >
-                  <I name={CONSENT_CATEGORY_ICONS[cat.slug] || "file"} size={13} />
-                  {cat.label}
-                  <span className={styles.pilChipCount}>{count}</span>
-                </button>
+                <div key={cat.id} className={styles.referralItem}>
+                  <button
+                    className={isOpen ? `${styles.referralToggle} ${styles.referralToggleOpen}` : styles.referralToggle}
+                    onClick={() => setActiveConsentCat(isOpen ? null : cat.label)}
+                  >
+                    <div className={styles.referralToggleLeft}>
+                      <div className={styles.referralToggleIcon}>
+                        <I name={cat.icon} size={16} color={isOpen ? "#fff" : "var(--primary)"} />
+                      </div>
+                      <span>{cat.label}</span>
+                      <span className={styles.consentFormCount}>{cat.forms.length}</span>
+                    </div>
+                    <I name="chevrondown" size={16} color={isOpen ? "#fff" : "var(--on-surface-variant)"}
+                      style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  </button>
+                  {isOpen && (
+                    <div className={styles.referralPanel}>
+                      {cat.forms.map(f => (
+                        <div key={f.name} className={styles.referralDocRow}>
+                          <div className={styles.docIconWrap}>
+                            <I name="file" size={13} color="var(--primary)" />
+                          </div>
+                          <div className={styles.docInfo}>
+                            <span className={styles.docName}>{f.name}</span>
+                            <span className={styles.docMeta}>{f.desc}</span>
+                          </div>
+                          <div className={styles.docActions}>
+                            <a
+                              href={f.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.consentSourceBadge}
+                              style={{ background: SOURCE_CFG[f.source].bg, color: SOURCE_CFG[f.source].color }}
+                              title={`Download template from ${f.source}`}
+                            >
+                              {f.source}
+                            </a>
+                            <a
+                              href={f.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.docBtn}
+                              title="Download template"
+                            >
+                              <I name="download" size={12} color="var(--primary)" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
-
-          {filtered.length === 0 && (
-            <div className={styles.pilEmpty}>
-              <div className={styles.pilEmptyTitle}>No consent forms match that search.</div>
-              <div>Try clearing the filters or searching by treatment, e.g. "implant", "sedation", "child".</div>
-            </div>
-          )}
-
-          {consentCats.map((cat) => {
-            const forms = filtered.filter((c) => c.category === cat.slug);
-            if (forms.length === 0) return null;
-            const catIcon = CONSENT_CATEGORY_ICONS[cat.slug] || "file";
-            return (
-              <div key={cat.slug} className={styles.pilCategoryGroup}>
-                <div className={styles.pilCategoryHead}>
-                  <span
-                    className={styles.pilCategoryIcon}
-                    style={{ background: `color-mix(in srgb, ${cat.color} 12%, transparent)`, color: cat.color }}
-                  >
-                    <I name={catIcon} size={18} color={cat.color} />
-                  </span>
-                  <span className={styles.pilCategoryNum} style={{ color: cat.color }}>{cat.number}</span>
-                  <span className={styles.pilCategoryLabelLg} style={{ color: cat.color }}>{cat.label}</span>
-                  <span className={styles.pilCategoryCount}>{forms.length} form{forms.length === 1 ? "" : "s"}</span>
-                </div>
-                <div className={styles.pilGrid}>
-                  {forms.map((f) => {
-                    const iconName = resolveConsentIcon(f.id, f.category);
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={styles.pilTileBtn}
-                        onClick={async () => { const full = await getConsent(f.id); setActiveConsent(full); }}
-                      >
-                        <div className={styles.pilTileTop}>
-                          <span
-                            className={styles.pilTileIcon}
-                            style={{ background: `color-mix(in srgb, ${cat.color} 12%, transparent)` }}
-                          >
-                            <I name={iconName} size={22} color={cat.color} />
-                          </span>
-                          <div className={styles.pilTileBody}>
-                            <span className={styles.pilTileNum}>Form {f.num}{f.ref ? ` · ${f.ref}` : ""}</span>
-                            <div className={styles.pilTileTitle}>{f.title}</div>
-                            {f.summary && <div className={styles.pilTileSummary}>{f.summary}</div>}
-                          </div>
-                        </div>
-                        <div className={styles.pilTileFoot}>
-                          <span className={styles.pilTileFootLabel} style={{ color: cat.color }}>{cat.label}</span>
-                          <span className={styles.pilTileIconBtn} title="View consent form">
-                            <I name="eye" size={14} />
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-          {activeConsent && (
-            <ConsentViewer
-              consent={activeConsent}
-              category={consentCats.find((c) => c.slug === activeConsent.category)}
-              branding={pilBranding}
-              sites={pilSites}
-              currentSiteId={pilSiteId}
-              onSiteChange={setActiveSite}
-              onManageBranding={() => setBrandingOpen(true)}
-              onClose={() => setActiveConsent(null)}
-            />
-          )}
         </div>
-      );})()}
+      )}
 
       {/* ══════════════ GUIDELINES tab ══════════════ */}
       {!q && activeTab === "guidelines" && (
@@ -1339,9 +731,6 @@ export const ClinicalPage = () => {
           <div className={styles.referralGrid}>
             {referralPathways.map(r => {
               const isOpen = activeReferral === r.label;
-              const packMatch = referralSpecs.find(
-                (s) => s.label.toLowerCase() === r.label.toLowerCase()
-              );
               return (
                 <div key={r.label} className={styles.referralItem}>
                   <button
@@ -1350,98 +739,103 @@ export const ClinicalPage = () => {
                       : `${styles.referralToggle} ${r.urgent ? styles.referralToggleUrgent : ""}`}
                     onClick={() => setActiveReferral(isOpen ? null : r.label)}>
                     <div className={styles.referralToggleLeft}>
-                      <div className={styles.referralToggleIcon}><I name={packMatch?.icon ?? r.icon} size={16} color={r.urgent ? "#fff" : (packMatch?.color ?? "var(--primary)")} /></div>
+                      <div className={styles.referralToggleIcon}><I name={r.icon} size={16} color={r.urgent ? "#fff" : "var(--primary)"} /></div>
                       <span>{r.label}</span>
                       {r.urgent && <span className={styles.urgentPill}>Urgent</span>}
-                      {packMatch && !r.urgent && (
-                        <span className={styles.refPackCardCode} style={{ marginLeft: 4 }}>
-                          {packMatch.documents.length} docs
-                        </span>
-                      )}
                     </div>
                     <I name="chevrondown" size={16} color={isOpen || r.urgent ? "#fff" : "var(--on-surface-variant)"}
                       style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                   </button>
-                  {isOpen && (packMatch ? (
-                    <div className={styles.refPackBody}>
-                      {packMatch.intro && <p className={styles.refPackIntro}>{packMatch.intro}</p>}
-                      <div className={styles.refPackGrid}>
-                        {packMatch.documents.map((d) => (
-                          <button
-                            key={d.id}
-                            type="button"
-                            className={styles.refPackCard}
-                            onClick={async () => {
-                              const full = await getReferralDocument(packMatch.id, d.id);
-                              setActiveRefDoc(full);
-                            }}
-                          >
-                            <div className={styles.refPackCardTop}>
-                              <span
-                                className={styles.refPackCardIcon}
-                                style={{ background: `color-mix(in srgb, ${packMatch.color} 12%, transparent)` }}
-                              >
-                                <I name="file" size={16} color={packMatch.color} />
-                              </span>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div className={styles.refPackCardType}>{d.type}</div>
-                                <div className={styles.refPackCardTitle}>{d.title}</div>
-                              </div>
-                            </div>
-                            {d.purpose && <div className={styles.refPackCardPurpose}>{d.purpose}</div>}
-                            <div className={styles.refPackCardFoot}>
-                              <span className={styles.refPackCardCode}>{d.code}</span>
-                              <span className={styles.refPackCardMeta}>Updated {d.updated}</span>
-                              {d.urgent && <span className={styles.refPackCardUrgent}>Urgent</span>}
-                              {!d.hasContent && !d.urgent && <span className={styles.refPackCardStub}>Stub</span>}
-                              <span className={styles.refPackCardOpen} title="Open document">
-                                <I name="eye" size={13} />
-                              </span>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
+                  {isOpen && (
                     <div className={styles.referralPanel}>
-                      {r.docs.map(d => (
-                        <div key={d.name} className={styles.referralDocRow}>
-                          <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
-                          <div className={styles.docInfo}>
-                            <span className={styles.docName}>{d.name}</span>
-                            <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                      {/* VER-46: nested sub-accordions when the pathway has `sections`. */}
+                      {r.sections ? (
+                        r.sections.map((sec) => {
+                          const secKey = `${r.label}::${sec.label}`;
+                          const secOpen = activeReferralSection === secKey;
+                          const isEmpty = sec.placeholder || !sec.docs?.length;
+                          return (
+                            <div key={sec.label} style={{ marginBottom: 6 }}>
+                              <button
+                                type="button"
+                                onClick={() => setActiveReferralSection(secOpen ? null : secKey)}
+                                style={{
+                                  width: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  background: "var(--surface-lowest)",
+                                  border: "1px solid var(--outline-variant)",
+                                  borderRadius: "var(--radius-md)",
+                                  padding: "10px 12px",
+                                  cursor: "pointer",
+                                  fontFamily: "var(--font-body)",
+                                  fontSize: 14,
+                                  color: "var(--on-surface)",
+                                }}
+                              >
+                                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <I name="chevronright" size={12}
+                                    color="var(--on-surface-variant)"
+                                    style={{ transform: secOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+                                  {sec.label}
+                                </span>
+                                {isEmpty && (
+                                  <span style={{ fontSize: 11, color: "var(--on-surface-variant)" }}>Coming soon</span>
+                                )}
+                              </button>
+                              {secOpen && !isEmpty && (
+                                <div style={{ marginTop: 6 }}>
+                                  {sec.docs.map((d) => (
+                                    <div key={d.name} className={styles.referralDocRow}>
+                                      <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
+                                      <div className={styles.docInfo}>
+                                        <span className={styles.docName}>{d.name}</span>
+                                        <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                                      </div>
+                                      <div className={styles.docActions}>
+                                        <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
+                                        <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {secOpen && isEmpty && (
+                                <p style={{
+                                  margin: "6px 0 0",
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  color: "var(--on-surface-variant)",
+                                  fontFamily: "var(--font-body)",
+                                }}>
+                                  Materials for this section will be added here — radiograph + photo requirements, periodontal charting, consent information, and referral rejection criteria.
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        r.docs.map(d => (
+                          <div key={d.name} className={styles.referralDocRow}>
+                            <div className={styles.docIconWrap}><I name="file" size={13} color="var(--primary)" /></div>
+                            <div className={styles.docInfo}>
+                              <span className={styles.docName}>{d.name}</span>
+                              <span className={styles.docMeta}>{d.type} · Updated {d.updated}</span>
+                            </div>
+                            <div className={styles.docActions}>
+                              <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
+                              <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
+                            </div>
                           </div>
-                          <div className={styles.docActions}>
-                            <button className={styles.docBtn} title="Preview"><I name="eye" size={12} color="var(--primary)" /></button>
-                            <button className={styles.docBtn} title="Download"><I name="download" size={12} color="var(--primary)" /></button>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               );
             })}
           </div>
-          {activeRefDoc && (
-            <ReferralDocViewer
-              doc={activeRefDoc}
-              branding={pilBranding}
-              sites={pilSites}
-              currentSiteId={pilSiteId}
-              onSiteChange={setActiveSite}
-              onManageBranding={() => setBrandingOpen(true)}
-              onClose={() => setActiveRefDoc(null)}
-            />
-          )}
-          {brandingOpen && pilUser && (
-            <PilBrandingAdmin
-              user={pilUser}
-              sites={pilSites}
-              onClose={() => setBrandingOpen(false)}
-              onSaved={() => setBrandingTick((n) => n + 1)}
-            />
-          )}
         </div>
       )}
 
@@ -1489,7 +883,7 @@ export const ClinicalPage = () => {
                 <h3 className={styles.sgCardTitle} style={{ marginBottom: 16 }}><I name="arrow" size={16} color="var(--primary)" /> Reporting Pathway</h3>
                 {[
                   { step: "1", label: "Identify concern",    desc: "Document observations factually in the patient record." },
-                  { step: "2", label: "Discuss with lead",   desc: "Contact the Practice Safeguarding Lead: Maya Manager." },
+                  { step: "2", label: "Discuss with lead",   desc: "Contact the Practice Safeguarding Lead: Mark Thompson." },
                   { step: "3", label: "Refer if necessary",  desc: "Refer to MASH or adult social care. Do not delay if at risk." },
                   { step: "4", label: "Record & follow up",  desc: "Document all actions, decisions, and outcomes in writing." },
                 ].map(s => (
@@ -1510,9 +904,6 @@ export const ClinicalPage = () => {
       {emergencyModal && (
         <EmergencyModal
           type={emergencyModal}
-          emergencyDrugs={emergencyDrugs}
-          laDrugs={laDrugs}
-          antibiotics={antibiotics}
           laWeight={laWeight}
           onWeightChange={setLaWeight}
           onClose={() => setEmergencyModal(null)}

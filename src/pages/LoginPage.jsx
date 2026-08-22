@@ -3,16 +3,19 @@ import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
 import { useAuth } from "../auth/AuthContext";
+import { useTenant } from "../auth/TenantContext";
+import { sectorIcon } from "../lib/sector";
 import styles from "./LoginPage.module.css";
 
 export const LoginPage = ({ onLoggedIn }) => {
   const { login } = useAuth();
+  const { tenant } = useTenant();
+  const sector = tenant?.sector ?? "";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const recoveryUrl = import.meta.env.VITE_PASSWORD_RECOVERY_URL?.trim();
 
   const handleSignIn = async () => {
     if (!username.trim() || !password.trim()) {
@@ -21,7 +24,11 @@ export const LoginPage = ({ onLoggedIn }) => {
     }
     setSubmitting(true);
     try {
-      await login(username.trim(), password, { remember });
+      // VER-54: thread the "Remember my session" checkbox through to
+      // the session storage backend. true → localStorage (persists
+      // across tabs and restarts); false → sessionStorage (default,
+      // expires when the tab closes).
+      await login(username.trim(), password, { persistent: remember });
       onLoggedIn?.();
     } catch (e) {
       setError(e.code === "UNAUTHORIZED" ? "Username or password is incorrect." : "Sign-in failed. Please try again.");
@@ -40,42 +47,37 @@ export const LoginPage = ({ onLoggedIn }) => {
       <div className={styles.shell}>
         <div className={styles.brand}>
           <div className={styles.brandLogo}>
-            <I name="tooth" size={32} color="var(--on-primary)" />
+            <I name={sectorIcon(sector)} size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Dental</span> Group
+            <span className={styles.brandTitleEm}>Ver</span>bilo
           </h1>
-          <p className={styles.brandTagline}>The Clinical Sanctuary</p>
+          <p className={styles.brandTagline}>Built for multi-site healthcare operators</p>
           <div className={styles.brandRule} />
         </div>
 
         <Card hover={false} style={{ padding: "40px 36px" }}>
           {/* Username */}
-          <label className={styles.fieldLabel} htmlFor="login-username">Username</label>
+          <label className={styles.fieldLabel}>Username</label>
           <div className={`${styles.inputWrap} ${error ? styles.inputWrapErr : ""}`}>
             <I name="person" size={15} />
             <input
-              id="login-username"
               className={styles.input}
-              type="text"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError(""); }}
               onKeyDown={handleKey}
-              placeholder="Your username"
+              placeholder="e.g. j.smith"
               autoComplete="username"
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
           {/* Password */}
           <div className={styles.passwordHeader}>
-            <label className={styles.passwordLabel} htmlFor="login-password">Password</label>
+            <label className={styles.passwordLabel}>Password</label>
           </div>
           <div className={`${styles.inputWrap} ${error ? styles.inputWrapErr : ""}`}>
             <I name="lock" size={15} />
             <input
-              id="login-password"
               className={styles.input}
               type="password"
               value={password}
@@ -83,14 +85,12 @@ export const LoginPage = ({ onLoggedIn }) => {
               onKeyDown={handleKey}
               placeholder="••••••••••••"
               autoComplete="current-password"
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className={styles.errorMsg} id="login-error" role="alert">
+            <div className={styles.errorMsg}>
               <I name="alert" size={13} /> {error}
             </div>
           )}
@@ -117,21 +117,16 @@ export const LoginPage = ({ onLoggedIn }) => {
             <p className={styles.dividerText}>
               <I name="lock" size={13} /> New staff? Contact your Practice Manager to request access.
             </p>
-            <p className={styles.dividerText}>
-              <I name="help" size={13} />{" "}
-              {recoveryUrl
-                ? <a className={styles.recoveryLink} href={recoveryUrl}>Forgotten your password?</a>
-                : <>Forgotten your password? Contact your Practice Manager using your organisation's approved recovery process.</>}
-            </p>
           </div>
         </Card>
 
         <div className={styles.footer}>
           <p className={styles.footerHeading}>Authorised Personnel Only</p>
-          {/* Static "System Status: Fully Operational" pill removed — it was a
-              fabricated signal with no health check behind it. Reinstate only
-              when wired to a real status endpoint. */}
-          <p className={styles.copyright}>© 2026 BrainPower Technologies Ltd. All rights reserved.</p>
+          <div className={styles.statusPill}>
+            <div className={styles.statusDot} />
+            <span className={styles.statusLabel}>System Status: Fully Operational</span>
+          </div>
+          <p className={styles.copyright}>© {new Date().getFullYear()} Verbilo Ltd. All rights reserved.</p>
         </div>
       </div>
     </div>

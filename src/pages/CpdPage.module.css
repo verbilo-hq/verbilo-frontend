@@ -29,14 +29,13 @@
 }
 
 .overviewStat {
-  box-shadow: var(--shadow-card);
-  background: var(--surface-lowest);
+  background: var(--surface-container);
   border-radius: var(--radius-md);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border: 1px solid transparent;
+  border: 1px solid var(--surface-container);
 }
 
 .overviewStatVal {
@@ -63,8 +62,8 @@
 }
 
 .overviewFilter {
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  border-radius: 9999px;
   border: 1px solid var(--surface-container);
   background: var(--surface-lowest);
   color: var(--on-surface-variant);
@@ -85,45 +84,8 @@
   margin-bottom: 32px;
 }
 
-@media (max-width: 1600px) {
-  .overviewStats,
-  .staffCpdGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 900px) {
-  .overviewStats,
-  .staffCpdGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .overviewFilterBar {
-    max-width: 100%;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-  }
-
-  .overviewFilter {
-    flex: 0 0 auto;
-  }
-}
-
-@media (max-width: 520px) {
-  .overviewStats,
-  .staffCpdGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .overviewStat,
-  .staffCpdCard {
-    min-width: 0;
-  }
-}
-
 .staffCpdCard {
-  box-shadow: var(--shadow-card);
-  background: var(--surface-lowest);
+  background: var(--surface-container);
   border-radius: var(--radius-md);
   padding: 16px;
   cursor: pointer;
@@ -253,8 +215,7 @@
 
 .title {
   font-family: var(--font-display);
-  /* 28px/800 — the site-wide page-title standard. */
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 800;
   color: var(--on-surface);
   margin: 0;
@@ -275,13 +236,13 @@
   margin-bottom: 24px;
   padding: 6px;
   background: var(--gradient-primary);
-  border-radius: var(--radius-md);
+  border-radius: 14px;
 }
 
 .roleTab {
   flex: 1;
   padding: 11px 8px;
-  border-radius: var(--radius-pill);
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   font-family: var(--font-display);
@@ -309,16 +270,10 @@
   gap: 24px;
 }
 
-@media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 /* ── CPD Hero Card ── */
 .heroCard {
   background: var(--gradient-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   padding: 28px;
   color: var(--on-primary);
   margin-bottom: 24px;
@@ -422,7 +377,7 @@
   align-items: center;
   gap: 0;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 20px;
 }
@@ -528,7 +483,7 @@
 .trackerIcon {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -790,7 +745,7 @@
 .quickIcon {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   background: rgba(0, 105, 116, 0.07);
   display: flex;
   align-items: center;
@@ -810,7 +765,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -839,7 +794,7 @@
 
 .modalTitle {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
   color: var(--on-surface);
 }
@@ -888,10 +843,11 @@
 
 .formInput,
 .formSelect {
-  padding: 9px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--outline-variant);
-  background-color: var(--surface);
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--surface-high);
+  background: var(--surface-low);
   font-family: var(--font-body);
   font-size: 13px;
   color: var(--on-surface);
@@ -987,7 +943,7 @@
   justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: var(--radius-md);
+  border-radius: 4px;
   background: rgba(0,105,116,0.08);
   margin-left: 6px;
   flex-shrink: 0;
@@ -1201,242 +1157,4 @@
   gap: 10px;
   padding-top: 20px;
   border-top: 1px solid var(--surface-high);
-}
-
-/* ─── Internal CPD Hub tab strip ─────────────────────────────────────────── */
-.cpdTabRow {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 4px 0 22px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--outline-variant);
-}
-.cpdTab {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 14px;
-  background: var(--surface);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-pill);
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--on-surface-variant);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-.cpdTab:hover { color: var(--on-surface); }
-.cpdTabActive {
-  color: var(--primary);
-  border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
-}
-
-/* ─── PDP — summary cards ────────────────────────────────────────────────── */
-.pdpSummaryGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.pdpSummaryCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-}
-.pdpSummaryIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  flex-shrink: 0;
-}
-.pdpSummaryNum {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--on-surface);
-}
-.pdpSummaryLabel {
-  font-size: 11px;
-  color: var(--on-surface-variant);
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-/* ─── PDP — main cards (Goals + Linked Activities) ───────────────────────── */
-.pdpCard {
-  margin-bottom: 14px;
-  padding: 18px;
-}
-.pdpCardHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-/* Goals table grid (Goal | Need | Target | Linked | Status | Reviewed | actions) */
-.pdpGoalsHead, .pdpGoalsRow {
-  display: grid;
-  grid-template-columns: minmax(190px, 1.6fr) minmax(220px, 2.4fr) 110px 70px 110px 110px 32px;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 6px;
-  font-size: 12px;
-}
-.pdpGoalsHead {
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--on-surface-variant);
-  border-bottom: 1px solid var(--outline-variant);
-}
-.pdpGoalsRow {
-  border-bottom: 1px solid var(--outline-variant);
-}
-.pdpGoalsRow:last-child {
-  border-bottom: none;
-}
-
-/* Linked activities grid (Date | Title | Provider | Goal | Hrs | Evidence | Reflection) */
-.pdpActivitiesHead, .pdpActivitiesRow {
-  display: grid;
-  grid-template-columns: 100px minmax(200px, 2fr) minmax(130px, 1.4fr) minmax(150px, 1.6fr) 70px 120px 100px;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 6px;
-  font-size: 12px;
-}
-.pdpActivitiesHead {
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--on-surface-variant);
-  border-bottom: 1px solid var(--outline-variant);
-}
-.pdpActivitiesRow {
-  border-bottom: 1px solid var(--outline-variant);
-}
-.pdpActivitiesRow:last-child {
-  border-bottom: none;
-}
-
-.pdpGoalTitle {
-  font-weight: 600;
-  color: var(--on-surface);
-}
-.pdpDim {
-  color: var(--on-surface-variant);
-}
-.pdpCenter {
-  text-align: center;
-}
-.pdpRowActionBtn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: var(--radius-lg);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.pdpRowActionBtn:hover {
-  background: var(--surface-low);
-}
-
-/* ─── PDP — right column upcoming items ──────────────────────────────────── */
-.pdpUpcomingItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 0;
-  font-size: 12px;
-  color: var(--on-surface);
-  border-top: 1px solid var(--outline-variant);
-}
-.pdpUpcomingItem:first-of-type {
-  border-top: none;
-}
-
-/* ── PDP tab — subtly promoted within the chip strip ─────────────────────── */
-/* Applied when the tab is INACTIVE; the active state still wins via .cpdTabActive */
-.cpdTabPromoted {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--outline-variant));
-}
-.cpdTabPromoted:hover {
-  color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
-}
-.cpdTabBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 6px;
-  margin-left: 2px;
-  border-radius: 99px;
-  background: var(--primary);
-  color: white;
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-/* ── PDP — Suggested Learning Areas (clickable rows) ─────────────────────── */
-.pdpSuggestedRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 9px 0;
-  background: transparent;
-  border: none;
-  border-top: 1px solid rgba(171, 180, 180, 0.07);
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-  transition: color 0.15s;
-}
-.pdpSuggestedRow:first-of-type {
-  border-top: none;
-}
-.pdpSuggestedRow:hover .reqLabel {
-  color: var(--primary);
-}
-
-/* ── Empty state — shared across PDP goals, activity log ──────────────── */
-.pdpEmpty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 48px 24px;
-  text-align: center;
-}
-.pdpEmpty h4 {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 800;
-  margin: 8px 0 4px;
-  color: var(--on-surface);
-}
-.pdpEmpty p {
-  font-size: 12.5px;
-  color: var(--on-surface-variant);
-  margin: 0 0 14px;
-  max-width: 380px;
-  line-height: 1.5;
 }

@@ -2,203 +2,33 @@ import { useState, useEffect } from "react";
 import { I } from "../components/Icon";
 import { Pill } from "../components/ui/Pill";
 import { Card } from "../components/ui/Card";
-import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
+import { BtnPrimary } from "../components/ui/Buttons";
 import { Avatar } from "../components/ui/Avatar";
-import { LiveScroller } from "../components/dashboard/LiveScroller";
-import { PersonaSwitcher } from "../components/dashboard/PersonaSwitcher";
-import { MyActionQueueWidget } from "../components/dashboard/MyActionQueueWidget";
-import { MyActivityPulseWidget } from "../components/dashboard/MyActivityPulseWidget";
-import { StreakWidget } from "../components/dashboard/StreakWidget";
-import { SpotlightWidget } from "../components/dashboard/SpotlightWidget";
-import { MyShiftsWidget } from "../components/dashboard/MyShiftsWidget";
-import { useDashboardPersona } from "../services/dashboard/persona";
-
-/* Personas that see the personal "My Shifts" widget. Manager
- * personas (PM / AM / CD) own the rota and don't consume it as a
- * personal queue, so the widget is hidden for them. */
-const SHIFTS_VISIBLE_PERSONAS = new Set([
-  "dentist", "foundation_dentist", "hygienist", "nurse",
-  "trainee_nurse", "receptionist",
-]);
-import { getTipForToday, getTipCount, getTipIndex } from "../services/dashboard/tipsLibrary";
-
-/* Personas that should see the Live Group Compliance Feed. Clinicians,
- * trainees, hygienists, nurses, receptionists don't need cross-site
- * noise — it's signal for management roles only. */
-const FEED_VISIBLE_PERSONAS = new Set(["practice_manager", "area_manager", "clinical_director"]);
 import { useClickOutside } from "../hooks/useClickOutside";
-import { useIndustry } from "../contexts/IndustryContext";
-import { useAgenda } from "../contexts/AgendaContext";
-import { hasCap, useDevRole } from "../services/devRole";
-import { resolveSiteId, siteName } from "../services/sites";
-import { personName, personAtSiteByRole } from "../services/people";
-import { visibleSites, defaultSiteFor } from "../services/scope";
 import {
   listGroupUpdates, listTips, listLinkIcons, listQuickLinks,
-  fetchNews, listInternalNews, saveInternalNews,
-  listSuggestions, saveSuggestion, dismissSuggestion,
+  fetchNews, getDashboardSummary,
 } from "../services/dashboard.service";
+import { listAnnouncements, deleteAnnouncement } from "../services/announcements.service";
+import { getMyOnboardingActions } from "../services/onboarding.service";
+import { useTenant } from "../auth/TenantContext";
+import { useCapability } from "../auth/AuthContext";
+import { isDemoMode } from "../lib/mode";
+import { ComposeAnnouncementModal } from "./ComposeAnnouncementModal";
 import styles from "./DashboardPage.module.css";
 
-/* ─── Mock compliance state ─────────────────────────────────────────────
- * Mirrors the ManagerPage fixture so the dashboard + Manager Hub stay
- * internally consistent. Production: derive from
- * listAcknowledgements() against the staff directory. */
-const CLINICIAN_PENDING_SIGNATURES = 2;
-
-/* Personal compliance streak — drives the (now-retired) circular
- * progress ring widget. Kept inline as fixture data so the widget
- * is one rebuild away if the brief swings back. */
-const COMPLIANCE_STREAK = {
-  weekPct:   92,    // logs completed / logs expected this rolling 7-day window
-  dayStreak: 6,     // consecutive days with zero outstanding tasks
-};
-
-/* ─── Verbilo Pulse — internal group newsletter card ─────────────────
- * Author + the colleague being welcomed resolve to REAL roster people
- * (services/people.js) and a canonical site (services/sites.js) — no
- * invented personas, no "Crawley". The group newsletter is authored by
- * the company owner; the new joiner is a real London associate. */
-const PULSE_NEW_JOINER = personName("london-dentist-1");          // real associate at London
-const PULSE_JOINER_FIRST = String(PULSE_NEW_JOINER).replace(/^Dr\.?\s+/i, "").split(/\s+/)[0];
-const VERBILO_PULSE = {
-  eyebrow: "VERBILO PULSE",
-  date:    "24 May 2026",
-  title:   `Welcome to our new clinical associate at the ${siteName("site-london")} site!`,
-  body:    `We're thrilled to welcome ${PULSE_NEW_JOINER} to the Dental Group family. ${PULSE_JOINER_FIRST} joins the ${siteName("site-london")} practice this week, bringing five years of restorative experience and a passion for nervous-patient care. Stop by Surgery 2 to say hello if you're on rota.`,
-  author:  personName("company-owner"),
-  role:    "Company Owner",
-  accent:  "#0d7280",
-};
-
-/* ─── Role-Based Action Tiles ──────────────────────────────────────── */
-/* Future: swap these per `devRole` so each persona sees their own
- * top-4 tasks. Today the clinical-team default set works for the
- * full demo cast. `nav` keys must match App.jsx pageComponents. */
-const ROLE_ACTIONS = [
-  {
-    icon: "award", label: "My Personal CPD Tracker",
-    sub:  "Log this week's reflection",
-    nav:  "cpd",
-    accent: "#1565c0",
-    /* `status` drives the live indicator pill rendered at the foot
-     * of the tile. `tone` maps to a colour class (good/warn/info);
-     * omit the field entirely on tiles that have no live metric. */
-    status: { tone: "info", icon: "⏱️", text: "12.5 / 15 Hours Completed" },
-  },
-  {
-    icon: "settings", label: "Autoclave & Sterilisation Logs",
-    sub:  "3 daily readings due",
-    nav:  "logbooks",
-    accent: "#00838f",
-    status: { tone: "good", icon: "🟢", text: "3 / 3 Completed Today" },
-  },
-  {
-    icon: "image", label: "Radiography & IR(ME)R Compliance",
-    sub:  "Image quality audit · Jun",
-    nav:  "governance",
-    accent: "#6a1b9a",
-    status: { tone: "warn", icon: "⚠️", text: "Audit Due in 4 Days" },
-  },
-  {
-    icon: "file", label: "Patient Consent Forms",
-    sub:  "Library + chairside print",
-    nav:  "clinical",
-    accent: "#2e7d32",
-  },
-];
-
-/* ─── Educational Supervisor Workspace fixtures ─────────────────────
- * Mock data for the FD / trainee oversight panel. Mirrors the COPDEND
- * / deanery portfolio shape so the layout reads correctly to a real
- * Educational Supervisor during the demo.
- *
- * In production, all three datasets come from the backend:
- *   ES_TRAINEE       → GET /api/educational-supervisor/me
- *   ES_SAFETY_GATES  → GET /api/trainees/{id}/protocol-acknowledgements
- *   ES_DEANERY       → GET /api/trainees/{id}/portfolio/{term} */
-
-/* ─── Today's Site Health checklist fixture ────────────────────────
- * Replaces the previous CQC Inspection Window countdown — practices
- * don't have constant inspections, so a permanent countdown becomes
- * dead data. This widget surfaces today's outstanding daily logs
- * with interactive checkbox state.
- *
- * The macro count ("3 / 5 Completed") deliberately includes ONE
- * already-completed item that lives outside the visible 4-row
- * shortlist, so the maths stays internally consistent as the user
- * toggles the visible checkboxes:
- *   • initial: 2 visible done + 1 hidden = 3 / 5
- *   • all done: 4 visible done + 1 hidden = 5 / 5 */
-const SITE_CHECKLIST = {
-  totalLogs:       5,
-  hiddenCompleted: 1,
-  items: [
-    { id: "auto",   label: "Surgery 1 & 2 Autoclave Steam Logs",      done: true  },
-    { id: "duwl",   label: "Decontamination Room Water Line Purge",    done: true  },
-    { id: "fridge", label: "Vaccine/Materials Fridge Temperature Log", done: false },
-    { id: "waste",  label: "End-of-Day Clinical Waste Consolidation",  done: false },
-  ],
-};
-
-/* ─── Audit Countdown Tracker fixture (RETIRED — kept as dead
- * data so a future revert is one block away). ───────────────────── */
-// eslint-disable-next-line no-unused-vars
-const AUDIT_COUNTDOWN = {
-  /* Days until the next mock CQC inspection window opens. Could
-   * derive from a real date in future:
-   *   days = Math.ceil((target.getTime() - Date.now()) / 86400000) */
-  days:          45,
-  status:        "CQC INSPECTION WINDOW",
-  /* Per-Phase-2 refinement, the bottom of the widget surfaces the
-   * site's overall readiness score (0-100) as a horizontal mini
-   * progress bar instead of duplicating the outstanding-action list
-   * that already lives in the Practice Manager / CQC hubs. */
-  readinessPct:  84,
-};
-
-/* ─── Live Group Compliance Feed fixture ─────────────────────────────
- * Every `siteId` is a CANONICAL site id (services/sites.js) and every
- * name in a message is a REAL roster person (services/people.js) — the
- * legacy BRIGHTON/CRAWLEY/HOVE/… labels and invented people are gone.
- * The renderer derives the displayed (uppercased) site label via
- * siteName(resolveSiteId(...)) and the feed is filtered to the logged-in
- * user's visible sites before rendering.
- *
- * `when` is parseable by relativeTime(); the renderer prints
- * "{site} • {relativeTime}" inline. */
-const COMPLIANCE_FEED = [
-  { siteId: resolveSiteId("site-southall"),   message: "CORE-01 Medical Emergencies protocol reached 100% team sign-off.",                                 when: new Date(Date.now() - 32 * 60 * 1000).toISOString() },
-  { siteId: resolveSiteId("site-london"),     message: `Weekly Cross-Infection Log successfully submitted by ${personName("london-nurse-1")}.`,            when: new Date(Date.now() - 2 * 3600 * 1000).toISOString() },
-  { siteId: resolveSiteId("site-reading"),    message: "Autoclave 2 daily parameter check signed off — all within spec.",                                  when: new Date(Date.now() - 4 * 3600 * 1000).toISOString() },
-  { siteId: resolveSiteId("site-new-cross"),  message: `${personName("south-dentist-2")} acknowledged CORE-03 Antimicrobial Prescribing.`,                 when: new Date(Date.now() - 5 * 3600 * 1000).toISOString() },
-  { siteId: resolveSiteId("site-manchester"), message: "Reg 19 Fit & Proper Persons audit closed — no actions raised.",                                    when: new Date(Date.now() - 9 * 3600 * 1000).toISOString() },
-  { siteId: resolveSiteId("site-birmingham"), message: `Vaccine fridge temperature log submitted by ${personName("london-lead-nurse")}.`,                  when: new Date(Date.now() - 22 * 3600 * 1000).toISOString() },
-];
-
-/* ─── Relative timestamp formatter ──────────────────────────────────────
- * Maps an ISO date or human string → "2 hours ago" / "Yesterday" /
- * "3 days ago" style. Gracefully falls through to the original string
- * when the input can't be parsed (older fixtures already shipped
- * pre-formatted dates). */
-function relativeTime(input) {
-  if (!input) return "";
-  const d = new Date(input);
-  if (Number.isNaN(d.getTime())) return input;        // pass-through fallback
+// VER-93: human-friendly date for announcement rows on the dashboard.
+// Compact relative form for recent (<7d), absolute thereafter.
+function formatAnnouncementDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
   const diffMs = Date.now() - d.getTime();
-  if (diffMs < 0) return "Just now";
-  const minutes = Math.round(diffMs / 60000);
-  const hours   = Math.round(diffMs / 3600000);
-  const days    = Math.round(diffMs / 86400000);
-  if (minutes < 1)   return "Just now";
-  if (minutes < 60)  return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-  if (hours   < 24)  return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  if (days   === 1)  return "Yesterday";
-  if (days    < 7)   return `${days} days ago`;
-  if (days    < 30) {
-    const w = Math.round(days / 7);
-    return `${w} week${w === 1 ? "" : "s"} ago`;
-  }
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 60) return `${Math.max(1, mins)}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `${days}d ago`;
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
@@ -211,28 +41,105 @@ const TIP_CFG = {
   "Team":         { color: "#6a1b9a", bg: "rgba(106,27,154,0.08)" },
 };
 
-/* ─── Healthcare industry selector (demo only) ───────────────────────────────
-   Cosmetic switcher above the welcome banner. Picking an industry updates
-   the sidebar branding + nav items and the welcome subheading. State lives
-   in IndustryContext so other components (Sidebar) can read it. */
-const IndustryBar = ({ value, industries, onChange }) => (
-  <div className={styles.industryBar}>
-    {industries.map((ind) => {
-      const active = value.id === ind.id;
-      return (
-        <button
-          key={ind.id}
-          type="button"
-          className={active ? `${styles.industryChip} ${styles.industryChipActive}` : styles.industryChip}
-          onClick={() => onChange(ind)}
+/* ─── Summary stat tile (VER-25 live endpoint) ─── */
+function StatTile({ icon, label, value }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "16px 18px",
+        background: "var(--surface-lowest)",
+        border: "1px solid var(--outline-variant)",
+        borderRadius: "var(--radius-lg)",
+        flex: "1 1 0",
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          display: "grid",
+          placeItems: "center",
+          background: "color-mix(in srgb, var(--primary) 12%, transparent)",
+          borderRadius: "var(--radius-md)",
+          flexShrink: 0,
+        }}
+      >
+        <I name={icon} size={18} color="var(--primary)" />
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1, color: "var(--on-surface)" }}>
+          {value}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--on-surface-variant)", marginTop: 4 }}>
+          {label}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStats({ summary, loading, hasError }) {
+  if (loading) {
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          color: "var(--on-surface-variant)",
+          fontSize: 13,
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        Loading practice summary…
+      </div>
+    );
+  }
+  if (hasError) {
+    return (
+      <div
+        style={{
+          padding: "12px 16px",
+          color: "var(--on-surface-variant)",
+          fontSize: 13,
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        Couldn't load the live summary. Refresh to try again.
+      </div>
+    );
+  }
+  if (!summary) return null;
+  const allZero =
+    !summary.patientCount &&
+    !summary.todaysAppointments &&
+    !summary.openTasks &&
+    (summary.recentActivity?.length ?? 0) === 0;
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <StatTile icon="staff"    label="Patients on record"  value={summary.patientCount} />
+        <StatTile icon="calendar" label="Today's appointments" value={summary.todaysAppointments} />
+        <StatTile icon="clipboard" label="Open tasks"           value={summary.openTasks} />
+      </div>
+      {allZero && (
+        <p
+          style={{
+            marginTop: 12,
+            fontSize: 12,
+            color: "var(--on-surface-variant)",
+            fontFamily: "var(--font-body)",
+          }}
         >
-          <I name={ind.icon} size={14} />
-          <span>{ind.label}</span>
-        </button>
-      );
-    })}
-  </div>
-);
+          No activity yet — once patients and appointments are added they'll appear here.
+        </p>
+      )}
+    </div>
+  );
+}
 
 /* ─── Icon picker dropdown ─── */
 const IconSelect = ({ value, onChange, options }) => {
@@ -271,13 +178,356 @@ const IconSelect = ({ value, onChange, options }) => {
 };
 
 
+/* VER-86: Tenant-mode dashboard.
+ *
+ * Slim, honest first-view: real summary stats (live endpoint), setup
+ * checklist derived from observable tenant state, RSS industry news,
+ * group internal news (localStorage; empty until something is posted),
+ * recent activity placeholder. No fake protocols / fake CPD / fake
+ * "Coffee with Dr Sarah Jenkins" / fake tip-of-the-day — those live
+ * in the demo path further down. */
+function TenantDashboard({ currentUser, onNav }) {
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
+  const [liveNews, setLiveNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  // VER-93: real Announcement endpoint replaces the localStorage stub
+  // (`listInternalNews()`). The endpoint already returns rows scoped to
+  // the actor — site users get their site's announcements + company-wide.
+  const [announcements, setAnnouncements] = useState([]);
+  const canCompose = useCapability("announcements.create");
+  const canDelete = useCapability("announcements.delete");
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryError, setSummaryError] = useState(false);
+
+  const refreshAnnouncements = () =>
+    listAnnouncements().then((r) => setAnnouncements(r?.items ?? []));
+  // VER-91: actions list comes from /users/me/onboarding-actions. Null
+  // while loading, [] when nothing to do (platform actors or fully
+  // onboarded tenants), or an array of action items.
+  const [actions, setActions] = useState(null);
+
+  useEffect(() => {
+    getDashboardSummary()
+      .then((data) => { setSummary(data); setSummaryError(false); })
+      .catch(() => { setSummary(null); setSummaryError(true); });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMyOnboardingActions()
+      .then((data) => {
+        if (cancelled) return;
+        setActions(Array.isArray(data?.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Endpoint not reachable / 401 — just hide the checklist rather
+        // than blocking the rest of the dashboard.
+        setActions([]);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchNews().then((items) => {
+      if (cancelled) return;
+      setLiveNews(items);
+      setNewsLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    listAnnouncements()
+      .then((r) => { if (!cancelled) setAnnouncements(r?.items ?? []); })
+      .catch(() => { if (!cancelled) setAnnouncements([]); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const dateDay  = now.toLocaleDateString("en-GB", { weekday: "long" });
+  const dateFull = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+  // VER-91: setup checklist now driven by /users/me/onboarding-actions.
+  // While the request is in flight `actions` is null; once it resolves
+  // we have an array (possibly empty). Hide the card entirely if the
+  // list is empty OR everything is done — no point cluttering a fully-
+  // onboarded dashboard.
+  const checklistItems = actions ?? [];
+  const checklistRemaining = checklistItems.filter((i) => !i.done).length;
+
+  const displayNews = newsLoading ? [] : liveNews;
+
+  return (
+    <div>
+      {/* Welcome banner */}
+      <div className={styles.welcome}>
+        <div className={styles.welcomeText}>
+          <h1 className={styles.welcomeTitle}>{greeting}, {currentUser?.displayName}.</h1>
+          <p className={styles.welcomeSub}>Here's what's happening at {tenantName} today.</p>
+        </div>
+        <div className={styles.welcomeDate}>
+          <span className={styles.welcomeDateDay}>{dateDay}</span>
+          <span className={styles.welcomeDateFull}>{dateFull}</span>
+        </div>
+      </div>
+
+      {/* Real summary stats (live endpoint) */}
+      <SummaryStats summary={summary} loading={summary === null && !summaryError} hasError={summaryError} />
+
+      {/* Setup checklist — hides once everything's done */}
+      {checklistRemaining > 0 && (
+        <SetupChecklist items={checklistItems} remaining={checklistRemaining} onNav={onNav} />
+      )}
+
+      {/* News & Updates (Industry RSS + internal Group posts) + Recent activity empty state */}
+      <div className={styles.bottomGrid}>
+        <Card hover={false} className={styles.newsCard}>
+          <div className={styles.cardHeader}>
+            <h3 className={styles.cardHeading}>
+              <I name="zap" size={16} color="var(--primary)" /> News & Updates
+            </h3>
+          </div>
+
+          <div className={styles.newsSectionLabel}>
+            <span>Industry</span>
+            {!newsLoading && <span className={styles.liveTag}><span className={styles.liveDot} /> Live</span>}
+          </div>
+
+          {newsLoading ? (
+            <div className={styles.newsList}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.newsRow}>
+                  <div className={styles.skeletonIcon} />
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.skeletonLine} style={{ width: "40%", marginBottom: 8 }} />
+                    <div className={styles.skeletonLine} style={{ width: "85%", marginBottom: 6 }} />
+                    <div className={styles.skeletonLine} style={{ width: "65%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {displayNews.map((n, idx) => (
+                <a
+                  key={idx}
+                  className={styles.newsRow}
+                  href={n.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className={styles.newsIconWrap} style={{ background: n.bg }}>
+                    <I name={n.icon} size={15} color={n.color} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg={n.bg} color={n.color} small>{n.tag}</Pill>
+                      <span className={styles.newsDate}>{n.date}</span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{n.title}</h4>
+                    <p className={styles.newsDesc}>{n.desc}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+
+          <div className={styles.newsSectionDivider} />
+          <div className={styles.newsSectionLabel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Announcements</span>
+            {canCompose && (
+              <button
+                type="button"
+                onClick={() => setComposeOpen(true)}
+                style={{
+                  background: "none", border: "1px solid var(--outline)",
+                  borderRadius: 6, padding: "4px 10px", fontSize: 12,
+                  cursor: "pointer", color: "var(--on-surface)",
+                }}
+              >
+                + Compose
+              </button>
+            )}
+          </div>
+
+          {announcements.length === 0 ? (
+            <div className={styles.internalEmpty}>
+              <I name="zap" size={15} color="var(--outline)" />
+              <span>No announcements yet. Anything an admin posts will appear here.</span>
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {announcements.map((a) => (
+                <div key={a.id} className={styles.newsRow}>
+                  <div className={styles.newsIconWrap} style={{ background: "rgba(156,39,176,0.08)" }}>
+                    <I name={a.pinned ? "star" : "building"} size={15} color="#9C27B0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>
+                        {a.visibilityScope === "company" ? "Company-wide" : "Site"}
+                      </Pill>
+                      <span className={styles.newsDate}>
+                        {formatAnnouncementDate(a.publishedAt)} · {a.author?.displayName ?? "system"}
+                      </span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{a.title}</h4>
+                    {a.body && <p className={styles.newsDesc}>{a.body}</p>}
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!confirm("Delete this announcement?")) return;
+                          deleteAnnouncement(a.id).then(refreshAnnouncements);
+                        }}
+                        style={{
+                          background: "none", border: "none", padding: 0,
+                          marginTop: 6, fontSize: 11, color: "var(--on-surface-variant)",
+                          cursor: "pointer", textDecoration: "underline",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {composeOpen && (
+          <ComposeAnnouncementModal
+            onCreated={refreshAnnouncements}
+            onClose={() => setComposeOpen(false)}
+          />
+        )}
+
+        {/* Recent activity empty state — replaces the Suggestion Box card in tenant mode */}
+        <Card hover={false} className={styles.suggestionCard}>
+          <div className={styles.suggestionTop}>
+            <div className={styles.suggestionIconWrap}>
+              <I name="clock" size={20} color="var(--primary)" />
+            </div>
+            <h3 className={styles.suggestionTitle}>Recent activity</h3>
+          </div>
+          <p className={styles.suggestionDesc}>
+            Once your team starts using {tenantName} — uploading documents, completing CPD,
+            adding patients — the latest changes will appear here.
+          </p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+/* VER-86: SetupChecklist card. Static items for now; VER-91 replaces
+ * the source with /admin/tenants/:id/onboarding. */
+function SetupChecklist({ items, remaining, onNav }) {
+  const handleClick = (item) => {
+    if (item.nav && onNav) onNav(item.nav);
+  };
+  return (
+    <Card hover={false} style={{ marginBottom: 24, padding: 0, overflow: "hidden" }}>
+      <div style={{ padding: "18px 22px 4px 22px", borderBottom: "1px solid var(--outline-variant)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <h3 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0, fontSize: 16, color: "var(--on-surface)" }}>
+            <I name="checkcircle" size={18} color="var(--primary)" /> Setup checklist
+          </h3>
+          <span style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
+            {remaining} step{remaining === 1 ? "" : "s"} left
+          </span>
+        </div>
+        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: "0 0 14px 0" }}>
+          A short list to get the most out of Verbilo. Tick these off and the card disappears.
+        </p>
+      </div>
+      <div>
+        {items.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => handleClick(item)}
+            disabled={item.done}
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 14,
+              padding: "14px 22px",
+              width: "100%",
+              textAlign: "left",
+              background: "transparent",
+              border: "none",
+              borderTop: "1px solid var(--outline-variant)",
+              cursor: item.done ? "default" : "pointer",
+              opacity: item.done ? 0.65 : 1,
+              font: "inherit",
+            }}
+          >
+            <div
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: "50%",
+                background: item.done ? "var(--primary)" : "var(--surface-container)",
+                display: "grid",
+                placeItems: "center",
+                flexShrink: 0,
+                marginTop: 1,
+              }}
+            >
+              {item.done && <I name="check" size={13} color="white" />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: "var(--on-surface)", textDecoration: item.done ? "line-through" : "none" }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--on-surface-variant)", marginTop: 3 }}>
+                {item.hint}
+              </div>
+            </div>
+            {!item.done && (
+              <I name="arrow" size={14} color="var(--on-surface-variant)" style={{ marginTop: 4 }} />
+            )}
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 export const DashboardPage = ({ currentUser, onNav }) => {
+  // VER-86: in tenant mode (not on demo subdomain + no demo env override),
+  // render the slim honest-empty-state dashboard instead of the
+  // hypothetical-practice fixture-driven one below. The demo path stays
+  // intact for the eventual demo.verbilo.co.uk + for VITE_VERBILO_MODE=demo.
+  if (!isDemoMode()) {
+    return <TenantDashboard currentUser={currentUser} onNav={onNav} />;
+  }
+
+  const { tenant } = useTenant();
+  const tenantName = tenant?.name ?? "your practice";
   const [activeIdx,    setActiveIdx]    = useState(0);
   const [suggestion,   setSuggestion]   = useState("");
   const [submitted,    setSubmitted]    = useState(false);
   const [liveNews,     setLiveNews]     = useState([]);
   const [newsLoading,  setNewsLoading]  = useState(true);
-  const [internalNews, setInternalNews] = useState(() => listInternalNews());
+  // VER-93: real Announcement endpoint replaces the localStorage stub
+  // on the demo path too. Demo subdomain seeds 4 plausible entries.
+  const [announcements, setAnnouncements] = useState([]);
+  const canCompose = useCapability("announcements.create");
+  const canDeleteAnn = useCapability("announcements.delete");
+  const [composeOpen, setComposeOpen] = useState(false);
+  const refreshAnnouncements = () =>
+    listAnnouncements().then((r) => setAnnouncements(r?.items ?? []));
   const [activeItem,   setActiveItem]   = useState(null);
   const [links,         setLinks]         = useState([]);
   const [showManage,    setShowManage]    = useState(false);
@@ -289,106 +539,27 @@ export const DashboardPage = ({ currentUser, onNav }) => {
   const [groupUpdates,  setGroupUpdates]  = useState([]);
   const [tips,          setTips]          = useState([]);
   const [linkIcons,     setLinkIcons]     = useState([]);
-  const { industry, setIndustry, industries } = useIndustry();
-  const [devRole] = useDevRole();
-  /* Global toast + the operational-log completion ledger — completing a
-   * task (agenda drawer or Operational Logs) ripples into the Live feed. */
-  const { ledger, setToast } = useAgenda();
+  const [summary,       setSummary]       = useState(null);
+  const [summaryError,  setSummaryError]  = useState(false);
 
-  /* Verbilo Pulse — the newest AUTHORED post wins; the static fixture is
-   * only the empty-state seed. Management roles compose posts via the
-   * "New post" button on the card. */
-  const pulse = internalNews[0] ?? VERBILO_PULSE;
-  const canManageComms =
-    hasCap(devRole, "view_practice_manager_hub") ||
-    hasCap(devRole, "view_management_hub");
-  const [showPulseComposer, setShowPulseComposer] = useState(false);
-  const [pulseTitle, setPulseTitle] = useState("");
-  const [pulseBody,  setPulseBody]  = useState("");
-  const [suggestionInbox, setSuggestionInbox] = useState(() => listSuggestions());
+  const isAdmin = currentUser?.role === "manager";
 
-  const handlePostPulse = () => {
-    if (!pulseTitle.trim() || !pulseBody.trim()) return;
-    const post = {
-      id:      `pulse-${Date.now()}`,
-      eyebrow: "VERBILO PULSE",
-      date:    new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
-      title:   pulseTitle.trim(),
-      body:    pulseBody.trim(),
-      author:  currentUser?.displayName ?? "—",
-      role:    currentUser?.hrProfile?.jobTitle ?? currentUser?.orgRoleLabel ?? "",
-      accent:  "#0d7280",
-      at:      new Date().toISOString(),
-    };
-    const next = [post, ...internalNews].slice(0, 20);
-    saveInternalNews(next);
-    setInternalNews(next);
-    setPulseTitle("");
-    setPulseBody("");
-    setShowPulseComposer(false);
-    setToast("Pulse update posted to the whole group.");
-  };
-
-  const isAdmin     = currentUser?.role === "manager";
-  /* Role-conditional Mandatory Action banner — clinicians see it,
-   * managers / directors don't. Mirrors the ManagerPage convention. */
-  const isClinician = devRole === "staff";
-
-  /* User can dismiss the banner per session — stays hidden until
-   * page reload (mirrors how toast / nudge banners behave). */
-  const [bannerDismissed, setBannerDismissed] = useState(false);
-
-  /* Today's Site Health widget — interactive checklist state.
-   * Initialised from the fixture's `done` flags; toggle ripples
-   * into the macro "X / 5 Completed" counter via derived counts. */
-  const [siteChecklist, setSiteChecklist] = useState(
-    () => Object.fromEntries(SITE_CHECKLIST.items.map((it) => [it.id, it.done])),
-  );
-  const toggleChecklistItem = (id) =>
-    setSiteChecklist((prev) => ({ ...prev, [id]: !prev[id] }));
-  const checklistVisibleDone = SITE_CHECKLIST.items.filter((it) => siteChecklist[it.id]).length;
-  const checklistTotalDone   = checklistVisibleDone + SITE_CHECKLIST.hiddenCompleted;
-
-  /* Tip carousel state — offset is layered on top of the auto-
-   * rotating dayIndex. Negative steps back through history, positive
-   * forward. Bookmark state is a local Set keyed by tip index so the
-   * star icon flips per-tip. */
-  const [tipOffset,       setTipOffset]       = useState(0);
-  const [bookmarkedTips,  setBookmarkedTips]  = useState(() => new Set());
-
-  const update    = groupUpdates[activeIdx];
-  const dayIndex  = Math.floor(Date.now() / 86400000);
-  /* Persona-aware Tip of the Day — pulls from the 225-tip library
-   * (9 personas × 25 tips). Falls back to the legacy `tips` service
-   * pool only when the library has no entry for the persona (defensive,
-   * shouldn't trigger). Carousel pagination still uses `tipOffset`. */
-  /* `personaMeta.persona` carries the Dental Group-grounded
-   * displayName / firstName / titleSuffix / site fields used by the
-   * personalised welcome bar. */
-  const [personaId, , personaMeta] = useDashboardPersona();
-  const persona = personaMeta.persona;
-  const personaTipCount = getTipCount(personaId);
-  const tipIndex  = getTipIndex(personaId, tipOffset);
-  const todayTip  = getTipForToday(personaId, tipOffset);
-  /* tipCfg drives the icon colour + pill background. The legacy TIP_CFG
-   * lookup keys off category strings — fall back to a generic "info"
-   * config when no match (every new persona's tips have new categories). */
-  const tipCfg    = TIP_CFG[todayTip?.category] ?? {
-    color: "var(--primary)",
-    bg:    "color-mix(in srgb, var(--primary) 12%, transparent)",
-  };
-  const tipIsBookmarked = bookmarkedTips.has(tipIndex);
-  const toggleBookmark  = () => setBookmarkedTips((prev) => {
-    const next = new Set(prev);
-    if (next.has(tipIndex)) next.delete(tipIndex); else next.add(tipIndex);
-    return next;
-  });
+  const update   = groupUpdates[activeIdx];
+  const dayIndex = Math.floor(Date.now() / 86400000);
+  const todayTip = tips.length > 0 ? tips[dayIndex % tips.length] : null;
+  const tipCfg   = todayTip ? TIP_CFG[todayTip.category] : null;
 
   useEffect(() => {
     listGroupUpdates().then(setGroupUpdates);
     listTips().then(setTips);
     listQuickLinks().then(setLinks);
     listLinkIcons().then(setLinkIcons);
+    listAnnouncements()
+      .then((r) => setAnnouncements(r?.items ?? []))
+      .catch(() => setAnnouncements([]));
+    getDashboardSummary()
+      .then((data) => { setSummary(data); setSummaryError(false); })
+      .catch(() => { setSummary(null); setSummaryError(true); });
   }, []);
 
   useEffect(() => {
@@ -411,10 +582,6 @@ export const DashboardPage = ({ currentUser, onNav }) => {
 
   const handleSuggest = () => {
     if (!suggestion.trim()) return;
-    // Persist so the management Suggestion Inbox can actually review it —
-    // anonymous by design (no user identity attached).
-    saveSuggestion(suggestion.trim());
-    setSuggestionInbox(listSuggestions());
     setSubmitted(true);
     setSuggestion("");
     setTimeout(() => setSubmitted(false), 4000);
@@ -457,446 +624,291 @@ export const DashboardPage = ({ currentUser, onNav }) => {
   const dateDay  = now.toLocaleDateString("en-GB", { weekday: "long" });
   const dateFull = now.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-  /* Greeting is the LOGGED-IN user's own identity (not the previewed
-   * persona): their first name + the canonical site they default to,
-   * both via the shared people/scope layer. */
-  const currentUserFirstName =
-    String(currentUser?.displayName ?? "")
-      .replace(/^(Dr\.?|Mr\.?|Mrs\.?|Ms\.?|Miss)\s+/i, "")
-      .trim()
-      .split(/\s+/)[0] || "there";
-  const currentUserSite = siteName(defaultSiteFor(currentUser));
-
-  /* Live Group Compliance Feed is scoped to the sites the logged-in
-   * user is allowed to see (a Practice Manager sees only their site; an
-   * Area Manager their area; group roles everything). Each row's display
-   * label is the canonical, uppercased site name. */
-  const visibleSiteIds = new Set(visibleSites(currentUser).map((s) => s.id));
-  /* Real operational-log completions (AgendaContext ledger) lead the feed,
-   * followed by the seeded history — completing a task in the agenda
-   * drawer or on Operational Logs now ripples straight into this ticker. */
-  const visibleSiteNames = new Set(
-    visibleSites(currentUser).map((s) => s.name.toUpperCase()),
-  );
-  const ledgerFeedItems = ledger
-    .map((l) => ({
-      site: String(l.siteName ?? currentUserSite).toUpperCase(),
-      message: l.status === "alert"
-        ? `${l.template} submitted by ${l.operator} — reading out of range, alert raised.`
-        : `${l.template} completed by ${l.operator}.`,
-      when: l.at ?? l.time,
-    }))
-    .filter((l) => visibleSiteNames.size === 0 || visibleSiteNames.has(l.site));
-  const scopedComplianceFeed = [
-    ...ledgerFeedItems,
-    ...COMPLIANCE_FEED
-      .filter((f) => visibleSiteIds.size === 0 || visibleSiteIds.has(f.siteId))
-      .map((f) => ({ ...f, site: siteName(f.siteId).toUpperCase() })),
-  ];
-
   return (
     <div>
-      {/* ══ Industry switcher — hidden while only one sector is enabled.
-        * `industries` comes from IndustryContext and already contains only
-        * this deployment's enabled sectors (ENABLED_INDUSTRY_IDS); once a
-        * second sector is enabled the bar reappears with no code change. ══ */}
-      {industries.length > 1 && (
-        <IndustryBar value={industry} industries={industries} onChange={setIndustry} />
-      )}
-
-      {/* ══ 0. Welcome Banner — greets the LOGGED-IN user ══
-        * Both lines describe the AUTHENTICATED user (their name, their real
-        * job title, their site). The persona preview only drives the widgets
-        * below and announces itself on the "Previewing as" chip — mixing it
-        * into the identity line made one screen show three different roles. */}
+      {/* ══ 0. Welcome Banner ══ */}
       <div className={styles.welcome}>
         <div className={styles.welcomeText}>
-          <h1 className={styles.welcomeTitle}>
-            {greeting}, {currentUserFirstName}.
-          </h1>
-          <p className={styles.welcomeSub}>
-            {currentUser?.hrProfile?.jobTitle ?? currentUser?.orgRoleLabel ?? "Team member"} · {currentUserSite} · {industry.brand}
-          </p>
+          <h1 className={styles.welcomeTitle}>{greeting}, {currentUser?.displayName}.</h1>
+          <p className={styles.welcomeSub}>Here's what's happening at {tenantName} today.</p>
         </div>
-        <div className={styles.welcomeRight}>
-          {/* PersonaSwitcher — dev/demo chip lets the user preview the
-            * dashboard as any of the 9 personas. Production swap: persona
-            * is resolved from a JWT claim and the chip disappears. */}
-          <PersonaSwitcher />
-          <div className={styles.welcomeDate}>
-            <span className={styles.welcomeDateDay}>{dateDay}</span>
-            <span className={styles.welcomeDateFull}>{dateFull}</span>
-          </div>
+        <div className={styles.welcomeDate}>
+          <span className={styles.welcomeDateDay}>{dateDay}</span>
+          <span className={styles.welcomeDateFull}>{dateFull}</span>
         </div>
       </div>
 
-      {personaMeta.isOverridden && (
-        <div className={styles.previewBanner} role="status">
-          <I name="eye" size={16} color="currentColor" />
-          <div className={styles.previewBannerText}>
-            <strong>Dashboard preview: {persona.label}</strong>
-            <span>{persona.displayName} · {persona.site}. Preview changes dashboard presentation only; your permissions and data scope are unchanged.</span>
+      {/* ══ 0a. Summary stats (VER-25 live endpoint) ══ */}
+      <SummaryStats summary={summary} loading={summary === null && !summaryError} hasError={summaryError} />
+
+      {/* ══ 1. Group Update Hero ══ */}
+      {update && (
+      <div className={styles.hero}>
+        {/* Left: media thumbnail */}
+        <div
+          className={styles.heroMedia}
+          style={{ background: `linear-gradient(145deg, ${update.color} 0%, ${update.color}99 100%)`, cursor: "pointer" }}
+          onClick={() => setActiveItem(update)}
+        >
+          <div className={styles.heroBlob} style={{ background: `${update.color}44` }} />
+          <div className={styles.heroBlob2} style={{ background: `${update.color}33` }} />
+          <div className={styles.heroMediaOverlay} />
+          <div className={styles.heroPlayBtn}>
+            <I name={update.videoSrc ? "play" : "eye"} size={30} color="white" />
           </div>
-          <button type="button" className={styles.previewBannerExit} onClick={personaMeta.clearOverride}>
-            Exit preview
-          </button>
+          {update.duration && (
+            <span className={styles.heroDuration}>{update.duration}</span>
+          )}
         </div>
-      )}
 
-      {/* ══ 0a. Mandatory Action banner (RBAC) ══
-       *
-       * Renders directly under the welcome banner for clinician
-       * roles when there are outstanding mandatory protocol
-       * signatures. Dismissible per-session. The Read & Sign Now
-       * link deep-links to the Clinical Protocols workspace. */}
-      {isClinician && !bannerDismissed && CLINICIAN_PENDING_SIGNATURES > 0 && (
-        <div className={styles.actionBanner} role="alert">
-          <span className={styles.actionBannerIcon} aria-hidden="true">⚠️</span>
-          <div className={styles.actionBannerBody}>
-            <strong>Mandatory Action Required</strong>:{" "}
-            You have {CLINICIAN_PENDING_SIGNATURES} updated Core Clinical Protocol{CLINICIAN_PENDING_SIGNATURES === 1 ? "" : "s"} awaiting your digital signature.
+        {/* Right: content */}
+        <div className={styles.heroContent}>
+          <div className={styles.heroEyebrow}>
+            <Pill bg="rgba(0,0,0,0.12)" color="var(--on-surface-variant)" small>{update.tag}</Pill>
+            <span className={styles.heroDate}>{update.date}</span>
           </div>
-          <button
-            type="button"
-            className={styles.actionBannerCta}
-            onClick={() => onNav?.("clinical_protocols")}
-          >
-            Read &amp; Sign Now <I name="arrow" size={11} color="currentColor" />
-          </button>
-          <button
-            type="button"
-            className={styles.actionBannerDismiss}
-            onClick={() => setBannerDismissed(true)}
-            aria-label="Dismiss action required banner"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* ══ NEW LAYOUT — 65/35 two-column grid below the welcome
-       *   strip. Left column carries the Verbilo Pulse newsletter +
-       *   role-based action tiles; right column stacks the Tip
-       *   carousel, Suggestion Box and Audit Countdown.
-       *
-       *   The previous Group Update Hero, Quick Links bar +
-       *   Streak Widget, and standalone News & Updates card were
-       *   removed per the executive-demo restructure. Their state +
-       *   modals (Manage Quick Links, Article/Video) remain in the
-       *   file as dead code so a future revert is one block away. */}
-      <div className={styles.dashGrid}>
-        <div className={styles.dashLeftCol}>
-          {/* Verbilo Pulse — internal group newsletter. Renders the newest
-            * AUTHORED post (localStorage via dashboard.service); the static
-            * fixture only seeds the empty state. Management roles get the
-            * "New post" composer — the card is genuinely postable. */}
-          <article className={styles.pulseCard} aria-labelledby="pulse-heading">
-            <div className={styles.pulseImage} style={{ background: `linear-gradient(145deg, ${pulse.accent}, ${pulse.accent}aa)` }}>
-              <div className={styles.pulseImageBlob} />
-              <div className={styles.pulseImageIcon} aria-hidden="true">
-                <I name="hearthandshake" size={40} color="rgba(255,255,255,0.92)" />
-              </div>
+          <h2 className={styles.heroTitle}>{update.title}</h2>
+          <p className={styles.heroDesc}>{update.desc}</p>
+          <div className={styles.heroHost}>
+            <Avatar name={update.host} size={30} />
+            <div>
+              <div className={styles.heroHostName}>{update.host}</div>
+              {update.role && <div className={styles.heroHostRole}>{update.role}</div>}
             </div>
-            <div className={styles.pulseBody}>
-              <div className={styles.pulseEyebrow}>
-                <span className={styles.pulseDot} style={{ background: pulse.accent }} />
-                {pulse.eyebrow}
-                <span className={styles.pulseDate}>· {pulse.date}</span>
-                {canManageComms && (
-                  <button
-                    type="button"
-                    onClick={() => setShowPulseComposer(true)}
-                    title="Post a new Pulse update to the whole group"
-                    style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: "var(--radius-pill)", border: "1px solid var(--outline-variant)", background: "var(--surface-low)", fontSize: 11.5, fontWeight: 700, cursor: "pointer", color: "var(--on-surface)" }}
-                  >
-                    <I name="plus" size={12} /> New post
-                  </button>
-                )}
-              </div>
-              <h2 id="pulse-heading" className={styles.pulseTitle}>{pulse.title}</h2>
-              <p className={styles.pulseText}>{pulse.body}</p>
-              <div className={styles.pulseAuthor}>
-                <Avatar name={pulse.author} size={28} />
-                <div className={styles.pulseAuthorText}>
-                  <div className={styles.pulseAuthorName}>{pulse.author}</div>
-                  <div className={styles.pulseAuthorRole}>{pulse.role}</div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          {/* Pulse composer — management-gated; posts persist and render
-            * immediately as the card above. */}
-          {showPulseComposer && (
-            <div
-              onClick={() => setShowPulseComposer(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)", zIndex: 90, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          </div>
+          <div className={styles.heroFooter}>
+            <BtnPrimary
+              style={{ padding: "9px 18px", fontSize: 12 }}
+              onClick={() => setActiveItem(update)}
             >
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-label="Post a Pulse update"
-                onClick={(e) => e.stopPropagation()}
-                style={{ background: "var(--surface)", borderRadius: "var(--radius-lg)", padding: "26px 28px", width: "min(560px, 100%)", boxShadow: "0 24px 64px rgba(15,23,42,0.35)" }}
-              >
-                <h3 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 17 }}>Post a Pulse update</h3>
-                <p style={{ margin: "6px 0 16px", fontSize: 12.5, color: "var(--on-surface-variant)" }}>
-                  Publishes to every team member&apos;s dashboard as the latest Verbilo Pulse, attributed to you.
-                </p>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--on-surface-variant)", marginBottom: 6 }}>Headline</label>
-                <input
-                  value={pulseTitle}
-                  onChange={(e) => setPulseTitle(e.target.value)}
-                  placeholder="e.g. Welcome our new hygienist at Reading"
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--outline-variant)", background: "var(--surface)", fontSize: 13, marginBottom: 14 }}
+              <I name={update.videoSrc ? "play" : "arrow"} size={13} />
+              {update.videoSrc ? "Watch Now" : "Read More"}
+            </BtnPrimary>
+            <div className={styles.heroDots}>
+              {groupUpdates.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIdx(i)}
+                  className={i === activeIdx ? `${styles.heroDot} ${styles.heroDotActive}` : styles.heroDot}
+                  style={i === activeIdx ? { background: update.color } : {}}
                 />
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--on-surface-variant)", marginBottom: 6 }}>Message</label>
-                <textarea
-                  rows={5}
-                  value={pulseBody}
-                  onChange={(e) => setPulseBody(e.target.value)}
-                  placeholder="Write the update the whole group should see…"
-                  style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--outline-variant)", background: "var(--surface)", fontSize: 13, resize: "vertical" }}
-                />
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
-                  <BtnSecondary onClick={() => setShowPulseComposer(false)}>Cancel</BtnSecondary>
-                  <BtnPrimary
-                    onClick={handlePostPulse}
-                    disabled={!pulseTitle.trim() || !pulseBody.trim()}
-                    title={pulseTitle.trim() && pulseBody.trim() ? undefined : "Add a headline and message first"}
-                  >
-                    <I name="send" size={14} /> Post update
-                  </BtnPrimary>
-                </div>
-              </div>
+              ))}
             </div>
-          )}
-
-          {/* MyActionQueue — persona-aware list of "what needs YOU today".
-            * Replaced the previous static 4-tile ROLE_ACTIONS grid which
-            * was hardcoded for all users. Pulls from
-            * services/dashboard/actionQueue.js per personaId. The old
-            * grid JSX is preserved below behind an `{false &&}` guard so
-            * the rollback is one flag flip away. */}
-          <MyActionQueueWidget personaId={personaId} onNav={onNav} />
-
-          {/* MyShifts — Slice PM-4. Personal "next 3 shifts" derived
-            * from the shared rota store. Reactive to any PM edit in
-            * the Rota tab. Hidden for manager personas (PM/AM/CD)
-            * since they OWN the rota rather than consume it. */}
-          {SHIFTS_VISIBLE_PERSONAS.has(personaId) && persona && (
-            <MyShiftsWidget personaDisplayName={persona.displayName} />
-          )}
-
-          {/* MyActivityPulse — per-persona "your week so far" metrics.
-            * 2-up grid of stat cards. All Verbilo-native data. */}
-          <MyActivityPulseWidget personaId={personaId} />
-
-          {false && (
-          <div className={styles.actionTilesGrid} aria-label="Quick actions for your role">
-            {ROLE_ACTIONS.map((a) => (
-              <button
-                key={a.label}
-                type="button"
-                className={styles.actionTile}
-                onClick={() => onNav?.(a.nav)}
-                style={{ "--tile-accent": a.accent }}
-              >
-                <span className={styles.actionTileIcon} style={{ background: `color-mix(in srgb, ${a.accent} 14%, transparent)`, color: a.accent }}>
-                  <I name={a.icon} size={18} color="currentColor" />
-                </span>
-                <div className={styles.actionTileText}>
-                  <span className={styles.actionTileLabel}>{a.label}</span>
-                  <span className={styles.actionTileSub}>{a.sub}</span>
-                  {a.status && (
-                    /* Live status pill — colour comes from the tone
-                     * class (good/warn/info). Sits below the sub
-                     * line so the tile reads label → context →
-                     * live signal in a single vertical scan. */
-                    <span className={`${styles.actionTileStatus} ${styles[`actionTileStatus_${a.status.tone}`]}`}>
-                      <span aria-hidden="true">{a.status.icon}</span>
-                      {a.status.text}
-                    </span>
-                  )}
-                </div>
-                <I name="arrow" size={11} color="var(--on-surface-variant)" />
-              </button>
-            ))}
           </div>
-          )}
+        </div>
+      </div>
+      )}
 
-          {/* Live Group Compliance Feed — manager-only (PM / AM / CD).
-            * Clinicians + reception don't need cross-site noise; their
-            * value comes from MyActionQueue + MyActivityPulse above. */}
-          {FEED_VISIBLE_PERSONAS.has(personaId) && (
-          <Card hover={false} className={styles.feedCard}>
-            <div className={styles.feedHead}>
-              <h3 className={styles.feedHeading}>
-                <I name="activity" size={15} color="var(--primary)" />
-                Live Group Compliance Feed
-              </h3>
-              <span className={styles.feedLive}>
-                <span className={styles.feedLiveDot} /> LIVE
+      {/* ══ 2. Quick Links ══ */}
+      {isAdmin && (
+        <div className={styles.quickLinksBar}>
+          <button className={styles.editLinksBtn} onClick={() => setShowManage(true)}>
+            <I name="edit" size={12} /> Edit Links
+          </button>
+        </div>
+      )}
+      <div className={styles.quickLinks}>
+        {links.map((link, idx) => (
+          <a
+            key={idx}
+            className={styles.quickLink}
+            href={link.href || "#"}
+            target={link.href ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            onClick={link.nav ? (e) => handleQuickLink(link, e) : undefined}
+          >
+            <div className={styles.quickLinkIcon}>
+              <I name={link.icon} size={20} color="var(--primary)" />
+            </div>
+            <span className={styles.quickLinkLabel}>{link.label}</span>
+          </a>
+        ))}
+      </div>
+
+      {/* ══ 3. Tip of the Day ══ */}
+      {todayTip && tipCfg && (
+        <div className={styles.tipCard} style={{ borderLeftColor: tipCfg.color }}>
+          <div className={styles.tipIconWrap} style={{ background: tipCfg.bg }}>
+            <I name="lightbulb" size={22} color={tipCfg.color} />
+          </div>
+          <div className={styles.tipContent}>
+            <div className={styles.tipTop}>
+              <span className={styles.tipLabel}>Tip of the Day</span>
+              <span className={styles.tipPill} style={{ background: tipCfg.bg, color: tipCfg.color }}>
+                {todayTip.category}
               </span>
             </div>
-            {/* LiveScroller — rotates the feed every 4s so it reads
-              * like a real-time activity ticker. Pauses on hover so
-              * the user can finish reading without items moving under
-              * the cursor. Respects prefers-reduced-motion. */}
-            <LiveScroller
-              items={scopedComplianceFeed}
-              visibleCount={4}
-              intervalMs={4000}
-              itemKey={(f) => `${f.site}-${f.message}`}
-              className={styles.feedList}
-              renderItem={(f) => (
-                <div className={styles.feedRow}>
-                  <span className={styles.feedSitePill}>
-                    <span aria-hidden="true">🟢</span> {f.site}
-                  </span>
-                  <span className={styles.feedMessage}>{f.message}</span>
-                  <span className={styles.feedWhen}>{relativeTime(f.when)}</span>
-                </div>
-              )}
-            />
-          </Card>
-          )}
+            <p className={styles.tipText}>{todayTip.tip}</p>
+          </div>
+          <span className={styles.tipCounter}>{(dayIndex % tips.length) + 1} / {tips.length}</span>
         </div>
+      )}
 
-        {/* ─── Right column — sticky daily-engagement stack ─── */}
-        <aside className={styles.dashRightCol} aria-label="Daily engagement">
-          {/* Tip of the Day — moved from previous position */}
-          {todayTip && tipCfg && (
-            <div className={styles.tipCard} style={{ borderLeftColor: tipCfg.color }}>
-              <div className={styles.tipIconWrap} style={{ background: tipCfg.bg }}>
-                <I name="lightbulb" size={22} color={tipCfg.color} />
-              </div>
-              <div className={styles.tipContent}>
-                <div className={styles.tipTop}>
-                  <span className={styles.tipLabel}>Tip of the Day</span>
-                  <span className={styles.tipPill} style={{ background: tipCfg.bg, color: tipCfg.color }}>
-                    {todayTip.category}
-                  </span>
-                </div>
-                <p className={styles.tipText}>{todayTip.tip}</p>
-              </div>
-              <div className={styles.tipControls}>
-                <button
-                  type="button"
-                  className={`${styles.tipBookmarkBtn} ${tipIsBookmarked ? styles.tipBookmarkBtnOn : ""}`}
-                  onClick={toggleBookmark}
-                  aria-pressed={tipIsBookmarked}
-                  aria-label={tipIsBookmarked ? "Remove bookmark" : "Bookmark this tip"}
-                  title={tipIsBookmarked ? "Bookmarked — click to remove" : "Bookmark this tip"}
-                >
-                  <I name="bookmark" size={13} color="currentColor" />
-                </button>
-                <div className={styles.tipPaginator}>
-                  <button type="button" className={styles.tipPagBtn} onClick={() => setTipOffset((o) => o - 1)} aria-label="Previous tip">
-                    <I name="back" size={12} color="currentColor" />
-                  </button>
-                  <span className={styles.tipCounter}>{tipIndex + 1} / {personaTipCount}</span>
-                  <button type="button" className={styles.tipPagBtn} onClick={() => setTipOffset((o) => o + 1)} aria-label="Next tip">
-                    <I name="arrow" size={12} color="currentColor" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* ══ 4. News & Updates + Suggestion Box ══ */}
+      <div className={styles.bottomGrid}>
 
-          {/* Suggestion Box — moved from previous position */}
-          <Card hover={false} className={styles.suggestionCard}>
-            <div className={styles.suggestionTop}>
-              <div className={styles.suggestionIconWrap}>
-                <I name="lightbulb" size={20} color="var(--primary)" />
-              </div>
-              <h3 className={styles.suggestionTitle}>Suggestion Box</h3>
-            </div>
-            <p className={styles.suggestionDesc}>
-              Got an idea to improve the practice? All submissions are anonymous and reviewed weekly by the management team.
-            </p>
-            {submitted ? (
-              <div className={styles.suggestionThanks}>
-                <I name="checkcircle" size={18} color="var(--success)" />
-                <span>Thank you — your suggestion has been submitted.</span>
-              </div>
-            ) : (
-              <>
-                <textarea
-                  rows={4}
-                  placeholder="Share your idea or suggestion..."
-                  className={styles.suggestionTextarea}
-                  value={suggestion}
-                  onChange={e => setSuggestion(e.target.value)}
-                />
-                <BtnPrimary
-                  onClick={handleSuggest}
-                  disabled={!suggestion.trim()}
-                  title={suggestion.trim() ? undefined : "Write a suggestion first"}
-                  style={{ width: "100%", justifyContent: "center", marginTop: 10, fontSize: 13 }}
-                >
-                  <I name="send" size={14} /> Submit Anonymously
-                </BtnPrimary>
-              </>
-            )}
-          </Card>
+        {/* News & Updates */}
+        <Card hover={false} className={styles.newsCard}>
+          <div className={styles.cardHeader}>
+            <h3 className={styles.cardHeading}>
+              <I name="zap" size={16} color="var(--primary)" /> News & Updates
+            </h3>
+          </div>
 
-          {/* Suggestion Inbox — the management side of the anonymous box
-            * above. Submissions persist via dashboard.service and are
-            * reviewed + cleared here, making the "reviewed weekly by the
-            * management team" promise actually true. */}
-          {canManageComms && (
-            <Card hover={false} className={styles.suggestionCard}>
-              <div className={styles.suggestionTop}>
-                <div className={styles.suggestionIconWrap}>
-                  <I name="mail" size={15} color="var(--primary)" />
-                </div>
-                <h3 className={styles.suggestionTitle}>Suggestion Inbox</h3>
-              </div>
-              <p className={styles.suggestionDesc}>
-                {suggestionInbox.length === 0
-                  ? "No suggestions waiting — anonymous submissions from the team appear here."
-                  : `${suggestionInbox.length} anonymous suggestion${suggestionInbox.length === 1 ? "" : "s"} awaiting review.`}
-              </p>
-              {suggestionInbox.slice(0, 6).map((s) => (
-                <div key={s.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "9px 0", borderTop: "1px solid var(--outline-variant)" }}>
+          {/* ── Industry news (live feeds) ── */}
+          <div className={styles.newsSectionLabel}>
+            <span>Industry</span>
+            {!newsLoading && <span className={styles.liveTag}><span className={styles.liveDot} /> Live</span>}
+          </div>
+
+          {newsLoading ? (
+            <div className={styles.newsList}>
+              {[1, 2, 3].map(i => (
+                <div key={i} className={styles.newsRow}>
+                  <div className={styles.skeletonIcon} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--on-surface)" }}>{s.text}</div>
-                    <div style={{ fontSize: 10.5, color: "var(--on-surface-variant)", marginTop: 3 }}>{relativeTime(s.at)}</div>
+                    <div className={styles.skeletonLine} style={{ width: "40%", marginBottom: 8 }} />
+                    <div className={styles.skeletonLine} style={{ width: "85%", marginBottom: 6 }} />
+                    <div className={styles.skeletonLine} style={{ width: "65%" }} />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setSuggestionInbox(dismissSuggestion(s.id))}
-                    title="Mark reviewed and clear"
-                    style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", width: 26, height: 26, borderRadius: "50%", border: "1px solid var(--outline-variant)", background: "var(--surface-low)", cursor: "pointer" }}
-                  >
-                    <I name="check" size={13} color="#2e7d32" />
-                  </button>
                 </div>
               ))}
-            </Card>
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {displayNews.map((n, idx) => (
+                <a
+                  key={idx}
+                  className={styles.newsRow}
+                  href={n.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "none" }}
+                >
+                  <div className={styles.newsIconWrap} style={{ background: n.bg }}>
+                    <I name={n.icon} size={15} color={n.color} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg={n.bg} color={n.color} small>{n.tag}</Pill>
+                      <span className={styles.newsDate}>{n.date}</span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{n.title}</h4>
+                    <p className={styles.newsDesc}>{n.desc}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
           )}
 
-          {/* Spotlight — weekly-rotating "always something fresh" slot.
-            * 6 content pieces per persona, ISO-week-driven rotation,
-            * manual prev/next chevrons for demo flick-through. */}
-          <SpotlightWidget personaId={personaId} onNav={onNav} />
+          {/* ── Announcements (VER-93) ── */}
+          <div className={styles.newsSectionDivider} />
+          <div className={styles.newsSectionLabel} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Announcements</span>
+            {canCompose && (
+              <button
+                type="button"
+                onClick={() => setComposeOpen(true)}
+                style={{
+                  background: "none", border: "1px solid var(--outline)",
+                  borderRadius: 6, padding: "4px 10px", fontSize: 12,
+                  cursor: "pointer", color: "var(--on-surface)",
+                }}
+              >
+                + Compose
+              </button>
+            )}
+          </div>
 
-          {/* Streak widget — persona-aware single big-number cadence
-            * metric. Replaces the previous Today's Site Health checklist
-            * (which was wallpaper for non-managers, duplicated Operational
-            * Logs for managers). Streaks are the strongest known
-            * retention lever in daily SaaS. */}
-          <StreakWidget personaId={personaId} />
-        </aside>
+          {announcements.length === 0 ? (
+            <div className={styles.internalEmpty}>
+              <I name="zap" size={15} color="var(--outline)" />
+              <span>No announcements yet.</span>
+            </div>
+          ) : (
+            <div className={styles.newsList}>
+              {announcements.map((a) => (
+                <div key={a.id} className={styles.newsRow}>
+                  <div className={styles.newsIconWrap} style={{ background: "rgba(156,39,176,0.08)" }}>
+                    <I name={a.pinned ? "star" : "building"} size={15} color="#9C27B0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className={styles.newsTop}>
+                      <Pill bg="rgba(156,39,176,0.08)" color="#9C27B0" small>
+                        {a.visibilityScope === "company" ? "Company-wide" : "Site"}
+                      </Pill>
+                      <span className={styles.newsDate}>
+                        {formatAnnouncementDate(a.publishedAt)} · {a.author?.displayName ?? "system"}
+                      </span>
+                    </div>
+                    <h4 className={styles.newsTitle}>{a.title}</h4>
+                    {a.body && <p className={styles.newsDesc}>{a.body}</p>}
+                    {canDeleteAnn && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!confirm("Delete this announcement?")) return;
+                          deleteAnnouncement(a.id).then(refreshAnnouncements);
+                        }}
+                        style={{
+                          background: "none", border: "none", padding: 0,
+                          marginTop: 6, fontSize: 11, color: "var(--on-surface-variant)",
+                          cursor: "pointer", textDecoration: "underline",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {composeOpen && (
+          <ComposeAnnouncementModal
+            onCreated={refreshAnnouncements}
+            onClose={() => setComposeOpen(false)}
+          />
+        )}
+
+        {/* Suggestion Box */}
+        <Card hover={false} className={styles.suggestionCard}>
+          <div className={styles.suggestionTop}>
+            <div className={styles.suggestionIconWrap}>
+              <I name="lightbulb" size={20} color="var(--primary)" />
+            </div>
+            <h3 className={styles.suggestionTitle}>Suggestion Box</h3>
+          </div>
+          <p className={styles.suggestionDesc}>
+            Got an idea to improve the practice? All submissions are anonymous and reviewed weekly by the management team.
+          </p>
+          {submitted ? (
+            <div className={styles.suggestionThanks}>
+              <I name="checkcircle" size={18} color="var(--success)" />
+              <span>Thank you — your suggestion has been submitted.</span>
+            </div>
+          ) : (
+            <>
+              <textarea
+                rows={5}
+                placeholder="Share your idea or suggestion..."
+                className={styles.suggestionTextarea}
+                value={suggestion}
+                onChange={e => setSuggestion(e.target.value)}
+              />
+              <BtnPrimary
+                onClick={handleSuggest}
+                style={{ width: "100%", justifyContent: "center", marginTop: 12, fontSize: 13 }}
+              >
+                <I name="send" size={14} /> Submit Anonymously
+              </BtnPrimary>
+            </>
+          )}
+        </Card>
+
       </div>
-
-      {/* ── Legacy components retained as dead code (Group Update
-       *    Hero + Quick Links + News Card) — JSX preserved below
-       *    inside an `{false && (…)}` guard so it never renders but
-       *    is one flip away if the brief changes direction again.
-       *    Tip of the Day + Suggestion Box now live inside the
-       *    Right column above, so they are not reproduced here. */}
 
       {/* ══ Manage Quick Links Modal ══ */}
       {showManage && (
@@ -1045,4 +1057,3 @@ export const DashboardPage = ({ currentUser, onNav }) => {
     </div>
   );
 };
-
