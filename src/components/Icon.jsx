@@ -14,6 +14,10 @@ import {
   Upload, Trash2, MoreVertical, Filter, ChevronDown, XCircle,
   CheckSquare, Clock3, Archive, RefreshCw, Cloud, FilePlus,
   UserCheck, ShieldAlert, BarChart3, Layers, Info, ChevronLeft, Phone,
+  Apple, Baby, Cigarette, CigaretteOff, Smile, Pill, Droplets, Moon,
+  Wine, Cookie, Ribbon, Activity, Scan, Wrench, Bone, Scissors,
+  Wind, Bed, Plane, HeartPulse, HeartHandshake, Microscope,
+  Hammer, Construction, Crown, Anchor, X, Printer, Sun, Menu, MapPin,
 } from "lucide-react";
 
 const iconMap = {
@@ -38,6 +42,14 @@ const iconMap = {
   clock3: Clock3, archive: Archive, refresh: RefreshCw, cloud: Cloud,
   fileplus: FilePlus, usercheck: UserCheck, shieldalert: ShieldAlert,
   barchart: BarChart3, layers: Layers, info: Info, back: ChevronLeft, phone: Phone,
+  apple: Apple, baby: Baby, cigarette: Cigarette, nosmoking: CigaretteOff,
+  smile: Smile, pill: Pill, droplets: Droplets, moon: Moon,
+  wine: Wine, cookie: Cookie, ribbon: Ribbon, activity: Activity,
+  scan: Scan, wrench: Wrench, bone: Bone, scissors: Scissors,
+  wind: Wind, bed: Bed, plane: Plane, heartpulse: HeartPulse,
+  hearthandshake: HeartHandshake, microscope: Microscope, sun: Sun,
+  hammer: Hammer, construction: Construction, crown: Crown, anchor: Anchor,
+  close: X, printer: Printer, sparkles: Sparkles, menu: Menu, "map-pin": MapPin,
 };
 
 export const I = ({ name, size = 18, strokeWidth = 1.75, color }) => {

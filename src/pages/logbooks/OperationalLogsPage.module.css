@@ -1,0 +1,919 @@
+/**
+ * OperationalLogsPage styles — page + card grid + status widgets + modal
+ * + Recent Activity Ledger + toast.
+ *
+ * Tokens-first. Sticks to the design system vars (--surface, --primary,
+ * etc.) so dark mode + theme swaps follow the rest of the app without
+ * per-file overrides.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 28px 80px;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ─── Page header ────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.headerMain { flex: 1; min-width: 280px; }
+
+.headerEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+}
+.headerSite {
+  color: var(--on-surface);
+  font-weight: 700;
+}
+
+.headerTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 4px 0 6px;
+  line-height: 1.15;
+}
+
+.headerSub {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+.siteSelector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--on-surface);
+}
+
+.siteSelect {
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  cursor: pointer;
+  outline: none;
+  padding-right: 16px;
+}
+
+/* ─── Status widgets ─────────────────────────────────────────────────── */
+
+.widgetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.widget {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface-lowest);
+  /* Flat white panel: square corners, soft shadow, no borders at all. */
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--shadow-card);
+}
+.widgetIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.widget_good   .widgetIcon { background: color-mix(in srgb, #2e7d32 14%, transparent); color: #1b5e20; }
+.widget_info   .widgetIcon { background: color-mix(in srgb, var(--primary) 14%, transparent); color: var(--primary); }
+.widget_danger .widgetIcon { background: color-mix(in srgb, #c62828 14%, transparent); color: #b71c1c; }
+
+.widgetBody { flex: 1; min-width: 0; }
+.widgetLabel {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+.widgetValue {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin-top: 2px;
+  line-height: 1.1;
+}
+.widget_danger .widgetValue { color: #b71c1c; }
+.widget_good   .widgetValue { color: #1b5e20; }
+.widgetHint {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ─── Card grid ──────────────────────────────────────────────────────── */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px 18px;
+  background: var(--surface-lowest);
+  /* Only a coloured left accent strip — no top/right/bottom border. The
+   * strip colour is set inline per card; left corners flush square so it
+   * runs perpendicular (platform rule). A soft shadow keeps the borderless
+   * white card readable against the white page. */
+  border: none;
+  border-left: 4px solid var(--outline-variant);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.18s, transform 0.12s;
+}
+.card:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+.cardAlert {
+  border-color: color-mix(in srgb, #c62828 45%, var(--outline-variant));
+  background: color-mix(in srgb, #c62828 3%, var(--surface));
+}
+.cardDone {
+  border-color: color-mix(in srgb, #2e7d32 35%, var(--outline-variant));
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardCategory {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.frequencyBadge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+.freqDaily   { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+.freqWeekly  { background: color-mix(in srgb, #a34800 14%, transparent);        color: #934b00; }
+.freqMonthly { background: color-mix(in srgb, #6a1b9a 14%, transparent);        color: #5e1289; }
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.cardFocus {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px dashed var(--outline-variant);
+  padding-top: 10px;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+}
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.statusPillPending { color: var(--on-surface-variant); background: var(--surface-low); }
+.statusPillDone {
+  color: #1b5e20;
+  background: color-mix(in srgb, #2e7d32 14%, transparent);
+}
+.statusPillAlert {
+  color: #b71c1c;
+  background: color-mix(in srgb, #c62828 14%, transparent);
+}
+
+.regulator {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+}
+
+.logBtn {
+  appearance: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  border: none;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.08s;
+}
+.logBtn:hover { transform: translateY(-1px); }
+.logBtnAlert  { background: #c62828; }
+.logBtnIcon   { font-size: 14px; line-height: 1; }
+
+/* ─── Recent Activity Ledger ─────────────────────────────────────────── */
+
+.ledgerSection {
+  background: var(--surface-lowest);
+  /* Flat white panel: square corners, soft shadow, no borders — matches
+   * the log cards + status widgets. */
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 18px 20px 20px;
+  box-shadow: var(--shadow-card);
+}
+.ledgerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ledgerTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 0;
+}
+.ledgerHint {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ─── Smart Filter Bar ────────────────────────────────────────────────
+ * Horizontal control row above the ledger header. Slate-bordered
+ * fields with crisp uppercase labels — matches the minimal aesthetic
+ * used by the rest of the page (eyebrow text + outlined widgets). */
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 18px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--surface-low);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.filterLabel {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+
+.filterSelect,
+.filterDateInput {
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--on-surface);
+  padding: 9px 28px 9px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+.filterSelect:hover,
+.filterDateInput:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--outline-variant));
+}
+.filterSelect:focus-visible,
+.filterDateInput:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+.filterDateInput {
+  padding-right: 12px;            /* date inputs render their own picker icon */
+  background-image: none;
+  cursor: text;
+}
+
+.filterCustomRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.filterDateSep {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  font-weight: 700;
+}
+
+/* ─── Ledger action column ────────────────────────────────────────── */
+
+.ledgerActionHead {
+  width: 110px;
+}
+.ledgerActionCell {
+  text-align: right;
+  white-space: nowrap;
+}
+.ledgerSiteCell {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+
+/* View Entry link-button — mirrors the .viewEntryBtn pattern used in
+ * the Audit & Evidence Centre so the two surfaces feel like one
+ * design system. */
+.ledgerViewBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--on-surface-variant) 35%, transparent);
+  text-underline-offset: 3px;
+  transition: background 0.15s, color 0.12s, text-decoration-color 0.12s;
+}
+.ledgerViewBtn:hover {
+  background: color-mix(in srgb, var(--on-surface-variant) 6%, transparent);
+  color: var(--on-surface);
+  text-decoration-color: var(--on-surface);
+}
+.ledgerViewBtn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.ledgerEmpty {
+  text-align: center;
+  padding: 20px 12px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  font-size: 12.5px;
+}
+
+.ledgerTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.ledgerTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ledgerTable th,
+.ledgerTable td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.ledgerTable th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.ledgerTable tbody tr:last-child td { border-bottom: none; }
+.ledgerTable tbody tr:hover { background: color-mix(in srgb, var(--primary) 3%, transparent); }
+.timeCell {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.ledgerStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+}
+.ledgerStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ledgerStatusPending { color: var(--on-surface-variant); background: var(--surface-low); }
+.ledgerStatusDone    { color: #1b5e20; background: color-mix(in srgb, #2e7d32 14%, transparent); }
+.ledgerStatusAlert   { color: #b71c1c; background: color-mix(in srgb, #c62828 14%, transparent); }
+
+/* ─── Modal ──────────────────────────────────────────────────────────── */
+
+.modalScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 80;
+  animation: scrimIn 0.18s ease-out;
+}
+@keyframes scrimIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: calc(100vh - 48px);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.32);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.modalEyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 3px 0 0;
+  line-height: 1.25;
+}
+
+.modalClose {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.modalClose:hover {
+  background: var(--surface-low);
+  color: var(--on-surface);
+}
+
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Modal fields ────────────────────────────────────────────────── */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fieldBreach {
+  /* visual cue handled by .fieldInputBreach + .fieldBreachMsg below */
+}
+
+.fieldLabel {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  letter-spacing: 0.01em;
+}
+.required {
+  color: #c62828;
+}
+
+.fieldInput {
+  appearance: none;
+  font: inherit;
+  font-size: 13.5px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  width: 100%;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.fieldInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.fieldInputNumeric {
+  /* Widened from 140 → 170px and font reduced 16 → 15px so the
+   * placeholder + the unit suffix both fit without clipping at any
+   * realistic reading length (e.g. "134.5"). */
+  width: 170px;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding-right: 44px;
+}
+/* Smaller placeholder text so even longer copy stays fully visible
+ * without dominating the input visually once a value is typed. */
+.fieldInputNumeric::placeholder {
+  font-size: 12px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--on-surface-variant) 70%, transparent);
+}
+.fieldInputBreach {
+  border-color: #c62828;
+  background: color-mix(in srgb, #c62828 8%, var(--surface));
+  color: #b71c1c;
+}
+
+.numericRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.numericField {
+  position: relative;
+  display: inline-flex;
+}
+.numericUnit {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  pointer-events: none;
+}
+.numericMeta {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+}
+
+.segmented {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  align-self: flex-start;
+}
+.segBtn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 7px 16px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.segBtn:hover { background: var(--surface); color: var(--on-surface); }
+.seg_pass.segBtnActive {
+  background: color-mix(in srgb, #2e7d32 14%, var(--surface));
+  color: #1b5e20;
+  border-color: color-mix(in srgb, #2e7d32 30%, transparent);
+}
+.seg_fail.segBtnActive {
+  background: color-mix(in srgb, #c62828 14%, var(--surface));
+  color: #b71c1c;
+  border-color: color-mix(in srgb, #c62828 30%, transparent);
+}
+.seg_na.segBtnActive {
+  background: var(--surface);
+  color: var(--on-surface);
+  border-color: var(--outline-variant);
+}
+
+.fieldBreachMsg {
+  padding: 9px 12px;
+  background: color-mix(in srgb, #c62828 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, #c62828 35%, var(--outline-variant));
+  border-left: 3px solid #c62828;
+  border-radius: var(--radius-md);
+  color: #b71c1c;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.fieldRegRef {
+  font-size: 10.5px;
+  color: var(--primary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Signature block ─────────────────────────────────────────────── */
+
+.signatureBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface-low));
+  border: 1px dashed color-mix(in srgb, var(--primary) 35%, var(--outline-variant));
+  border-radius: var(--radius-md);
+  margin-top: 6px;
+}
+.signatureInput {
+  appearance: none;
+  font: inherit;
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  width: 100%;
+}
+.signatureInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.signatureHint {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+/* ─── Modal footer ────────────────────────────────────────────────── */
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface);
+}
+.modalFooterStatus {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #ef6c00;
+  font-weight: 600;
+}
+.modalCancelBtn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--outline-variant);
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.modalCancelBtn:hover { background: var(--surface-low); }
+
+/* ─── Archive banner (read-only mode) ────────────────────────────────
+ * Renders at the top of the modal body when LogModal opens in
+ * `readOnly` configuration (View Entry on completed feed rows).
+ * High-contrast dark slate background → white text mimics a
+ * cryptographic security stamp so the legal/ledger context is the
+ * first thing the eye lands on. */
+.archiveBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #1f2937;                   /* slate-800 */
+  color: #f8fafc;                        /* slate-50  */
+  border-radius: var(--radius-md);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  border: 1px solid #0f172a;             /* slate-900 outline */
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+}
+.archiveBanner strong {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #4ade80;                        /* green-400 — pops against slate */
+}
+.archiveBannerLock {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── Disabled / read-only field styling ─────────────────────────────
+ * Every input that LogModal renders carries `disabled` when readOnly
+ * is true. These rules dim them to a calm, locked-but-legible look so
+ * the historical record reads as evidence rather than as broken
+ * inputs. */
+.fieldInput:disabled,
+.fieldInput[readonly] {
+  background: color-mix(in srgb, var(--on-surface-variant) 4%, var(--surface-low));
+  color: var(--on-surface);
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+.signatureInput:disabled,
+.signatureInput[readonly] {
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+  color: var(--on-surface);
+  cursor: not-allowed;
+  opacity: 0.95;
+}
+.segBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+.segBtn:disabled:hover {
+  background: transparent;
+  color: var(--on-surface-variant);
+}
+
+.modalSubmitBtn {
+  appearance: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.08s;
+}
+.modalSubmitBtn:hover:not(:disabled) { transform: translateY(-1px); }
+.modalSubmitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Toast ──────────────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px 12px 14px;
+  background: #1b5e20;
+  color: white;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.28);
+  z-index: 90;
+  animation: toastIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.toastIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────── */
+
+@media (max-width: 880px) {
+  .widgetGrid { grid-template-columns: 1fr; }
+  .page { padding: 18px 14px 80px; }
+  .modal { max-width: none; }
+}

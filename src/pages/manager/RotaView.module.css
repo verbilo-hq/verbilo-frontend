@@ -1,0 +1,1034 @@
+/**
+ * RotaView styles — Slice PM-2.
+ *
+ * Sub-page lives inside the Manager Hub. Two design priorities:
+ *   1. On-screen: PMs scan it daily, so dense + scannable
+ *   2. Print: A4 landscape with thick borders, large type, no chrome
+ *      so the print-out becomes a credible wall-pin artefact
+ */
+
+.rotaPage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 6px 0 60px;
+}
+
+/* ─── Header strip ───────────────────────────────────────────────── */
+
+.rotaHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.rotaHeadMain { flex: 1; min-width: 280px; }
+
+.rotaTitle {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--on-surface);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rotaWeekLabel {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+
+.rotaPublishedLine {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+.rotaDraft {
+  display: inline-block;
+  padding: 2px 8px;
+  background: color-mix(in srgb, #ef6c00 12%, transparent);
+  color: #b65100;
+  border-radius: 999px;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rotaControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rotaNavBtn {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.rotaNavBtn:hover:not(:disabled) {
+  background: var(--surface-low);
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--outline-variant));
+}
+.rotaNavBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rotaPrintBtn {
+  appearance: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.08s, opacity 0.12s;
+  margin-left: 4px;
+}
+.rotaPrintBtn:hover { transform: translateY(-1px); opacity: 0.95; }
+
+/* ─── Summary chips strip ────────────────────────────────────────── */
+
+.rotaSummary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+}
+
+/* Sharp 4px rectangles (was 999px capsules) — matches the
+ * modern-feel refresh applied to PM Hub Overview tab. */
+.summaryChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: var(--radius-md);
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+}
+.summaryChip strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 13.5px;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+}
+.summaryChip_good    { background: color-mix(in srgb, #2e7d32 8%, var(--surface-low));  color: #1b5e20; }
+.summaryChip_good    strong { color: #1b5e20; }
+.summaryChip_info    { background: color-mix(in srgb, var(--primary) 8%, var(--surface-low)); color: var(--primary); }
+.summaryChip_info    strong { color: var(--primary); }
+.summaryChip_warning { background: color-mix(in srgb, #ef6c00 10%, var(--surface-low)); color: #b65100; }
+.summaryChip_warning strong { color: #b65100; }
+.summaryChip_leave   { background: color-mix(in srgb, #6a1b9a 8%, var(--surface-low));  color: #6a1b9a; }
+.summaryChip_leave   strong { color: #6a1b9a; }
+.summaryChip_muted   { background: var(--surface-low); color: var(--on-surface-variant); }
+
+/* ─── The grid ───────────────────────────────────────────────────── */
+
+/* Borderless flat white treatment — matches Overview tab. Vertical
+ * scroll caps the visible grid at ~10 surgeries on standard
+ * viewports; large practices (15+ surgeries) scroll within this
+ * container. The header row sticks via thead's position: sticky
+ * defined below. */
+.rotaGridWrap {
+  width: 100%;
+  max-height: 44vh;                                /* tighter — scroll now engages with standard practice sizes */
+  overflow-x: auto;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 0;
+  border-top: 1px solid var(--outline-variant);    /* anchor line at top for visual definition */
+  border-radius: 0;
+  box-shadow: none;
+  /* Thin custom scrollbar to match modern-feel refresh */
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
+}
+.rotaGridWrap::-webkit-scrollbar              { width: 6px; height: 6px; }
+.rotaGridWrap::-webkit-scrollbar-track        { background: transparent; }
+.rotaGridWrap::-webkit-scrollbar-thumb        { background: var(--outline-variant); border-radius: 999px; }
+.rotaGridWrap::-webkit-scrollbar-thumb:hover  { background: var(--on-surface-variant); }
+
+/* Sticky day-header row when scrolling many surgeries vertically. */
+.rotaGrid thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+
+.rotaGrid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: 880px;
+}
+
+.rotaCornerCell {
+  background: var(--surface-low);
+  border-right: 1px solid var(--outline-variant);
+  border-bottom: 1px solid var(--outline-variant);
+  width: 140px;
+}
+
+.rotaDayHead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  border-right: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+  padding: 10px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+.rotaDayHead:last-child { border-right: none; }
+
+.rotaDayHeadPartial {
+  background: color-mix(in srgb, #ef6c00 5%, var(--surface-low));
+}
+
+.rotaDayLabel {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--on-surface);
+  letter-spacing: 0.02em;
+}
+.rotaDayDate {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 1px;
+}
+.rotaDayBadge {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 6px;
+  background: color-mix(in srgb, #ef6c00 14%, transparent);
+  color: #b65100;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+}
+
+.rotaRoomCell {
+  background: var(--surface-low);
+  border-right: 1px solid var(--outline-variant);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+.rotaGrid tbody tr:last-child .rotaRoomCell { border-bottom: none; }
+
+.rotaRoomLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1.2;
+}
+.rotaRoomKind {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+.rotaRoomKind_dentist   { box-shadow: inset 3px 0 0 var(--primary); }
+.rotaRoomKind_hygiene   { box-shadow: inset 3px 0 0 #ef6c00; }
+.rotaRoomKind_reception { box-shadow: inset 3px 0 0 #6a1b9a; }
+.rotaRoomKind_decon     { box-shadow: inset 3px 0 0 #00838f; }
+
+/* ─── Cells ──────────────────────────────────────────────────────── */
+
+.rotaCell {
+  padding: 10px 12px;
+  border-right: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+  vertical-align: top;
+  background: var(--surface);
+  transition: background 0.12s;
+  min-height: 64px;
+}
+.rotaCell:last-child { border-right: none; }
+.rotaGrid tbody tr:last-child .rotaCell { border-bottom: none; }
+
+.cellPrimary {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+}
+.cellPrimaryRole {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  margin-top: 1px;
+}
+.cellSecondary {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+.cellSecondaryRole {
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+.cellNote {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  margin-top: 4px;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+/* Status tints */
+.cellStaffed { background: var(--surface); }
+.cellPartial { background: color-mix(in srgb, #ef6c00 5%, var(--surface)); }
+.cellCover   { background: color-mix(in srgb, #00838f 5%, var(--surface)); }
+.cellLeave   { background: color-mix(in srgb, #6a1b9a 6%, var(--surface)); }
+.cellOpen    { background: color-mix(in srgb, #ef6c00 10%, var(--surface)); }
+.cellClosed  { background: var(--surface-low); }
+
+.cellOpenLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #b65100;
+}
+.cellLeaveLabel {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6a1b9a;
+}
+.cellCoverLabel {
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  color: #00838f;
+}
+.cellClosedLabel {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--on-surface-variant);
+}
+.cellRolePill {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 7px;
+  background: color-mix(in srgb, #00838f 14%, transparent);
+  color: #006974;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+}
+
+/* ─── Footer / signature row ─────────────────────────────────────── */
+
+.rotaFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  padding: 8px 4px;
+  flex-wrap: wrap;
+}
+
+.rotaSignature {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.rotaSignatureLine {
+  display: inline-block;
+  width: 180px;
+  border-bottom: 1px solid var(--on-surface-variant);
+  height: 14px;
+}
+.rotaSignatureLineShort {
+  display: inline-block;
+  width: 80px;
+  border-bottom: 1px solid var(--on-surface-variant);
+  height: 14px;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+ * PRINT STYLESHEET — A4 landscape, wall-pin artefact.
+ * Strips chrome, enlarges type, ensures all 5 rooms × 6 days fit.
+ * ═════════════════════════════════════════════════════════════════ */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 1cm 1.2cm;
+  }
+
+  /* Hide every element OUTSIDE the rota page (sidebars, app header,
+   * accordions, FAB, toasts, etc.) */
+  body * { visibility: hidden; }
+  .rotaPage,
+  .rotaPage * { visibility: visible; }
+  .rotaPage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+  }
+
+  /* Strip interactive chrome inside the rota itself */
+  .rotaControls,
+  .rotaNavBtn,
+  .rotaPrintBtn { display: none !important; }
+
+  .rotaHead {
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  .rotaTitle      { font-size: 18pt; color: #000; }
+  .rotaWeekLabel  { font-size: 13pt; color: #000; }
+  .rotaPublishedLine { font-size: 9pt; color: #444; }
+
+  .rotaSummary { display: none; }
+
+  .rotaGridWrap {
+    border: 2px solid #000;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .rotaGrid {
+    min-width: 0;
+    font-size: 9pt;
+  }
+  .rotaCornerCell,
+  .rotaDayHead,
+  .rotaRoomCell,
+  .rotaCell {
+    border-color: #000 !important;
+    background: white !important;
+  }
+  .rotaDayHead { background: #f5f5f5 !important; }
+  .rotaRoomCell { background: #f5f5f5 !important; }
+  .rotaDayLabel { color: #000; }
+  .rotaRoomLabel { color: #000; }
+
+  /* Force colour for status cells so red/amber leave/open is
+   * legible on monochrome printers too (light grey background). */
+  .cellOpen    { background: #fff3e0 !important; }
+  .cellLeave   { background: #f3e5f5 !important; }
+  .cellClosed  { background: #eeeeee !important; }
+  .cellPartial { background: #fff8e1 !important; }
+  .cellCover   { background: #e0f2f1 !important; }
+
+  .cellPrimary, .cellSecondary, .cellNote, .cellPrimaryRole {
+    color: #000 !important;
+  }
+
+  .rotaFooter {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1px solid #000;
+    color: #000;
+    font-size: 9pt;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * SLICE PM-3 — additions for editable cells + publish workflow.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Status chip beside the week label ──────────────────────────── */
+
+.rotaWeekLabelRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rotaStatusDraft {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #ef6c00 14%, transparent);
+  color: #b65100;
+}
+.rotaStatusPublished {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #2e7d32 12%, transparent);
+  color: #1b5e20;
+}
+
+/* ─── Publish / Unpublish buttons ────────────────────────────────── */
+
+.rotaPublishBtn {
+  appearance: none;
+  background: #1b5e20;
+  color: white;
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  transition: transform 0.08s, opacity 0.12s;
+}
+.rotaPublishBtn:hover { transform: translateY(-1px); opacity: 0.94; }
+
+.rotaUnpublishBtn {
+  appearance: none;
+  background: var(--surface);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 13px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 4px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.rotaUnpublishBtn:hover {
+  background: var(--surface-low);
+  border-color: color-mix(in srgb, #ef6c00 35%, var(--outline-variant));
+  color: #b65100;
+}
+
+/* ─── Cell editable state ────────────────────────────────────────── */
+
+.rotaCellEditable {
+  cursor: pointer;
+  position: relative;
+}
+.rotaCellEditable:hover {
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+  outline: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: -1px;
+}
+.rotaCellEditable:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 60%, transparent);
+  outline-offset: -2px;
+}
+
+.cellHoverHint {
+  display: block;
+  margin-top: 3px;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.rotaCellEditable:hover .cellHoverHint,
+.rotaCellEditable:focus-visible .cellHoverHint {
+  opacity: 1;
+}
+
+/* ─── Conflict cells ─────────────────────────────────────────────── */
+
+.cellConflict {
+  outline: 2px solid #c62828 !important;
+  outline-offset: -2px !important;
+  background: color-mix(in srgb, #c62828 8%, var(--surface)) !important;
+}
+.cellConflictBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-md);
+  background: #c62828;
+  color: white;
+  align-self: flex-start;
+}
+
+/* ─── AssignCellModal ────────────────────────────────────────────── */
+
+.modalScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 70;
+  animation: rotaModalScrim 0.15s ease-out;
+}
+@keyframes rotaModalScrim {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modalDialog {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: rotaModalIn 0.18s ease-out;
+}
+@keyframes rotaModalIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.modalEyebrow {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+}
+.modalPublishedHint {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: #b65100;
+  font-weight: 600;
+  font-size: 10.5px;
+}
+.modalTitle {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.modalClose {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 6px;
+}
+.modalClose:hover { color: var(--on-surface); }
+
+.modalBody {
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modalFieldLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+.modalInput {
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  transition: border-color 0.15s;
+}
+.modalInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.modalInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modalCheckboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--on-surface);
+  cursor: pointer;
+}
+
+.modalWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, #ef6c00 8%, transparent);
+  border: 1px solid color-mix(in srgb, #ef6c00 30%, transparent);
+  border-radius: var(--radius-md);
+  color: #b65100;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.modalFoot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px;
+  background: var(--surface-low);
+  border-top: 1px solid var(--outline-variant);
+}
+.modalCancelBtn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--outline-variant);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  cursor: pointer;
+}
+.modalCancelBtn:hover { background: var(--surface); }
+.modalSaveBtn {
+  appearance: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.08s, opacity 0.12s;
+}
+.modalSaveBtn:hover { transform: translateY(-1px); opacity: 0.95; }
+
+/* ─── Rota-scoped toast ──────────────────────────────────────────── */
+
+.rotaToast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--on-surface);
+  color: var(--surface);
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
+  z-index: 80;
+  animation: rotaToastIn 0.2s ease-out;
+}
+@keyframes rotaToastIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+ * PRINT — additions: hide hover hints + status chips that aren't
+ * useful on paper.
+ * ═════════════════════════════════════════════════════════════════ */
+
+@media print {
+  .cellHoverHint        { display: none !important; }
+  .rotaStatusDraft,
+  .rotaStatusPublished  { display: none !important; }
+  .rotaPublishBtn,
+  .rotaUnpublishBtn,
+  .modalScrim           { display: none !important; }
+  .cellConflictBadge    { display: inline-block !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+ * Add Space — button in header controls + lightweight modal
+ * ════════════════════════════════════════════════════════════════════ */
+
+.rotaAddSpaceBtn {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 7px 13px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.rotaAddSpaceBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+/* Modal — narrower than the AssignCellModal since the form is short. */
+.addSpaceModal {
+  width: 100%; max-width: 440px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.32);
+}
+
+.addSpaceBody {
+  padding: 18px 22px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.addSpaceField {
+  display: flex; flex-direction: column; gap: 5px;
+}
+.addSpaceLabel {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.addSpaceInput {
+  font: inherit; font-size: 13.5px; font-weight: 500;
+  color: var(--on-surface);
+  background-color: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+}
+.addSpaceInput:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+.addSpaceHint {
+  margin: 4px 0 0;
+  font-size: 11.5px; font-style: italic;
+  color: var(--on-surface-variant);
+}
+
+/* Remove-surgery button — sits absolute top-right of the room cell,
+ * hidden until the row is hovered. Small red ghost on hover so the
+ * intent is obvious without shouting. Print + scope-locked rows
+ * (initial 5) can still be removed — no special protection on
+ * default surgeries; PMs can shape the rota however they like. */
+.rotaRoomCell {
+  position: relative;
+}
+.rotaRoomRemoveBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  width: 20px; height: 20px;
+  border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.rotaGrid tr:hover .rotaRoomRemoveBtn { opacity: 1; }
+.rotaRoomRemoveBtn:hover {
+  background: color-mix(in srgb, #c62828 12%, transparent);
+  color: #c62828;
+}
+.rotaRoomRemoveBtn:focus-visible {
+  opacity: 1;
+  outline: 2px solid color-mix(in srgb, #c62828 40%, transparent);
+  outline-offset: 1px;
+}
+
+@media print {
+  .rotaRoomRemoveBtn { display: none !important; }
+}
+
+/* Reorder controls — tiny up/down chevrons stacked at the top-left
+ * of the room cell. Mirror the trash button's hover-reveal pattern
+ * so the room name stays clean at rest. */
+.rotaRoomRowControls {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.rotaGrid tr:hover .rotaRoomRowControls { opacity: 1; }
+
+.rotaRoomMoveBtn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  width: 18px; height: 12px;
+  border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 8px;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.12s, color 0.12s;
+}
+.rotaRoomMoveBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+.rotaRoomMoveBtn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.rotaRoomMoveBtn:focus-visible {
+  opacity: 1;
+  outline: 2px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  outline-offset: 1px;
+}
+
+@media print {
+  .rotaRoomRowControls { display: none !important; }
+}
+
+/* Click-to-rename label — looks identical to the old static div at
+ * rest, but is a real button (tabbable, click to commit edit state).
+ * Hover shows a subtle background hint so the affordance is
+ * discoverable without an icon. */
+.rotaRoomLabelBtn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+  margin: 0 -2px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1.2;
+  text-align: left;
+  cursor: text;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s;
+}
+.rotaRoomLabelBtn:hover {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.rotaRoomLabelBtn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  outline-offset: 1px;
+}
+
+/* Inline-edit input — sized + styled to feel continuous with the
+ * label (same font weight + size), with a subtle border to confirm
+ * edit mode. */
+.rotaRoomLabelInput {
+  appearance: none;
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--on-surface);
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+  margin: -1px -4px;
+  line-height: 1.2;
+}
+.rotaRoomLabelInput:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 0;
+}
+
+@media print {
+  .rotaRoomLabelBtn,
+  .rotaRoomLabelInput { background: transparent !important; border: 0 !important; cursor: default !important; }
+}

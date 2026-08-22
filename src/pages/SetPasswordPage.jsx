@@ -3,14 +3,10 @@ import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary } from "../components/ui/Buttons";
 import { useAuth } from "../auth/AuthContext";
-import { useTenant } from "../auth/TenantContext";
-import { sectorIcon } from "../lib/sector";
 import styles from "./SetPasswordPage.module.css";
 
 export const SetPasswordPage = ({ onComplete }) => {
   const { user, setPassword } = useAuth();
-  const { tenant } = useTenant();
-  const sector = tenant?.sector ?? "";
   const displayName = user?.displayName;
   const username = user?.username;
   const [pw, setPw] = useState("");
@@ -48,12 +44,12 @@ export const SetPasswordPage = ({ onComplete }) => {
       <div className={styles.shell}>
         <div className={styles.brand}>
           <div className={styles.brandLogo}>
-            <I name={sectorIcon(sector)} size={32} color="var(--on-primary)" />
+            <I name="tooth" size={32} color="var(--on-primary)" />
           </div>
           <h1 className={styles.brandTitle}>
-            <span className={styles.brandTitleEm}>Ver</span>bilo
+            <span className={styles.brandTitleEm}>Dental</span> Group
           </h1>
-          <p className={styles.brandTagline}>Built for multi-site healthcare operators</p>
+          <p className={styles.brandTagline}>The Clinical Sanctuary</p>
           <div className={styles.brandRule} />
         </div>
 

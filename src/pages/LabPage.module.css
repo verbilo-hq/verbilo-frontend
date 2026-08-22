@@ -6,21 +6,6 @@
   margin-bottom: 28px;
 }
 
-/* ── Overdue banner ──────────────────────────────────────────────────────── */
-.overdueBanner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
-  background: rgba(245,124,0,0.1);
-  border: 1px solid rgba(245,124,0,0.3);
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  color: var(--on-surface);
-  margin-bottom: 20px;
-  border-left: 4px solid #b36000;
-}
-
 /* ── Lab contacts ────────────────────────────────────────────────────────── */
 .labContactsCard,
 .labGuidesCard { padding: 20px; }
@@ -177,13 +162,6 @@
 }
 .logCaseBtn:hover { opacity: 0.88; }
 
-.labTrackerCard {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--outline-variant);
-  background: var(--surface);
-  overflow: hidden;
-}
-
 .labTrackerTableHead {
   display: flex;
   align-items: center;
@@ -253,11 +231,6 @@
   text-overflow: ellipsis;
 }
 
-.labSentDate {
-  font-size: 11px;
-  color: var(--on-surface-variant);
-}
-
 .labDueDate {
   font-size: 11px;
   font-weight: 600;
@@ -275,7 +248,7 @@
 .labStatusPill {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
@@ -304,7 +277,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(15, 23, 42, 0.45);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -320,7 +293,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -387,10 +360,11 @@
 }
 
 .labCaseInput {
+  font: inherit;
   padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--surface-container);
-  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface);
   color: var(--on-surface);
   font-size: 13px;
   outline: none;
@@ -434,3 +408,1362 @@
   transition: background 0.12s;
 }
 .labCaseCancelBtn:hover { background: var(--surface-container-low); }
+
+/* ─── KPI summary row ──────────────────────────────────────────────────── */
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin: 6px 0 16px;
+}
+@media (max-width: 1100px) {
+  .kpiRow { grid-template-columns: repeat(3, 1fr); }
+}
+.kpiCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.kpiCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background: rgba(0,105,116,0.08);
+  flex-shrink: 0;
+}
+.kpiCardBody { display: flex; flex-direction: column; min-width: 0; }
+.kpiCardValue {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--on-surface);
+  line-height: 1.1;
+}
+.kpiCardLabel {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* ─── Needs Attention card ────────────────────────────────────────────── */
+.naCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.naCardTitle {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 0 0 2px;
+}
+.naCardSub { font-size: 11.5px; color: var(--on-surface-variant); margin: 0; }
+.naCardCount {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(198,40,40,0.10);
+  color: #c62828;
+  flex-shrink: 0;
+}
+.naList { display: flex; flex-direction: column; }
+.naEmpty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 4px;
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+}
+.naRow {
+  display: grid;
+  grid-template-columns: 22px 1fr 150px 160px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--outline-variant);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.naRow:first-child { border-top: none; }
+.naRow:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.naSeverity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-md);
+}
+.naSeverityHigh { background: rgba(198,40,40,0.10); }
+.naSeverityMed  { background: rgba(245,124,0,0.10); }
+.naBody { min-width: 0; }
+.naTitle { font-size: 13px; font-weight: 700; color: var(--on-surface); }
+.naMuted { color: var(--on-surface-variant); font-weight: 500; }
+.naReason { font-size: 11.5px; color: var(--on-surface-variant); margin-top: 2px; }
+.naMeta { font-size: 11.5px; color: var(--on-surface-variant); }
+.naActionPill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+/* ─── Filter chips above tracker ───────────────────────────────────────── */
+
+/* ─── Stage pill + tracker tweaks ─────────────────────────────────────── */
+.stagePill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  line-height: 1.3;
+}
+.trackerHead {
+  display: flex;
+  padding: 12px 16px;
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.trackerRow {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--outline-variant);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.trackerEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 20px;
+  font-size: 13px;
+  color: var(--on-surface-variant);
+}
+.trackerOpenLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ─── Supporting section heading (Directory + Protocols) ──────────────── */
+.supportSectionTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 28px 0 12px;
+}
+.supportSectionTitle > span:first-child {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: var(--on-surface);
+}
+.supportSectionSub { font-size: 11.5px; color: var(--on-surface-variant); }
+
+/* ─── Enriched lab contact block ──────────────────────────────────────── */
+.labContactBlock {
+  padding: 14px 0;
+  border-top: 1px solid var(--outline-variant);
+}
+.labContactBlock:first-of-type { border-top: none; padding-top: 4px; }
+.labContactTopLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.labContactServices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.labServiceChip {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--primary);
+}
+.labContactMetaGrid {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 3px 12px;
+  font-size: 11.5px;
+}
+.labContactMetaLbl { color: var(--on-surface-variant); font-weight: 600; }
+.labContactMetaVal { color: var(--on-surface); }
+.labContactNotes {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+/* ─── Form section grouping inside Log Case modal ─────────────────────── */
+.formSection {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.formSection:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.formSectionTitle {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: 10px;
+}
+.checklistGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 6px;
+}
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.checkboxRow:hover { background: var(--surface-low); }
+.checkboxRow input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+
+/* ─── Case Detail Drawer ──────────────────────────────────────────────── */
+.drawerScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+  animation: drawerScrimIn 0.18s ease;
+}
+@keyframes drawerScrimIn { from { opacity: 0; } to { opacity: 1; } }
+.drawer {
+  width: min(580px, 100vw);
+  background: var(--surface);
+  height: 100%;
+  overflow-y: auto;
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.12);
+  animation: drawerSlideIn 0.22s cubic-bezier(0.2,0.8,0.2,1);
+}
+@keyframes drawerSlideIn {
+  from { transform: translateX(40px); opacity: 0.3; }
+  to   { transform: translateX(0);    opacity: 1;   }
+}
+.drawerHead {
+  padding: 18px 20px 14px;
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.drawerHeadTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.drawerClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  border-radius: var(--radius-md);
+}
+.drawerClose:hover { background: var(--surface); }
+.drawerRef {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.04em;
+}
+.drawerTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--on-surface);
+  margin: 0;
+}
+.drawerSubtitle {
+  font-size: 12.5px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+.drawerHeadMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.drawerHeadMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.drawerSection {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.drawerSection:last-child { border-bottom: none; }
+.drawerSectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: 10px;
+}
+.drawerChecklistCount {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(0,105,116,0.08);
+  color: var(--primary);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.drawerDl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 18px;
+  margin: 0;
+}
+.drawerDlRow { display: contents; }
+.drawerDlLabel { font-size: 11px; color: var(--on-surface-variant); padding-bottom: 4px; }
+.drawerDlVal {
+  font-size: 12.5px;
+  color: var(--on-surface);
+  margin: 0;
+  padding-bottom: 4px;
+  font-weight: 500;
+}
+.drawerNoteBlock {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--on-surface);
+  line-height: 1.5;
+}
+.drawerNoteLabel {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-right: 6px;
+}
+.drawerChecklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drawerChecklistItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.checkOn, .checkOff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.checkOn  { background: #2e7d32; }
+.checkOff { background: transparent; border: 1.5px solid var(--outline-variant); }
+.checkLabelOn  { color: var(--on-surface); }
+.checkLabelOff { color: var(--on-surface-variant); }
+.drawerActionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.drawerActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drawerActionBtn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+}
+.drawerActionBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.drawerActionBtnPrimary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.drawerActionBtnPrimary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 85%, black);
+  border-color: color-mix(in srgb, var(--primary) 85%, black);
+}
+.drawerTimeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.drawerTimelineRow {
+  position: relative;
+  padding: 6px 0 6px 20px;
+}
+.drawerTimelineRow::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 14px;
+  bottom: -6px;
+  width: 1px;
+  background: var(--outline-variant);
+}
+.drawerTimelineRow:last-child::before { display: none; }
+.drawerTimelineDot {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--primary);
+}
+.drawerTimelineEvent {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+.drawerTimelineMeta {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+.drawerTimelineNote {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Visual refresh (v2) — overrides for the polished mock look.
+ * Keeps all existing class names so JSX stays untouched; just upgrades the
+ * styling. Anything below this line takes precedence due to source order.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+.initialsAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-family: var(--font-display, "Inter", system-ui, sans-serif);
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.kpiCard:hover {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--outline-variant));
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+.kpiCardWarn {
+  border-color: color-mix(in srgb, #c62828 22%, var(--outline-variant));
+  background: linear-gradient(180deg, #fff5f5 0%, var(--surface) 60%);
+}
+
+.overdueBanner {
+  padding: 14px 18px;
+  background: linear-gradient(90deg, #fff3e0 0%, #fff9f0 100%);
+  border: 1px solid rgba(245, 124, 0, 0.18);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  color: #7a3c00;
+  margin: 4px 0 18px;
+}
+
+/* Accent-strip-bearing card: LEFT corners flush square (so the
+ * teal strip runs perpendicular), right corners keep the modern
+ * 6px soft rounding. Platform rule: any card with a left-edge
+ * accent must have its left corners zeroed. */
+.naCard {
+  padding: 18px 20px 16px;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border: 1px solid var(--outline-variant);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 20px;
+}
+
+.naCardRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.naCardRow::-webkit-scrollbar { height: 6px; }
+.naCardRow::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.12); border-radius: var(--radius-pill); }
+.naCardRow::-webkit-scrollbar-track { background: transparent; }
+.naCardItem {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+}
+.naCardItem:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--outline-variant));
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+.naCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.naCardLab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.naCardReason {
+  font-size: 11px;
+  color: #c62828;
+  font-weight: 600;
+  margin-top: 6px;
+  margin-bottom: 10px;
+}
+.naCardBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.labTrackerHeader { align-items: flex-start; margin-bottom: 14px; }
+.trackerOpenCol {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.filterChipActive {
+  background: #006974;
+  color: #ffffff;
+  border-color: #006974;
+}
+
+.stagePill {
+  font-size: 9.5px;
+  padding: 5px 10px;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Headline readiness card (CQC pattern) ─────────────────────────────── */
+.headlineCard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 36px;                              /* matches CQC gaugeLayout gap */
+  align-items: center;
+  padding: 24px;                          /* matches CQC gaugeCard padding */
+  background: var(--surface-lowest);      /* matches CQC surface tone */
+  border: 1px solid var(--surface-high);
+  border-radius: var(--radius-lg);
+  margin: 0 0 20px;                       /* tighter against TopBar above */
+}
+@media (max-width: 760px) {
+  .headlineCard { grid-template-columns: 1fr; gap: 18px; padding: 20px; }
+  .headlineDonutWrap { justify-self: center; }
+}
+.headlineDonutWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+/* Conic-gradient donut — matched to CQC gauge for visual parity:
+ * 164px outer × 120px inner = 22px thick ring. */
+.donut {
+  width: 164px;
+  height: 164px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.6s ease;
+  flex-shrink: 0;
+}
+.donutCenter {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.donutPct {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--on-surface);
+  line-height: 1;
+}
+.donutLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.headlineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+/* All sizes / weights / letter-spacing values below mirror CQCPage's
+ * gauge equivalents (gaugeName, gaugeDesc, bands, gaugeStat*) so the two
+ * cards read as the same component visually. */
+.headlineTitle {
+  font-family: var(--font-display);
+  font-size: 20px;                        /* CQC gaugeName */
+  font-weight: 700;                       /* CQC: 700 (not 800) */
+  letter-spacing: -0.5px;
+  color: var(--on-surface);
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+.headlineDesc {
+  font-size: 14px;                        /* CQC gaugeDesc */
+  color: var(--on-surface-variant);
+  margin: 0 0 16px;
+  line-height: 1.55;
+}
+.headlineLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 16px;                       /* CQC gaugeBands */
+}
+.headlineLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;                        /* CQC bands */
+  font-weight: 500;                       /* CQC: 500 (not 600) */
+  color: var(--on-surface-variant);
+}
+.headlineDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* Stat row — flex with vertical dividers between, mirroring CQC's
+ * gaugeStats + gaugeStat + gaugeDivider trio. */
+.headlineStatRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 14px 20px;                     /* CQC gaugeStats */
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  width: fit-content;
+  max-width: 100%;
+}
+.headlineStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;                    /* CQC centres each stat */
+  gap: 2px;
+  padding: 0 20px;                        /* CQC gaugeStat */
+}
+.headlineStat + .headlineStat {
+  border-left: 1px solid var(--surface-high); /* CQC gaugeDivider */
+}
+.headlineStatValue {
+  font-family: var(--font-display);
+  font-size: 22px;                        /* CQC gaugeStatVal */
+  font-weight: 700;                       /* CQC: 700 (not 800) */
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--on-surface);
+}
+.headlineStatLabel {
+  font-size: 11px;                        /* CQC gaugeStatLab */
+  font-weight: 400;                       /* CQC: 400 (not 700) */
+  letter-spacing: 0.4px;                  /* CQC: 0.4px (not 0.08em) */
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+/* ─── Section strip header — left accent bar (CQC pattern) ─────────────── */
+.naCard, .labTrackerCard {
+  position: relative;
+}
+/* Modern-feel refresh — accent strip now flush-square (was 14px
+ * rounded). The bare `border-radius` shorthand sweep missed this
+ * because the corners were set via `border-top-left-radius` /
+ * `border-bottom-left-radius` longhand. */
+.naCard::before, .labTrackerCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #006974;
+  border-radius: 0;
+}
+
+/* ─── Needs Attention horizontal scroller ──────────────────────────────── */
+.naScrollWrap { position: relative; }
+.naScrollBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: background 0.15s, opacity 0.15s, transform 0.12s;
+}
+.naScrollBtn:hover { background: var(--surface-low); transform: translateY(-50%) scale(1.05); }
+.naScrollBtnLeft  { left: -10px; }
+.naScrollBtnRight { right: -10px; }
+.naScrollBtnDisabled { opacity: 0.35; cursor: not-allowed; }
+.naScrollBtnDisabled:hover { transform: translateY(-50%); background: var(--surface); }
+
+/* ─── Main 2-col layout (Needs Attention + Tracker | Right rail) ───────── */
+.labMainLayout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+.labMainCol {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.labRightRail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 16px;
+}
+
+/* Right-rail mini-card — compact, soft, scannable */
+.rrCardTitle {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: var(--on-surface);
+  margin: 0 0 10px;
+}
+.rrList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rrList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+.rrDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: #1565c0;
+  flex-shrink: 0;
+}
+.rrViewAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  margin-top: 12px;
+  padding: 4px 0 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Collapse rail beneath the main column on smaller viewports */
+@media (max-width: 1100px) {
+  .labMainLayout {
+    grid-template-columns: 1fr;
+  }
+  .labRightRail {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+@media (max-width: 720px) {
+  .labRightRail {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Premium SaaS refresh — Lab Hub (overrides above; later wins in cascade)
+   Tokens:
+     #F8FAFC canvas, #FFFFFF surfaces, #0F172A text, #64748B muted,
+     #E2E8F0 rules, #006974 teal, #EF4444 coral, #F59E0B amber
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── KPI strip — single seamless white pane with vertical dividers ───── */
+/* KPI strip — individual boxes with breathing room between them
+ * (was: one wrapper card with internal border-left dividers). Each
+ * cell now stands alone with its own border + soft shadow, gaps
+ * give the row some air. */
+.kpiRow {
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 6px 0 20px;
+  overflow: visible;
+}
+/* Borderless flat boxes — soft shadow alone gives definition. */
+.kpiCard {
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  padding: 18px 22px;
+  transform: none;
+  transition: box-shadow 0.15s, background 0.15s;
+}
+.kpiCard:hover {
+  background: var(--surface-low);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+  transform: none;
+}
+.kpiCard:first-child { border-left: none; }
+.kpiCardWarn { background: var(--surface-lowest); }
+.kpiCardWarn:hover { background: #FEF2F2; }
+.kpiCardIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 105, 116, 0.10);
+}
+.kpiCardWarn .kpiCardIcon { background: rgba(239, 68, 68, 0.10); }
+.kpiCardBody { gap: 2px; }
+.kpiCardValueRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kpiCardValue {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0F172A;
+  line-height: 1.1;
+}
+.kpiCardWarn .kpiCardValue { color: #EF4444; }
+.kpiCardDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+  animation: kpiPulse 2.4s ease-in-out infinite;
+}
+@keyframes kpiPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18); }
+  50%      { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.06); }
+}
+.kpiCardLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.005em;
+  margin-top: 4px;
+}
+.kpiCardWarn .kpiCardLabel { color: #0F172A; }
+.kpiCardSub {
+  font-size: 11px;
+  color: #64748B;
+  letter-spacing: 0;
+  margin-top: 1px;
+}
+
+/* ── Needs Attention — pill status badge at top, pill action at bottom ─ */
+.naCard {
+  background: var(--surface-lowest);
+  border: none;
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 18px;
+}
+.naCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.naCardTitle {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0F172A;
+}
+.naCardSub {
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 2px;
+}
+.naCardCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: #F1F5F9;
+  color: #0F172A;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.naCardItem {
+  background: var(--surface-lowest);
+  border: none;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.naCardItem:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+.naStatusPill {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.naCardAvatarRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.naCardName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.005em;
+  line-height: 1.3;
+}
+.naCardWork {
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 2px;
+}
+.naCardLab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+}
+.naCardBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 9px 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.12s;
+}
+.naCardBtn:hover { filter: brightness(0.96); transform: translateY(-1px); }
+
+/* ── Filter chips — unbordered, plain text inactive, solid teal active ─ */
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 18px 0 14px;
+}
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.filterChip:hover { color: #0F172A; background: #F1F5F9; }
+.filterChipActive {
+  background: #006974;
+  color: #FFFFFF;
+}
+.filterChipActive:hover { background: #00525a; color: #FFFFFF; }
+.filterCount {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: #64748B;
+}
+
+/* ── Right rail — unified white pane with internal border-top dividers ─ */
+.labRightRail {
+  background: var(--surface-lowest);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 6px 4px;
+  gap: 0;
+}
+.rrCard {
+  background: transparent;
+  border: none;
+  border-top: 1px solid #E2E8F0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px 18px 20px;
+}
+.rrCard:first-child { border-top: none; }
+.rrCardTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #0F172A;
+  margin: 0 0 12px;
+  text-transform: none;
+}
+.rrList { gap: 10px; }
+.rrList li {
+  font-size: 12px;
+  color: #0F172A;
+}
+.rrDot { background: #006974; }
+.rrViewAll {
+  color: #006974;
+  font-size: 12px;
+  font-weight: 700;
+}
+.rrViewAll:hover { color: #00525a; }
+
+/* ── Tracker — generous row padding, lighter chrome ────────────────── */
+.labTrackerHeader {
+  margin: 22px 0 4px;
+}
+.labTrackerTitle {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0F172A;
+}
+.labTrackerSub {
+  font-size: 12.5px;
+  color: #64748B;
+  margin-top: 2px;
+}
+.logCaseBtn {
+  background: #006974;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+  box-shadow: 0 2px 6px rgba(0, 105, 116, 0.25);
+}
+.logCaseBtn:hover {
+  background: #00525a;
+  transform: translateY(-1px);
+}
+/* Accent-strip-bearing card — LEFT corners flush square so the
+ * teal ::before strip runs perpendicular. Platform rule. */
+.labTrackerCard {
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.trackerHead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  padding: 12px 18px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+.trackerRow {
+  padding: 16px 18px;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.12s;
+}
+.trackerRow:hover { background: var(--surface-low); }
+.trackerRow:last-child { border-bottom: none; }
+.labPatientName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.005em;
+}
+.labClinician,
+.labNotes,
+.labSentDate {
+  font-size: 11px;
+  color: #64748B;
+}
+.labNotes {
+  font-style: italic;
+  margin-top: 2px;
+}
+.labWorkType {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0F172A;
+}
+.labLabName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0F172A;
+}
+.labDueDate {
+  font-size: 12px;
+  color: #0F172A;
+  font-weight: 600;
+}
+.labDueDateOverdue {
+  font-size: 12px;
+  color: #EF4444;
+  font-weight: 700;
+}
+.trackerNextAction,
+.trackerOwner {
+  font-size: 12px;
+  color: #0F172A;
+}
+.trackerStatusOpen {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #006974;
+  background: rgba(0, 105, 116, 0.10);
+}
+
+/* ── Slim alert banner ──────────────────────────────────────────────── */
+/* Accent-strip-bearing banner: left corners flush square so the
+ * red border-left runs perpendicular. Platform rule. */
+.overdueBanner {
+  padding: 13px 18px;
+  background: #FEF3F2;
+  border: none;
+  border-left: 4px solid #EF4444;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: 12.5px;
+  color: #7F1D1D;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Drawer left-padding alignment (head + body share the same indent) ─ */
+.drawerHead {
+  padding: 20px 24px 18px;
+}
+.drawerBody {
+  padding: 18px 24px 24px;
+  overflow-y: auto;
+}
+/* Compensate the close button's own 4px padding so the X visually aligns
+   with the title text at the same left edge. */
+.drawerClose {
+  margin-left: -4px;
+}
+
+/* The visual refresh above deliberately comes after the original layout;
+ * keep its KPI override responsive too. */
+@media (max-width: 1100px) {
+  .kpiRow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .kpiRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpiCard { min-width: 0; padding: 14px 16px; }
+  .topLayout { grid-template-columns: minmax(0, 1fr); }
+  .labTrackerHeader { flex-direction: column; }
+}
+
+@media (max-width: 420px) {
+  .kpiRow { grid-template-columns: minmax(0, 1fr); }
+  .overdueBanner { align-items: flex-start; }
+}
