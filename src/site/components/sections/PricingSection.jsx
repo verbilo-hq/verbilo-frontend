@@ -57,7 +57,7 @@ const TIERS = [
   },
 ];
 
-export default function PricingSection() {
+export default function PricingSection({ demoCta = {} }) {
   const [annual, setAnnual] = useState(true);
 
   return (
@@ -126,7 +126,7 @@ export default function PricingSection() {
 
               <Button
                 as="a"
-                href={t.ctaHref || (t.ctaVariant === 'primary' ? '#demo' : '#contact')}
+                {...(t.ctaVariant === 'primary' ? demoCta : { href: t.ctaHref || '#contact' })}
                 variant={t.ctaVariant}
                 size="md"
                 arrow
