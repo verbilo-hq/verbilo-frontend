@@ -1,12 +1,27 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { I } from "../components/Icon";
 import { Card } from "../components/ui/Card";
 import { BtnPrimary, BtnSecondary } from "../components/ui/Buttons";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TopBar } from "../components/layout/TopBar";
-import { useTenant } from "../auth/TenantContext";
-import { isDemoMode } from "../lib/mode";
+import { putFile, downloadFile, deleteFile } from "../services/clientFileStore";
+import { escapeHtml } from "../utils/escapeHtml";
+import { useModalA11y } from "../hooks/useModalA11y";
 import styles from "./MarketingPage.module.css";
+
+const LS_TEMPLATES = "verbilo.marketing.templates";
+const LS_LOGOS = "verbilo.marketing.logoUploads";
+
+function loadList(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch { /* noop */ }
+  return fallback;
+}
+function saveList(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* noop */ }
+}
 
 /* ── Data ──────────────────────────────────────────────────────────────────── */
 
@@ -33,12 +48,12 @@ const seedTemplates = [
 
 const seedPalette = [
   { name: "Primary Teal",   hex: "#006974", textDark: false },
-  { name: "Teal Light",     hex: "#4DB6AC", textDark: false },
+  { name: "Teal Light",     hex: "#4DB6AC", textDark: true  },
   { name: "On-Primary",     hex: "#FFFFFF", textDark: true  },
   { name: "Surface Low",    hex: "#F0F4F4", textDark: true  },
   { name: "Surface Lowest", hex: "#E4ECEC", textDark: true  },
   { name: "On-Surface",     hex: "#1A2B2B", textDark: false },
-  { name: "Error / Alert",  hex: "#E53935", textDark: false },
+  { name: "Error / Alert",  hex: "#E53935", textDark: true  },
   { name: "Success",        hex: "#2E7D32", textDark: false },
 ];
 
@@ -82,19 +97,35 @@ const hexToHsl = (hex) => {
 };
 
 /* ── Colour swatch ─────────────────────────────────────────────────────────── */
+const relativeLuminance = ({ r, g, b }) => {
+  const channel = (value) => {
+    const normalised = value / 255;
+    return normalised <= 0.04045 ? normalised / 12.92 : ((normalised + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+};
+
 const Swatch = ({ name, hex, textDark }) => {
   const [copied, setCopied] = useState(false);
+  const luminance = relativeLuminance(hexToRgb(hex));
+  const darkLuminance = relativeLuminance(hexToRgb("#1A2B2B"));
+  const whiteContrast = 1.05 / (luminance + 0.05);
+  const darkContrast = (Math.max(luminance, darkLuminance) + 0.05) / (Math.min(luminance, darkLuminance) + 0.05);
+  const preferredContrast = textDark ? darkContrast : whiteContrast;
+  const needsPlate = preferredContrast < 4.5;
+  const textColor = needsPlate ? "#fff" : textDark ? "#1A2B2B" : "#fff";
   const copy = () => navigator.clipboard.writeText(hex).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
   return (
-    <button className={styles.swatch} style={{ background: hex, color: textDark ? "#1A2B2B" : "#fff" }} onClick={copy} title={`Copy ${hex}`}>
-      <span className={styles.swatchName}>{copied ? "Copied!" : name}</span>
-      <span className={styles.swatchHex}>{hex}</span>
+    <button className={styles.swatch} style={{ background: hex, color: textColor }} onClick={copy} title={`Copy ${hex}`}>
+      <span className={`${styles.swatchName} ${needsPlate ? styles.swatchContrastPlate : ""}`}>{copied ? "Copied!" : name}</span>
+      <span className={`${styles.swatchHex} ${needsPlate ? styles.swatchContrastPlate : ""}`}>{hex}</span>
     </button>
   );
 };
 
 /* ── Colour edit modal ─────────────────────────────────────────────────────── */
 const ColourEditModal = ({ palette, onSave, onClose }) => {
+  const dialogRef = useModalA11y(onClose);
   const [draft, setDraft] = useState(palette.map((c) => ({ ...c })));
 
   const update = (i, field, value) =>
@@ -107,13 +138,13 @@ const ColourEditModal = ({ palette, onSave, onClose }) => {
 
   return (
     <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.editModal} onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} className={styles.editModal} onClick={(e) => e.stopPropagation()} aria-labelledby="edit-palette-title">
         <div className={styles.editModalHeader}>
           <div>
-            <h3 className={styles.editModalTitle}>Edit Colour Palette</h3>
+            <h3 id="edit-palette-title" className={styles.editModalTitle}>Edit Colour Palette</h3>
             <p className={styles.editModalSub}>Adjust names and hex values. Changes apply immediately on save.</p>
           </div>
-          <button className={styles.modalCloseBtn} onClick={onClose}><I name="xcircle" size={20} /></button>
+          <button className={styles.modalCloseBtn} onClick={onClose} aria-label="Close colour palette dialog"><I name="xcircle" size={20} /></button>
         </div>
         <div className={styles.editModalBody}>
           {draft.map((c, i) => {
@@ -122,6 +153,7 @@ const ColourEditModal = ({ palette, onSave, onClose }) => {
             return (
               <div key={i} className={styles.editRow}>
                 <input
+                  aria-label={`Choose ${c.name} colour`}
                   type="color"
                   className={styles.colorPicker}
                   value={c.hex.length === 7 ? c.hex : "#000000"}
@@ -166,13 +198,15 @@ const ColourEditModal = ({ palette, onSave, onClose }) => {
 };
 
 /* ── Delete confirmation modal ─────────────────────────────────────────────── */
-const DeleteConfirmModal = ({ template, onConfirm, onClose }) => (
+const DeleteConfirmModal = ({ template, onConfirm, onClose }) => {
+  const dialogRef = useModalA11y(onClose);
+  return (
   <div className={styles.overlay} onClick={onClose}>
-    <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+    <div ref={dialogRef} className={styles.confirmModal} onClick={(e) => e.stopPropagation()} aria-labelledby="delete-template-title">
       <div className={styles.confirmIconWrap}>
         <I name="trash" size={24} color="var(--error, #e53935)" />
       </div>
-      <h3 className={styles.confirmTitle}>Delete Template?</h3>
+      <h3 id="delete-template-title" className={styles.confirmTitle}>Delete Template?</h3>
       <p className={styles.confirmBody}>
         Are you sure you want to delete <strong>{template}</strong>? This cannot be undone and all
         copies of this file will be permanently removed from the hub.
@@ -185,38 +219,43 @@ const DeleteConfirmModal = ({ template, onConfirm, onClose }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ── Brand book print ──────────────────────────────────────────────────────── */
-const openBrandBook = (palette, tenantName = "Verbilo") => {
+const openBrandBook = (palette) => {
   const win = window.open("", "_blank");
   if (!win) return;
 
   const colourRows = palette.map((c) => {
-    const rgb = hexToRgb(c.hex);
-    const hsl = hexToHsl(c.hex);
+    const safeHex = /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : "#000000";
+    const rgb = hexToRgb(safeHex);
+    const hsl = hexToHsl(safeHex);
     return `
       <tr>
-        <td><div style="width:48px;height:48px;border-radius:8px;background:${c.hex};border:1px solid rgba(0,0,0,0.08)"></div></td>
-        <td><strong>${c.name}</strong></td>
-        <td class="mono">${c.hex}</td>
+        <td><div style="width:48px;height:48px;border-radius:8px;background:${safeHex};border:1px solid rgba(0,0,0,0.08)"></div></td>
+        <td><strong>${escapeHtml(c.name)}</strong></td>
+        <td class="mono">${escapeHtml(safeHex)}</td>
         <td class="mono">rgb(${rgb.r}, ${rgb.g}, ${rgb.b})</td>
         <td class="mono">hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)</td>
       </tr>`;
   }).join("");
 
-  const typoRows = typography.map((t) => `
+  const typoRows = typography.map((t) => {
+    const safeFamily = /^[a-z0-9 _-]{1,80}$/i.test(t.family) ? t.family : "Arial";
+    return `
     <tr>
-      <td><span style="font-family:'${t.family}',sans-serif;font-size:22px;font-weight:700;color:#006974">${t.sample}</span></td>
-      <td><strong>${t.family}</strong></td>
-      <td>${t.role}</td>
-      <td>${t.weight}</td>
-      <td>${t.sizes}</td>
-    </tr>`).join("");
+      <td><span style="font-family:'${safeFamily}',sans-serif;font-size:22px;font-weight:700;color:#006974">${escapeHtml(t.sample)}</span></td>
+      <td><strong>${escapeHtml(t.family)}</strong></td>
+      <td>${escapeHtml(t.role)}</td>
+      <td>${escapeHtml(t.weight)}</td>
+      <td>${escapeHtml(t.sizes)}</td>
+    </tr>`;
+  }).join("");
 
   win.document.write(`<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
-    <title>${tenantName} — Brand Book</title>
+    <title>Dental Group — Brand Book</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -251,10 +290,10 @@ const openBrandBook = (palette, tenantName = "Verbilo") => {
     <div class="cover">
       <div>
         <div class="cover-title">Brand Book</div>
-        <div class="cover-sub">${tenantName} · Colour, Typography &amp; Guidelines</div>
+        <div class="cover-sub">Dental Group · Colour, Typography &amp; Guidelines</div>
         <div style="margin-top:16px;font-size:11px;opacity:0.6">Generated ${new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" })}</div>
       </div>
-      <div class="cover-logo">${tenantName.toUpperCase().replace(/\s+/g, "\n")}</div>
+      <div class="cover-logo">DENTAL\nGROUP</div>
     </div>
 
     <section>
@@ -274,7 +313,7 @@ const openBrandBook = (palette, tenantName = "Verbilo") => {
 
     <section>
       <h2>Typography</h2>
-      <p class="section-sub">Approved typefaces for all ${tenantName} communications.</p>
+      <p class="section-sub">Approved typefaces for all Dental Group communications.</p>
       <table>
         <thead><tr>
           <th>Sample</th>
@@ -300,68 +339,74 @@ const openBrandBook = (palette, tenantName = "Verbilo") => {
         </div>`).join("")}
     </section>
 
-    <div class="footer">© ${new Date().getFullYear()} ${tenantName} · Confidential — Internal Use Only</div>
+    <div class="footer">© ${new Date().getFullYear()} Dental Group · Confidential — Internal Use Only</div>
     <script>window.onload = () => { window.print(); }</script>
   </body></html>`);
   win.document.close();
 };
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
-/* VER-90: Tenant-mode Brand Hub.
- *
- * Scope of this module beyond "logo + colours" is still TBD — the
- * demo path mocks up a marketing-asset library but we haven't
- * committed to building that. For now: minimal honest placeholder
- * pointing to the existing branding workflow. Demo path preserved. */
-function TenantMarketingPage() {
-  return (
-    <div>
-      <TopBar
-        title="Brand Hub"
-        subtitle="Your logo, colours, and brand assets."
-      />
-
-      <Card hover={false} style={{ marginBottom: 24 }}>
-        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
-          <I name="palette" size={18} color="var(--primary)" /> Brand basics
-        </h2>
-        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
-          Your logo and brand colours are managed under <strong>Settings → Branding</strong>. The intranet's sidebar, hero, and primary buttons re-theme to whatever you set there.
-        </p>
-      </Card>
-
-      <Card hover={false}>
-        <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: "0 0 6px 0", fontSize: 18, color: "var(--on-surface)" }}>
-          <I name="image" size={18} color="var(--primary)" /> Brand assets
-        </h2>
-        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
-          Wider asset library (logo variants, social templates, typography reference) is on the roadmap. Nothing here yet.
-        </p>
-      </Card>
-    </div>
-  );
-}
-
 export const MarketingPage = ({ currentUser }) => {
-  if (!isDemoMode()) {
-    return <TenantMarketingPage />;
-  }
-
-  const { tenant } = useTenant();
-  const tenantName = tenant?.name ?? "Verbilo";
   const logoUploadRef     = useRef();
   const templateUploadRef = useRef();
-  const [templateList, setTemplateList]   = useState(seedTemplates);
+  const [templateList, setTemplateList]   = useState(() => loadList(LS_TEMPLATES, seedTemplates));
+  const [logoUploads, setLogoUploads]     = useState(() => loadList(LS_LOGOS, []));
   const [palette, setPalette]             = useState(seedPalette);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [editingPalette, setEditingPalette] = useState(false);
 
+  useEffect(() => saveList(LS_TEMPLATES, templateList), [templateList]);
+  useEffect(() => saveList(LS_LOGOS, logoUploads), [logoUploads]);
+
   const triggerLogoUpload     = () => logoUploadRef.current.click();
   const triggerTemplateUpload = () => templateUploadRef.current.click();
 
-  const handleDeleteConfirm = () => {
+  const handleLogoFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { key } = await putFile("marketing-logo", file);
+    setLogoUploads((prev) => [
+      { fileKey: key, label: file.name, dims: `${(file.size / 1024).toFixed(0)} KB`, formats: [file.name.split(".").pop()?.toUpperCase() ?? "FILE"] },
+      ...prev,
+    ]);
+    e.target.value = "";
+  };
+
+  const handleTemplateFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { key } = await putFile("marketing-template", file);
+    setTemplateList((prev) => [
+      { fileKey: key, icon: "file", label: file.name, desc: "Uploaded template", formats: [file.name.split(".").pop()?.toUpperCase() ?? "FILE"] },
+      ...prev,
+    ]);
+    e.target.value = "";
+  };
+
+  const handleTemplateDownload = async (t) => {
+    if (!t.fileKey) return;
+    await downloadFile(t.fileKey, t.label);
+  };
+
+  const handleLogoDownload = async (a) => {
+    if (!a.fileKey) return;
+    await downloadFile(a.fileKey, a.label);
+  };
+
+  const handleLogoDelete = async (a) => {
+    setLogoUploads((prev) => prev.filter((x) => x.fileKey !== a.fileKey));
+    if (a.fileKey) {
+      try { await deleteFile(a.fileKey); } catch { /* best effort */ }
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    const target = templateList.find((t) => t.label === pendingDelete);
     setTemplateList((prev) => prev.filter((t) => t.label !== pendingDelete));
     setPendingDelete(null);
+    if (target?.fileKey) {
+      try { await deleteFile(target.fileKey); } catch { /* best effort */ }
+    }
   };
 
   const canDelete = currentUser?.role === "manager";
@@ -370,29 +415,47 @@ export const MarketingPage = ({ currentUser }) => {
   <>
   <div>
     <SearchBar placeholder="Search brand assets, templates, or colour codes..." />
-    <TopBar title="Brand Hub" subtitle={`Official ${tenantName} brand assets, templates, and guidelines.`} />
+    <TopBar title="Brand Hub" subtitle="Official Dental Group brand assets, templates, and guidelines." />
 
     {/* Hidden file inputs */}
-    <input ref={logoUploadRef}     type="file" accept=".svg,.png,.pdf,.ai,.eps" style={{ display: "none" }} />
-    <input ref={templateUploadRef} type="file" accept=".pdf,.docx,.pptx,.html,.png" style={{ display: "none" }} />
+    <input ref={logoUploadRef}     type="file" accept=".svg,.png,.pdf,.ai,.eps"     style={{ display: "none" }} onChange={handleLogoFile} />
+    <input ref={templateUploadRef} type="file" accept=".pdf,.docx,.pptx,.html,.png" style={{ display: "none" }} onChange={handleTemplateFile} />
 
     {/* Logo assets */}
     <Card hover={false} className={styles.logosCard}>
       <div className={styles.cardHeader}>
         <div>
           <h3 className={styles.heading}>Logo Assets</h3>
-          <p className={styles.helpText}>Download official {tenantName} logos in all formats.</p>
+          <p className={styles.helpText}>Download official Dental Group logos in all formats.</p>
         </div>
         <div className={styles.headerBtns}>
           <BtnSecondary style={{ padding: "11px 18px", fontSize: 12 }} onClick={triggerLogoUpload}>
             <I name="upload" size={14} /> Upload Asset
           </BtnSecondary>
-          <BtnPrimary style={{ padding: "11px 20px", fontSize: 12 }}>
+          <BtnPrimary style={{ padding: "11px 20px", fontSize: 12 }} disabled title="Bulk ZIP download is not available yet">
             <I name="download" size={14} /> Download All (.ZIP)
           </BtnPrimary>
         </div>
       </div>
       <div className={styles.assetGrid}>
+        {logoUploads.map((a) => (
+          <div key={a.fileKey || a.label} className={styles.assetTile}>
+            <span className={styles.assetWordmark}>{a.formats?.[0] || "FILE"}</span>
+            <span className={styles.assetCaption}>{a.label}</span>
+            <span className={styles.assetDims}>{a.dims}</span>
+            <div className={styles.assetFormats}>
+              {(a.formats || []).map((f) => <span key={f} className={styles.assetFormatPill}>{f}</span>)}
+            </div>
+            <button className={styles.assetDownloadBtn} onClick={() => handleLogoDownload(a)}>
+              <I name="download" size={12} /> Download
+            </button>
+            {canDelete && (
+              <button className={styles.deleteBtn} onClick={() => handleLogoDelete(a)} title="Delete asset">
+                <I name="trash" size={12} />
+              </button>
+            )}
+          </div>
+        ))}
         {logoAssets.map((a) => {
           const tileClass = [
             styles.assetTile,
@@ -412,7 +475,12 @@ export const MarketingPage = ({ currentUser }) => {
               <div className={styles.assetFormats}>
                 {a.formats.map((f) => <span key={f} className={pillClass}>{f}</span>)}
               </div>
-              <button className={btnClass}>
+              <button
+                className={btnClass}
+                disabled={!a.fileKey}
+                title={!a.fileKey ? "Asset download is not available in the local demo" : undefined}
+                onClick={() => handleLogoDownload(a)}
+              >
                 <I name="download" size={12} /> Download
               </button>
             </div>
@@ -453,7 +521,12 @@ export const MarketingPage = ({ currentUser }) => {
                     <I name="trash" size={14} />
                   </button>
                 )}
-                <BtnSecondary style={{ padding: "7px 14px", fontSize: 11 }}>
+                <BtnSecondary
+                  style={{ padding: "7px 14px", fontSize: 11 }}
+                  disabled={!t.fileKey}
+                  title={!t.fileKey ? "Template download is not available in the local demo" : undefined}
+                  onClick={() => handleTemplateDownload(t)}
+                >
                   <I name="download" size={12} /> Download
                 </BtnSecondary>
               </div>
@@ -510,7 +583,7 @@ export const MarketingPage = ({ currentUser }) => {
               </div>
             </div>
           ))}
-          <button className={styles.brandBookBtn} onClick={() => openBrandBook(palette, tenantName)}>
+          <button className={styles.brandBookBtn} onClick={() => openBrandBook(palette)}>
             <I name="download" size={13} /> Download Brand Book PDF
           </button>
         </div>

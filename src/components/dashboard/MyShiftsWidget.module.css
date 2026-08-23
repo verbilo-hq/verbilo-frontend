@@ -1,0 +1,193 @@
+/* MyShiftsWidget — Slice PM-4.
+ * Compact 3-row personal shift list. Sits in the dashboard left
+ * column for clinical / front-desk personas. */
+
+.myShiftsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--surface-lowest);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.myShiftsHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.myShiftsTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.myShiftsSub {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+.shiftList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shiftRow {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface-low);
+  border-left: 3px solid var(--shift-accent, var(--primary));
+  border-radius: var(--radius-md);
+  transition: background 0.12s;
+}
+.shiftRow:hover {
+  background: color-mix(in srgb, var(--shift-accent, var(--primary)) 7%, var(--surface-low));
+}
+
+.shiftDateCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1px;
+}
+.shiftDayLabel {
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--shift-accent, var(--primary));
+}
+.shiftDate {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.1;
+}
+.shiftPartialBadge {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  background: color-mix(in srgb, #ef6c00 14%, transparent);
+  color: #b65100;
+  border-radius: 999px;
+}
+
+.shiftMain {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.shiftSurgeryRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.shiftSurgery {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.shiftRolePill {
+  display: inline-block;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--shift-accent, var(--primary)) 14%, transparent);
+  color: var(--shift-accent, var(--primary));
+}
+.shiftPairedRow {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.shiftPairedRow strong {
+  color: var(--on-surface);
+  font-weight: 600;
+}
+.shiftNote {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.shiftStatusCol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shiftPubChip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #2e7d32 16%, transparent);
+  color: #1b5e20;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+.shiftDraftChip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, #ef6c00 16%, transparent);
+  color: #b65100;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+
+/* ─── Empty states ───────────────────────────────────────────────── */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 18px 14px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+.emptyTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-top: 2px;
+}
+.emptyBody {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--on-surface-variant);
+}

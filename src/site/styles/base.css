@@ -4,7 +4,7 @@
    ───────────────────────────────────────────────────────────────────── */
 
 /* Skip link for keyboard users */
-.skip {
+.vsite .skip {
   position: absolute;
   top: 0;
   left: 0;
@@ -16,28 +16,28 @@
   z-index: 1000;
   border-radius: 0 0 var(--r-sm) 0;
 }
-.skip:focus-visible { transform: translateY(0); }
+.vsite .skip:focus-visible { transform: translateY(0); }
 
 /* Layout primitives */
-.container {
+.vsite .container {
   max-width: var(--content);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
-.container--tight {
+.vsite .container--tight {
   max-width: var(--content-sm);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
 
-.section            { padding-block: var(--section-pad);       position: relative; }
-.section--tight     { padding-block: var(--section-pad-tight); position: relative; }
-.section--hero      { padding-block: var(--section-pad-hero);  position: relative; }
-.section--surface   { background: var(--surface-2); }
-.section--paper-3   { background: var(--paper-3); }
+.vsite .section { padding-block: var(--section-pad);       position: relative; }
+.vsite .section--tight { padding-block: var(--section-pad-tight); position: relative; }
+.vsite .section--hero { padding-block: var(--section-pad-hero);  position: relative; }
+.vsite .section--surface { background: var(--surface-2); }
+.vsite .section--paper-3 { background: var(--paper-3); }
 
 /* Section header (eyebrow + heading + optional lead) */
-.section-head {
+.vsite .section-head {
   max-width: var(--content-sm);
   margin: 0 auto var(--section-head-mb);
   text-align: center;
@@ -45,7 +45,7 @@
   gap: var(--space-4);
 }
 
-.eyebrow {
+.vsite .eyebrow {
   display: inline-block;
   font-family: var(--font-display);
   font-size: var(--text-base);
@@ -54,7 +54,7 @@
   letter-spacing: -.005em;
 }
 
-.display {
+.vsite .display {
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.04;
@@ -62,10 +62,10 @@
   color: var(--ink);
   text-wrap: balance;
 }
-.display--section { font-size: var(--display-section); }
-.display--hero    { font-size: var(--display-hero); line-height: 1.02; }
+.vsite .display--section { font-size: var(--display-section); }
+.vsite .display--hero { font-size: var(--display-hero); line-height: 1.02; }
 
-.lead {
+.vsite .lead {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   line-height: 1.4;
@@ -75,18 +75,18 @@
 }
 
 /* Reveal-on-scroll (IntersectionObserver toggles .is-in) */
-.reveal {
+.vsite .reveal {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
 }
-.reveal.is-in { opacity: 1; transform: none; }
-.reveal.d-1 { transition-delay: 80ms; }
-.reveal.d-2 { transition-delay: 160ms; }
-.reveal.d-3 { transition-delay: 240ms; }
-.reveal.d-4 { transition-delay: 320ms; }
-.reveal.d-5 { transition-delay: 400ms; }
-.reveal.d-6 { transition-delay: 480ms; }
+.vsite .reveal.is-in { opacity: 1; transform: none; }
+.vsite .reveal.d-1 { transition-delay: 80ms; }
+.vsite .reveal.d-2 { transition-delay: 160ms; }
+.vsite .reveal.d-3 { transition-delay: 240ms; }
+.vsite .reveal.d-4 { transition-delay: 320ms; }
+.vsite .reveal.d-5 { transition-delay: 400ms; }
+.vsite .reveal.d-6 { transition-delay: 480ms; }
 
 /* ── Editorial section numbering — globally available so each section's
    CSS module doesn't have to re-declare them. Used inside .eyebrow:
@@ -94,7 +94,7 @@
         <span class="eyebrow-divider"></span> Eyebrow text</p>
    The number lives in Newsreader italic for an editorial-magazine cadence.
 */
-.eyebrow-num {
+.vsite .eyebrow-num {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
@@ -105,7 +105,7 @@
   font-variant-numeric: tabular-nums;
   margin-right: 2px;
 }
-.eyebrow-divider {
+.vsite .eyebrow-divider {
   display: inline-block;
   width: 22px;
   height: 1px;
@@ -117,7 +117,7 @@
 
 /* Subtle dot-grid background pattern. Drop on any element with
    `position: relative; overflow: hidden;` to layer it underneath content. */
-.dot-grid {
+.vsite .dot-grid {
   position: absolute;
   inset: 0;
   background-image: radial-gradient(currentColor 1px, transparent 1px);
@@ -130,7 +130,7 @@
 }
 
 /* Visually hidden */
-.vh {
+.vsite .vh {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -141,5 +141,5 @@
 
 /* Reduced-motion: instant reveal, no Y offset */
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .vsite .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
 }
