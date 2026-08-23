@@ -26,7 +26,7 @@ const TIERS = [
     blurb: 'For multi-site groups and clinical leads.',
     monthly: 449,
     annual:  379,
-    cta: 'Book a demo',
+    cta: 'View demo',
     ctaVariant: 'primary',
     featured: true,
     badge: 'Recommended',

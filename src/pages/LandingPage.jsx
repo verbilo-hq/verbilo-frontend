@@ -28,20 +28,25 @@ import CtaSection from "../site/components/sections/CtaSection.jsx";
 import useReveal from "../site/hooks/useReveal.js";
 import { isDemoMode } from "../lib/demoMode.js";
 
-export function LandingPage({ onLoginClick, bookDemoHref = null, contactHref = null }) {
+const DEMO_SITE_URL = "https://demo.verbilo.co.uk";
+
+export function LandingPage({ onLoginClick, contactHref = null }) {
   useReveal();
+
+  /* One destination for every "View demo" control on the page.
+   * On the public site it links to the demo host; on the demo host itself
+   * there is nowhere to link to, so it opens the in-app login instead. */
+  const demoCta = isDemoMode()
+    ? { href: "#demo", onClick: (e) => { e.preventDefault(); onLoginClick?.(); } }
+    : { href: DEMO_SITE_URL };
 
   return (
     <div className="vsite">
       <a className="skip" href="#main">Skip to content</a>
       <IconSprite />
-      <Nav
-        onSignIn={isDemoMode() ? onLoginClick : undefined}
-        signInHref={isDemoMode() ? undefined : "https://demo.verbilo.co.uk"}
-        bookDemoHref={bookDemoHref}
-      />
+      <Nav demoCta={demoCta} />
       <main id="main">
-        <LaptopScroll scale={1.3} />
+        <LaptopScroll scale={1.3} demoCta={demoCta} />
         <LogosSection />
         <FeaturesSection />
         <ComplianceScene />
@@ -50,7 +55,7 @@ export function LandingPage({ onLoginClick, bookDemoHref = null, contactHref = n
         <QuotesScene />
         <PricingSection />
         <FaqSection />
-        <CtaSection contactHref={contactHref} bookDemoHref={bookDemoHref} />
+        <CtaSection demoCta={demoCta} contactHref={contactHref} />
       </main>
       <Footer />
     </div>

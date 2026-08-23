@@ -23,7 +23,7 @@ const SPRING_W = 18;
  *  CSS-level transitions in the rest of the page are still gated by the
  *  global @media block in reset.css.
  */
-export default function LaptopScroll({ scale = 1.0 }) {
+export default function LaptopScroll({ scale = 1.0, demoCta = {} }) {
   const sectionRef = useRef(null);
   const pinRef     = useRef(null);
   const canvasRef  = useRef(null);
@@ -437,7 +437,7 @@ export default function LaptopScroll({ scale = 1.0 }) {
             The intranet, training, and audit hub built for healthcare teams who care about doing things properly — without the spreadsheet sprawl.
           </p>
           <div className={s.cta}>
-            <Button href="#demo" variant="primary" size="lg" arrow>Book a demo</Button>
+            <Button {...demoCta} variant="primary" size="lg" arrow>View demo</Button>
             <Button href="#trial" variant="secondary" size="lg" icon="zap">Start 1-month trial</Button>
           </div>
           <p className={s.trialNote}>
