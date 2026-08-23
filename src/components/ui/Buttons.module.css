@@ -10,6 +10,13 @@
   transition: filter 0.2s, background 0.2s, color 0.2s;
 }
 
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+  pointer-events: none;
+}
+
 .primary {
   background: var(--gradient-primary);
   color: var(--on-primary);

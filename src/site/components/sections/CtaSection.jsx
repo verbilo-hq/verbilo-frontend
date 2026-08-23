@@ -1,7 +1,7 @@
 import s from './CtaSection.module.css';
 import Button from '../Button.jsx';
 
-export default function CtaSection() {
+export default function CtaSection({ bookDemoHref, contactHref }) {
   return (
     <section className={s.section} aria-labelledby="cta-h">
       <div className="container">
@@ -23,8 +23,8 @@ export default function CtaSection() {
               The demo is a 30-minute walk-through with us. The trial is the full product, on your own data, for a month. No card. No subscription. Walk away if it doesn't fit.
             </p>
             <div className={s.actions}>
-              <Button href="mailto:hello@verbilo.co.uk" variant="invert-primary" size="lg" arrow>Book a demo</Button>
-              <Button href="mailto:hello@verbilo.co.uk" variant="invert-secondary" size="lg">Start 1-month trial</Button>
+              <Button href={bookDemoHref || '#demo'} variant="invert-primary" size="lg" arrow>Book a demo</Button>
+              <Button href={contactHref || '#trial'} variant="invert-secondary" size="lg">Start 1-month trial</Button>
             </div>
             <p className={s.trust}>
               <span className={s.trustItem}>Made in the UK</span>

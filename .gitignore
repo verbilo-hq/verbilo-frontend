@@ -31,3 +31,7 @@ Thumbs.db
 
 # Misc
 *.local
+
+# Dev server logs
+vite*.log
+local-vite*.log

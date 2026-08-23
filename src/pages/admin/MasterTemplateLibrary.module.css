@@ -1,0 +1,451 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 4px;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  color: var(--on-surface);
+}
+.lead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  max-width: 640px;
+}
+
+.packStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.packChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.packChip:hover { color: var(--on-surface); }
+.packChipActive {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+.packCount {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+}
+
+.tableHead, .tableRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2.4fr) 100px minmax(120px, 1fr) 80px 100px 110px 80px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.tableHead {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.tableRow {
+  border-bottom: 1px solid var(--outline-variant);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.tableRow:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.tableRow:last-child { border-bottom: none; }
+.titleCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.dim { color: var(--on-surface-variant); }
+.rowActions { display: flex; gap: 4px; justify-content: flex-end; }
+.iconBtn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.iconBtn:hover { background: var(--surface-low); }
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+}
+.empty p { font-size: 13px; color: var(--on-surface-variant); margin: 0; max-width: 360px; }
+
+/* ── Editor modal ─────────────────────────────────────────────────────────── */
+.editorScrim {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--on-surface) 32%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  z-index: 50;
+  overflow-y: auto;
+}
+.editorCard {
+  width: 100%;
+  max-width: 1200px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+}
+.editorHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.editorTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--on-surface);
+}
+.editorBody {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+.editorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 12px 16px;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.hint {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--on-surface-variant);
+}
+.input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  transition: border-color 0.15s;
+}
+.input:focus { outline: none; border-color: var(--primary); }
+.body {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 12px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  resize: vertical;
+  min-height: 220px;
+}
+.body:focus { outline: none; border-color: var(--primary); }
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 0;
+}
+.editorFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+/* ── Body editor + live preview split ────────────────────────────────────── */
+.bodySplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.bodySplit > textarea { min-height: 380px; }
+
+/* ── Polished SOP preview — paper + header band + section bars + callouts ─ */
+
+.previewWrap {
+  overflow-y: auto;
+  max-height: 540px;
+  background: #eef0f3;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+.previewEmpty {
+  border: 1px dashed var(--outline-variant);
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+}
+
+.previewPaper {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  font-family: var(--font-body, "Inter", "Segoe UI", system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.55;
+  color: #1f2937;
+}
+
+.previewHeaderBand {
+  background: linear-gradient(180deg, #006974 0%, #00525a 100%);
+  color: #ffffff;
+  padding: 18px 24px 22px;
+}
+.previewHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+.previewBrand { letter-spacing: 0.16em; }
+.previewKicker { opacity: 0.75; }
+.previewDocCode {
+  margin-top: 4px;
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10px;
+  opacity: 0.75;
+  letter-spacing: 0.06em;
+}
+.previewTitle {
+  font-family: var(--font-display, "Inter", system-ui, sans-serif);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 10px 0 0;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.previewMetaGrid {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  background: #f6f8fa;
+  border-bottom: 1px solid #e5e7eb;
+}
+.previewMetaItem { display: contents; }
+.previewMetaLabel,
+.previewMetaValue {
+  padding: 8px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+.previewMetaItem:first-child > .previewMetaLabel,
+.previewMetaItem:first-child > .previewMetaValue {
+  border-top: none;
+}
+.previewMetaLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+.previewMetaValue {
+  font-size: 12px;
+  color: #1f2937;
+}
+
+.previewBody { padding: 20px 24px 24px; }
+
+.previewSectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 22px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #006974;
+}
+.previewSectionHead:first-child { margin-top: 0; }
+.previewSectionNum {
+  font-family: var(--font-display, "Inter", system-ui, sans-serif);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: #006974;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-md);
+}
+.previewH2 {
+  font-family: var(--font-display, "Inter", system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #111827;
+}
+.previewH3 {
+  font-family: var(--font-display, "Inter", system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  margin: 14px 0 6px;
+  color: #111827;
+}
+
+.previewP { margin: 0 0 10px; }
+.previewList { margin: 0 0 12px; padding-left: 22px; }
+.previewList li { margin: 4px 0; }
+
+.previewCallout {
+  margin: 14px 0;
+  padding: 12px 16px;
+  background: #fef3e2;
+  border-left: 4px solid #f57c00;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.previewCalloutLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c66600;
+}
+.previewCalloutText {
+  font-size: 12px;
+  color: #7a3c00;
+  line-height: 1.55;
+}
+
+.previewCode {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 11px;
+  padding: 1px 5px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-md);
+}
+
+.previewHr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 18px 0;
+}
+
+.previewFooter {
+  background: #f6f8fa;
+  padding: 12px 24px 14px;
+  border-top: 1px solid #e5e7eb;
+}
+.previewFooterLabel {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.previewFooterText {
+  font-size: 11px;
+  color: #4b5563;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+/* ── Client-Specific pack chip (Audit & Evidence, Site-Specific SOPs) ──── */
+/* These two packs have no SaaS-provided master templates by design — the
+ * client builds them per their workflow. The small purple "Client" label
+ * inside the chip makes that distinction obvious. */
+.packChipClient {
+  border-style: dashed;
+}
+.packChipClientLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(106, 27, 154, 0.10);
+  color: #6a1b9a;
+  margin-left: 2px;
+}

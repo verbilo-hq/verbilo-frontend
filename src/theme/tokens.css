@@ -21,7 +21,7 @@
   /* Text & lines */
   --on-surface: #2b3435;
   --on-surface-variant: #586161;
-  --outline: #737c7d;
+  --outline: #626c6d;
   --outline-variant: #abb4b4;
 
   /* Accents */
@@ -33,38 +33,44 @@
   /* Status */
   --error: #a83836;
   --error-container: #fa746f;
-  --success: #4caf50;
-  --warning: #ff9800;
+  --success: #256f2a;
+  --warning: #934b00;
 
   /* Brand-active teal (used for logo wordmark and active nav state) */
-  --brand-active: #00838f;
+  --brand-active: #006974;
 
   /* Composed */
   --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-dim) 100%);
-  --shadow-card: 0 12px 32px rgba(43, 52, 53, 0.06);
-
-  /* VER-81: semantic tokens for the intranet shell. Default to the raw
-     surface tokens so untenanted appearance is bit-for-bit unchanged.
-     TenantContext overrides these on tenant-themed surfaces so the
-     BrandPreview mock matches the real app (sidebar fills with
-     secondary, body tints with accent). */
-  --sidebar-bg:          var(--surface-low);
-  --sidebar-fg:          var(--on-surface);
-  --sidebar-fg-muted:    var(--on-surface-variant);
-  --sidebar-card-bg:     var(--surface-container);
-  --sidebar-active-bg:   var(--surface-lowest);
-  --sidebar-active-fg:   var(--brand-active);
-  --sidebar-brand-color: var(--brand-active);
-  --sidebar-track-bg:    var(--outline-variant);
-  --accent-bg:           var(--surface);
+  /* Tightened shadow — sharper, more defined card edges. Old:
+   * 0 12px 32px rgba(43,52,53,0.06) — soft drop-shadow halo. */
+  --shadow-card: 0 2px 6px rgba(15, 23, 42, 0.06);
 
   /* Typography */
   --font-display: 'Manrope', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* Radii */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-pill: 9999px;
+  /* Radii — sharpened (Slice "modern feel" refresh).
+   *   sm  → 3px  (badges, pills, status chips)
+   *   md  → 4px  (buttons, dropdowns, small inputs)
+   *   lg  → 6px  (cards, modals, larger surfaces)
+   *   pill → 4px (was 9999px capsules — now sharp pills per design refresh)
+   * Old values preserved in the git history for revert. */
+  --radius-sm:   3px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
+  --radius-pill: 4px;
+
+  /* ─── Canonical surface recipe ─────────────────────────────────────
+   * There is ONE card look, defined by components/ui/Card and mirrored
+   * by every page-local card class:
+   *   background:    var(--surface-lowest);
+   *   border:        1px solid transparent;  (status variants override
+   *                                           border-color only)
+   *   border-radius: var(--radius-md);       (--radius-lg on hero panels)
+   *   box-shadow:    var(--shadow-card);
+   * Sanctioned variants — nothing else:
+   *   • grey inset/toolbar: var(--surface-low), flat, radius-md
+   *   • striped inner rows inside a card: flat, square
+   *   • semantic tints via color-mix on bg/border-color only
+   * Do NOT hand-roll new card recipes in page modules. */
 }

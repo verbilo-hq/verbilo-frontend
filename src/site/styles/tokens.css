@@ -3,7 +3,7 @@
    Sections must consume these; no per-file clamp() reinvention.
    No @media (prefers-color-scheme: dark) — site is light-only by design.
    ───────────────────────────────────────────────────────────────────── */
-:root {
+.vsite {
   /* ── Brand ── sampled directly from verbilo-icon-256 transparent PNG.
      #074856 is the exact ink used in the official logo mark. */
   --accent:        #074856;

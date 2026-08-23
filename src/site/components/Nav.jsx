@@ -13,7 +13,7 @@ const LINKS = [
   { href: '#faq',         label: 'Support' },
 ];
 
-export default function Nav() {
+export default function Nav({ onSignIn, signInHref, bookDemoHref }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -59,8 +59,14 @@ export default function Nav() {
 
         <div className={s.right}>
           <a href="#search" className={s.search} aria-label="Search"><Icon name="search" /></a>
-          <a href="https://demo.verbilo.co.uk" className={s.signin}>Sign in</a>
-          <Button href="mailto:hello@verbilo.co.uk" variant="primary" size="sm" className={s.ctaBtn}>Book demo</Button>
+          <a
+            href={signInHref || "#signin"}
+            className={s.signin}
+            onClick={(e) => { if (onSignIn) { e.preventDefault(); onSignIn(); } }}
+          >
+            Sign in
+          </a>
+          <Button href={bookDemoHref || '#demo'} variant="primary" size="sm" className={s.ctaBtn}>Book demo</Button>
           <button
             type="button"
             className={s.menuBtn}
@@ -89,8 +95,8 @@ export default function Nav() {
           </ul>
         </nav>
         <div className={s.sheetCta}>
-          <Button href="mailto:hello@verbilo.co.uk" variant="secondary" size="md" onClick={close}>Start 1-month trial</Button>
-          <Button href="mailto:hello@verbilo.co.uk"  variant="primary"   size="md" arrow onClick={close}>Book a demo</Button>
+          <Button href="#trial" variant="secondary" size="md" onClick={close}>Start 1-month trial</Button>
+          <Button href={bookDemoHref || '#demo'} variant="primary" size="md" arrow onClick={close}>Book a demo</Button>
         </div>
         <p className={s.sheetFootnote}>Free for 1 month · No card · No subscription</p>
       </div>

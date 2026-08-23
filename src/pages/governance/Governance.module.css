@@ -1,0 +1,4436 @@
+/* ============================================================================
+ * Governance & SOPs — shared module styles
+ * ============================================================================ */
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
+.scopedLayout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+}
+
+/* ── Tab-bar layout (replaces inner sidebar) ─────────────────────────────── */
+
+.tabsLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.packHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.packHeaderLeft { display: flex; flex-direction: column; gap: 4px; }
+.packHeaderEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.packHeaderTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--on-surface);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.packHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Post-approval "now Live" banner (PackHub) ─────────────────────────
+ * Transient confirmation that appears on the catalogue after the approval
+ * cascade flips a pack live. "View pack →" jumps into the pack's overview;
+ * "×" dismisses. Cleared automatically when the user opens any pack. */
+.packLiveBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  background: color-mix(in srgb, #2e7d32 7%, var(--surface));
+  border: 1px solid color-mix(in srgb, #2e7d32 30%, var(--outline-variant));
+  border-radius: var(--radius-lg);
+  animation: packLiveBannerIn 0.25s ease-out;
+}
+@keyframes packLiveBannerIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.packLiveBannerText {
+  flex: 1;
+  font-size: 13px;
+  color: var(--on-surface);
+  line-height: 1.45;
+}
+.packLiveBannerText strong { font-weight: 700; }
+.packLiveBannerOpen {
+  background: #2e7d32;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.packLiveBannerOpen:hover { background: #1b5e20; }
+.packLiveBannerDismiss {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  line-height: 1;
+}
+.packLiveBannerDismiss:hover {
+  background: var(--surface-low);
+  color: var(--on-surface);
+}
+
+/* ── Pattern C — Re-evaluation banner (Step 7) ─────────────────────────
+ * Amber/warning callout above the tier sections. Surfaces SOPs the user
+ * skipped that have become applicable again because a flag flipped on at
+ * Step 4. Per-row inline actions: Activate (clears the skip) or Keep
+ * skipped (refreshes the audit-trail confirmedAt). */
+.reEvalBanner {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, #b76e00 6%, var(--surface));
+  border: 1px solid color-mix(in srgb, #b76e00 30%, var(--outline-variant));
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.reEvalBannerHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--on-surface);
+}
+.reEvalBannerHead strong { font-weight: 700; }
+.reEvalBannerSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.45;
+}
+.reEvalList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.reEvalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+}
+.reEvalRowMain { flex: 1; min-width: 0; }
+.reEvalRowTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.reEvalRowMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.reEvalRowMeta code {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10px;
+  padding: 1px 4px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+.reEvalRowMeta em {
+  font-style: italic;
+  color: var(--on-surface);
+}
+.reEvalRowActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.linkBtnSubtle {
+  background: none;
+  border: 1px solid var(--outline-variant);
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.linkBtnSubtle:hover {
+  background: var(--surface-low);
+  color: var(--on-surface);
+}
+
+/* ── Pattern C — Tiered SOP sections (Step 7) ──────────────────────────
+ * Three collapsible sections (Statutory / Recommended / Optional). The
+ * <details>/<summary> chrome gives a free disclosure widget — we just style
+ * the head row to look like a clickable accordion bar with tier badge,
+ * title, and count. */
+.tierSection {
+  margin-top: 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 12px 14px;
+}
+.tierSection[open] { padding-bottom: 14px; }
+.tierSectionHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  padding: 4px 0;
+}
+.tierSectionHead::-webkit-details-marker { display: none; }
+.tierBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.tierTitle {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.tierCount {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+}
+.tierHelp {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Per-row layout: title · status · owner · reviewer · actions */
+.tierRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 140px 140px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--outline-variant);
+  transition: background 0.12s;
+}
+.tierRow:last-child { border-bottom: none; }
+.tierRow:hover { background: var(--surface-low); }
+
+.tierLockedHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+.linkBtnDanger {
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #c62828;
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: background 0.12s, border-color 0.12s;
+}
+.linkBtnDanger:hover {
+  background: rgba(198, 40, 40, 0.08);
+  border-color: rgba(198, 40, 40, 0.25);
+}
+
+/* ── PackSwitcher dropdown ─────────────────────────────────────────────
+ * Title-as-button: clickable pack name with a chevron that opens a menu
+ * of every pack at this tenant, with one-click switching. */
+.packSwitcher {
+  position: relative;
+  display: inline-block;
+}
+.packSwitcherTrigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px 10px 4px 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  transition: background 0.12s, border-color 0.12s;
+}
+.packSwitcherTrigger:hover {
+  background: var(--surface);
+  border-color: var(--outline-variant);
+  padding-left: 10px;
+}
+.packSwitcherChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+.packSwitcherMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: 380px;
+  max-height: 480px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.packSwitcherMenuLabel {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  padding: 8px 10px 4px;
+}
+.packSwitcherRow {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font: inherit;
+  color: var(--on-surface);
+  transition: background 0.12s;
+}
+.packSwitcherRow:hover { background: var(--surface-low); }
+.packSwitcherRowActive {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.packSwitcherDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  justify-self: center;
+}
+.packSwitcherName {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.packSwitcherSub {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 1px;
+}
+
+.packSwitcherFoot {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--outline-variant);
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.packSwitcherFootLink {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+}
+.packSwitcherFootLink:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+
+.packTabBar {
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  overflow-x: auto;
+}
+.packTabLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.packTabLink:hover { background: var(--surface-low); color: var(--on-surface); }
+.packTabLinkActive {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+.tabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+}
+.tabBadgeAlert {
+  background: rgba(229, 57, 53, 0.12);
+  color: #e53935;
+}
+
+/* Alerts list on the Overview tab — compact callout for overdue / config gaps */
+.alertList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alertRow {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+}
+.alertRowTitle { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+.alertRowMeta  { font-size: 11px; color: var(--on-surface-variant); }
+.alertRowSev   { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-lg); }
+
+/* Pack header inline meta strip (status / next review / owner) */
+.packMetaStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+}
+.packMetaCell { display: flex; flex-direction: column; gap: 2px; }
+.packMetaCellLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.packMetaCellValue { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+
+.innerSidebar {
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  height: fit-content;
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.innerSidebarHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--outline-variant);
+  margin-bottom: 6px;
+}
+
+.innerSidebarTitle {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--on-surface);
+}
+
+.innerNavLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+}
+.innerNavLink:hover { background: var(--surface-low); color: var(--on-surface); }
+.innerNavLinkActive {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+.scopedBody {
+  min-width: 0;
+}
+
+.scopedTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.innerSidebarFoot {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.siteFilterRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.siteFilterLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.siteFilterSelect {
+  padding: 7px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  min-width: 220px;
+}
+
+/* ── Export preview page ─────────────────────────────────────────────────── */
+
+.exportRoot { display: flex; flex-direction: column; gap: 16px; }
+.exportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.exportActions { display: flex; gap: 10px; }
+.exportContent { display: flex; flex-direction: column; gap: 14px; }
+.exportSection { padding: 18px; }
+.exportSectionHead {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.exportTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.exportTable th,
+.exportTable td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.exportTable th {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+}
+.exportTable td { color: var(--on-surface); }
+.exportNote {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  text-align: center;
+  padding: 12px;
+}
+
+.kvGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.kvGrid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--on-surface);
+}
+.kvLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+}
+
+/* ── Generic area header ──────────────────────────────────────────────────── */
+
+.intro      { margin: 8px 0 22px; }
+.introTitle { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin: 0 0 8px; color: var(--on-surface); }
+.introLead  { color: var(--on-surface-variant); font-size: 13px; line-height: 1.55; max-width: 760px; margin: 0; }
+
+.areaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 8px 0 14px;
+}
+
+.areaEyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.areaTitle {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: var(--on-surface);
+}
+
+.areaLead {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 760px;
+  margin: 0 0 16px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+.cardLead {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.bodyText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 12px;
+}
+.backBtn:hover { opacity: 0.75; }
+
+.linkBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  font: inherit;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+}
+.linkBtn:hover { color: var(--primary); }
+
+/* ── Pack hub ─────────────────────────────────────────────────────────────── */
+
+.packGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  gap: 18px;
+}
+
+.packCard {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.packCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.packCardIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.packCardSub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.packCardTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 4px 0 0;
+}
+
+.packCardDesc {
+  color: var(--on-surface-variant);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+
+.packCardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 8px 0;
+  border-top: 1px solid var(--outline-variant);
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.packCardMetaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.packCardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.packCardResetLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+  margin-top: 8px;
+  padding: 4px 6px;
+  background: transparent;
+  border: none;
+  color: var(--outline);
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+}
+
+.packCardResetLink:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--on-surface);
+}
+
+/* ── Wizard ───────────────────────────────────────────────────────────────── */
+
+.wizardProgress {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 6px;
+}
+.wizardStepWrap { display: flex; align-items: center; flex: 1; }
+.wizardDot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--surface-container);
+  border: 2px solid var(--outline-variant);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+  font-family: var(--font-display);
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.wizardDotDone { background: var(--primary); border-color: var(--primary); color: white; }
+.wizardDotCurrent {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.wizardLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  margin-left: 7px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.wizardLabelCurrent { color: var(--primary); font-weight: 800; }
+.wizardConnector {
+  flex: 1;
+  height: 2px;
+  margin: 0 6px;
+  background: var(--outline-variant);
+  border-radius: 999px;
+  min-width: 12px;
+}
+.wizardConnectorDone { background: var(--primary); }
+
+.wizardBody { padding: 28px; }
+.wizardFooter {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--surface-low);
+  border-top: 1px solid var(--outline-variant);
+  align-items: center;
+}
+
+.wizStep { display: flex; flex-direction: column; gap: 14px; }
+.wizStepTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--on-surface);
+}
+.wizStepLead {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+  margin: 0 0 8px;
+}
+.wizFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.wizField { display: flex; flex-direction: column; gap: 6px; }
+.wizLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wizHint {
+  text-transform: none;
+  font-weight: 500;
+  color: var(--outline);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+.wizInput, .wizSelect {
+  padding: 9px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  color: var(--on-surface);
+  transition: border-color 0.15s;
+}
+.wizInput:focus, .wizSelect:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.wizColor {
+  width: 44px; height: 38px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+.wizHintBox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--on-surface);
+}
+.wizActions { display: flex; gap: 10px; margin-top: 14px; }
+
+/* ── Sites grid (applicability + site list) ──────────────────────────────── */
+
+.siteGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.siteApplyCard {
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1.5px solid var(--outline-variant);
+  transition: border-color 0.15s, background 0.15s;
+}
+.siteApplyCard:hover { border-color: var(--primary); }
+.siteApplyCardActive {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.siteApplyTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.siteCheckbox {
+  width: 20px; height: 20px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--outline-variant);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
+}
+.siteCheckboxOn {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.siteApplyName {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--on-surface);
+}
+.siteApplyLocation {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.siteListGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.siteRowCard {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+.siteRowName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--on-surface);
+}
+.siteRowMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+.siteHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 18px;
+}
+.siteHeaderSub {
+  color: var(--on-surface-variant);
+  font-size: 12px;
+}
+
+.siteFooterCard {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 18px;
+  cursor: pointer;
+  border: 1px solid var(--outline-variant);
+}
+.siteFooterCard:hover { border-color: var(--primary); }
+
+/* ── Profile flags ────────────────────────────────────────────────────────── */
+
+.flagGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.flagRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  color: var(--on-surface);
+  text-align: left;
+}
+.flagRow:hover { background: var(--surface-low); }
+.flagRowOn {
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  border-color: var(--primary);
+}
+.flagCheck {
+  width: 18px; height: 18px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--outline-variant);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface);
+}
+.flagCheckOn { background: var(--primary); border-color: var(--primary); }
+
+/* ── Equipment register ──────────────────────────────────────────────────── */
+
+.equipmentRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 18px;
+  border-top: 1px solid var(--outline-variant);
+}
+.equipmentRow:first-child { border-top: none; }
+.equipmentService {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.iconBtn {
+  width: 28px; height: 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.iconBtn:hover { background: var(--surface-low); }
+
+/* ── Documents ───────────────────────────────────────────────────────────── */
+
+.docHeader {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0 14px;
+}
+.docFilters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--surface-container);
+  border: 1px solid var(--outline-variant);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.chipOn {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.docBucketCard {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.docBucketHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.docRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--outline-variant);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+}
+.docRow:last-child { border-bottom: none; }
+.docRow:hover { background: var(--surface-low); }
+.docRowTitle {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--on-surface);
+}
+.docRowMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+.docDetailHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.docDetailType {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+.docDetailMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  flex-wrap: wrap;
+}
+
+.docActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tabBar {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+.tabBtn:hover { color: var(--on-surface); }
+.tabBtnActive { color: var(--primary); border-bottom-color: var(--primary); }
+
+.docBody {
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  white-space: pre-wrap;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--on-surface);
+}
+
+/* ── Versions list ───────────────────────────────────────────────────────── */
+
+.versionList { display: flex; flex-direction: column; gap: 10px; }
+.versionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+}
+.versionMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ── Acknowledgements ────────────────────────────────────────────────────── */
+
+.ackRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.ackRow:last-child { border-bottom: none; }
+.ackTitle {
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--on-surface);
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+.ackTitle:hover { color: var(--primary); }
+.ackMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+/* ── Evidence rows ───────────────────────────────────────────────────────── */
+
+.evidenceRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 16px;
+  border-top: 1px solid var(--outline-variant);
+}
+.evidenceRow:first-child { border-top: none; }
+.evidenceMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.uploaderZone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1.5px dashed var(--outline-variant);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  width: 100%;
+}
+.uploaderZone:hover { border-color: var(--primary); background: var(--surface-low); color: var(--on-surface); }
+.uploaderZoneFilled {
+  border-style: solid;
+  border-color: var(--primary);
+  color: var(--on-surface);
+}
+
+/* ── Stats / bar ─────────────────────────────────────────────────────────── */
+
+.dashGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.statTile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+}
+.statTileIcon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.statTileValue {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.statTileLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  margin-top: 5px;
+}
+.statTileHelper {
+  font-size: 10px;
+  color: var(--outline);
+  margin-top: 3px;
+}
+
+.bar {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--outline-variant);
+  overflow: hidden;
+}
+.barFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.siteCompList { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.siteCompRow {
+  display: grid;
+  grid-template-columns: 200px 1fr 60px auto;
+  gap: 14px;
+  align-items: center;
+  padding: 6px 0;
+}
+.siteCompName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.siteCompPct {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ── Provided-by-platform / client tags ──────────────────────────────────── */
+
+.providedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.clientTag {
+  background: #f57c00;
+  color: white;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 90;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+}
+.modalHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.modalTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* ── Empty + Review ──────────────────────────────────────────────────────── */
+
+.emptyCard {
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--on-surface-variant);
+}
+
+/* `align-items: stretch` (grid default) + h-full on children keeps the
+ * two summary cards aligned to a single baseline even when one carries
+ * fewer rows than the other. */
+.reviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.reviewCard {
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.reviewCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.reviewCardTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0;
+}
+.reviewList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--on-surface);
+}
+
+.awaitingHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.awaitingTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--on-surface);
+}
+
+/* ── History rows ────────────────────────────────────────────────────────── */
+
+.historyList { display: flex; flex-direction: column; gap: 12px; position: relative; }
+.historyList::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--outline-variant);
+}
+.historyRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  position: relative;
+}
+.historyDot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-top: 3px;
+  flex-shrink: 0;
+  border: 2px solid var(--surface);
+  z-index: 1;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .scopedLayout { grid-template-columns: 1fr; }
+  .innerSidebar { position: static; }
+  .dashGrid { grid-template-columns: repeat(2, 1fr); }
+  .reviewGrid { grid-template-columns: 1fr; }
+  .wizFormGrid { grid-template-columns: 1fr; }
+  .flagGrid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================================
+ * Protocol Viewer
+ * Structured controlled-document layout: information / version control /
+ * read & approved by (signatures). Mirrors the printable protocol pattern.
+ * ============================================================================ */
+
+.pvRoot { display: flex; flex-direction: column; gap: 18px; padding-bottom: 32px; }
+
+.pvDocHeader { padding: 4px 0 0; }
+.pvDocEyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--primary); margin-bottom: 6px;
+}
+.pvDocTitle {
+  font-family: var(--font-display);
+  font-size: 28px; font-weight: 800; color: var(--on-surface);
+  margin: 0; line-height: 1.2;
+}
+.pvDocSubtitle { font-size: 13px; color: var(--on-surface-variant); margin: 6px 0 0; max-width: 780px; line-height: 1.5; }
+
+.pvBodyCard { padding: 22px; display: flex; flex-direction: column; gap: 22px; }
+
+/* Header strip — APPLIES TO / FREQUENCY / LEAD / EVIDENCE */
+.pvHeaderStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1px;
+  background: var(--outline-variant);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.pvHeaderCell { background: var(--surface); padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+.pvHeaderCellLabel {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.pvHeaderCellValue { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+
+/* Protocol standard callout */
+.pvStandard {
+  background: color-mix(in srgb, #006974 8%, transparent);
+  border-left: 4px solid #006974;
+  padding: 14px 18px; border-radius: var(--radius-md);
+}
+.pvStandardLabel {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #006974;
+}
+.pvStandardText { font-size: 13.5px; color: var(--on-surface); margin: 6px 0 0; line-height: 1.55; }
+
+/* Two-column rows (purpose+controls, audit+documentation) */
+.pvTwoCol { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 800px) { .pvTwoCol { grid-template-columns: 1fr; } }
+
+.pvPurposeBox {
+  background: color-mix(in srgb, #006974 5%, transparent);
+  border: 1px solid color-mix(in srgb, #006974 20%, transparent);
+  padding: 14px 16px; border-radius: var(--radius-md);
+}
+.pvControlsBox {
+  background: rgba(229, 57, 53, 0.06);
+  border: 1px solid rgba(229, 57, 53, 0.2);
+  padding: 14px 16px; border-radius: var(--radius-md);
+}
+
+.pvSectionTitle {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  margin: 0 0 8px 0;
+}
+.pvBulletList { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--on-surface); }
+.pvBulletList li + li { margin-top: 5px; }
+
+/* Numbered workflow */
+.pvWorkflow {
+  display: flex; flex-direction: column; gap: 1px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.pvWorkflowStep {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pvWorkflowStep:last-child { border-bottom: none; }
+.pvWorkflowNum {
+  width: 28px; height: 28px; border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+}
+.pvWorkflowTitle { font-size: 13.5px; font-weight: 700; color: var(--on-surface); margin-bottom: 3px; }
+.pvWorkflowDesc  { font-size: 12.5px; color: var(--on-surface); line-height: 1.5; }
+
+/* Decision table */
+.pvTable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-size: 13px;
+}
+.pvTable th {
+  background: var(--primary);
+  color: white;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+}
+.pvTable td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  vertical-align: top;
+}
+.pvTable tr:last-child td { border-bottom: none; }
+.pvTable td:first-child {
+  font-weight: 700;
+  color: var(--primary);
+  width: 110px;
+  white-space: nowrap;
+}
+
+/* Pathway snapshot strip */
+.pvPathway {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  background: var(--surface-low);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline-variant);
+}
+.pvPathwayPhase {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 8px 12px;
+  position: relative;
+}
+.pvPathwayPhaseTitle { font-size: 13px; font-weight: 700; color: var(--on-surface); }
+.pvPathwayPhaseDesc  { font-size: 11.5px; color: var(--on-surface-variant); }
+
+/* Audit + documentation prompts */
+.pvAuditBox {
+  background: rgba(245, 124, 0, 0.06);
+  border: 1px solid rgba(245, 124, 0, 0.2);
+  padding: 14px 16px; border-radius: var(--radius-md);
+}
+.pvDocPromptBox {
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  padding: 14px 16px; border-radius: var(--radius-md);
+}
+.pvDocPromptCaption { font-size: 12px; color: var(--on-surface-variant); margin: 0 0 10px; line-height: 1.5; }
+.pvDocPromptGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.pvDocPromptField { display: flex; flex-direction: column; gap: 4px; }
+.pvDocPromptLabel {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.pvDocPromptLine { height: 1px; background: var(--outline-variant); margin-top: 14px; }
+
+/* Clinical sources */
+.pvSourceList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.pvSourceLink {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--primary);
+  text-decoration: none;
+}
+.pvSourceLink:hover { text-decoration: underline; }
+
+/* ─── Version control panel ──────────────────────────────────────────── */
+.pvVersionCard { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.pvVersionHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.pvVersionEyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.pvVersionTitle {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 800; color: var(--on-surface);
+  margin: 4px 0 0 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.pvVersionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 24px;
+}
+.pvVersionGrid > div { display: flex; flex-direction: column; gap: 2px; }
+.pvKvLabel {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.pvVersionGrid > div > span:not(.pvKvLabel) { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+
+.pvChangeSummary {
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.pvChangeSummary p { font-size: 13px; color: var(--on-surface); margin: 4px 0 0; line-height: 1.5; }
+
+/* ─── Signatures panel ───────────────────────────────────────────────── */
+.pvSigCard { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.pvSigCaption { font-size: 13px; color: var(--on-surface-variant); margin: 0; line-height: 1.5; max-width: 780px; }
+
+.pvSigEmpty {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px;
+  background: var(--surface-low);
+  border: 1px dashed var(--outline-variant);
+  border-radius: var(--radius-md);
+  font-size: 13px; color: var(--on-surface-variant);
+}
+
+.pvSigList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1px; border: 1px solid var(--outline-variant); border-radius: var(--radius-md); overflow: hidden; }
+.pvSigRow {
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pvSigRow:last-child { border-bottom: none; }
+.pvSigInitials {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 13px;
+}
+.pvSigInfo { display: flex; flex-direction: column; gap: 2px; }
+.pvSigName { font-size: 13.5px; font-weight: 700; color: var(--on-surface); }
+.pvSigRole { font-size: 11.5px; color: var(--on-surface-variant); }
+.pvSigTimestamp { font-size: 11.5px; color: var(--on-surface-variant); white-space: nowrap; }
+
+.pvSigFormWrap {
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.pvSigForm { display: flex; flex-direction: column; gap: 12px; }
+.pvSigField { display: flex; flex-direction: column; gap: 4px; max-width: 420px; }
+.pvSigInput {
+  padding: 9px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 14px;
+  font-family: 'Brush Script MT', cursive, var(--font-display);  /* feels like a signature */
+  color: var(--primary);
+  letter-spacing: 0.01em;
+}
+.pvSigInput:focus { outline: 2px solid color-mix(in srgb, var(--primary) 30%, transparent); outline-offset: -1px; }
+.pvSigActions { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+
+.pvSigError {
+  background: rgba(229, 57, 53, 0.1);
+  color: #b71c1c;
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.pvSigConfirm p { font-size: 13.5px; color: var(--on-surface); margin: 0 0 10px; line-height: 1.55; }
+
+.pvSigAlreadyMsg {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: #2e7d32;
+}
+
+/* Prominent "Preview the protocol library" callout on the Clinical
+ * Governance pack's wizard intro. Sits between the lead copy and the
+ * Next button. */
+.previewLibraryCard {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 18px 20px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 7%, transparent),
+    color-mix(in srgb, var(--primary) 2%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: var(--radius-lg);
+}
+@media (max-width: 720px) {
+  .previewLibraryCard {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+.previewLibraryIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.previewLibraryBody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.previewLibraryTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--on-surface);
+  margin: 0;
+}
+.previewLibraryDesc {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Group adoption + clinician acknowledgements — two stacked sub-sections
+ * inside the SignaturesPanel card. The thin divider above the acks section
+ * visually separates the single CD adoption signature from the multiple
+ * clinician acknowledgements that follow it. */
+.pvAdoptSection { display: flex; flex-direction: column; gap: 10px; }
+.pvAckSection {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--outline-variant);
+}
+.pvAdoptHead { display: flex; flex-direction: column; gap: 6px; }
+.pvAdoptHead .pvSectionTitle { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Endo-source small annotation tiles — Clinical Intent (page 1 boilerplate)
+ * and Local Sign-Off (page 2 adaptation note). Distinct from the main
+ * ProtocolStandard tile so the source's voice is preserved without being
+ * mistaken for the standard itself. */
+.pvIntent, .pvSignOffNote {
+  border-left: 3px solid var(--outline-variant);
+  background: color-mix(in srgb, var(--surface-container) 60%, transparent);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  margin: 6px 0;
+}
+.pvSignOffNote { border-left-color: #b36000; }
+.pvIntentLabel {
+  display: block;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+.pvIntentText { font-size: 13px; color: var(--on-surface); margin: 0; line-height: 1.5; }
+
+/* Plain-text variant for internal references in ClinicalSources — used when
+ * the source PDF cites a local procedure rather than an external standard. */
+.pvSourceLocal {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--on-surface-variant);
+}
+
+/* Category grouping for the protocol library. Each clinical specialty gets a
+ * heading + count and its own card with the protocols in source order. Keeps
+ * the library scannable as the pack grows beyond a single specialty. */
+.pvCategoryBlock { margin-top: 20px; }
+.pvCategoryHead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 8px;
+  border-left: 4px solid transparent;
+  padding-left: 10px;
+}
+.pvCategoryTitle {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 800;
+  margin: 0;
+}
+.pvCategoryCount {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+
+/* Library: sticky category tabs at the top of the protocol library. Click
+ * jumps to that specialty section. Each tab is colour-coded so a clinician
+ * scanning the library knows where each specialty lives. */
+.pvLibTabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 14px 0 18px;
+  padding: 10px 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pvLibTab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface-container);
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 700;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.pvLibTab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--on-surface) 12%, transparent);
+}
+/* Filled active state — the category colour itself comes from inline
+ * style on the button (so each specialty gets its own). The shadow lifts
+ * the active tab so the current filter is unambiguous at a glance. */
+.pvLibTabActive {
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--on-surface) 18%, transparent);
+}
+.pvLibTabActive .pvLibTabCount {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.pvLibTabDot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.pvLibTabCount {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 18px; padding: 0 6px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 10px; font-weight: 800; letter-spacing: 0;
+}
+
+/* Viewer: sticky top header — back link + category pill + title + status
+ * pills + a primary CTA that jumps to the sign-off panel. Stays in view as
+ * the body scrolls so the action is always one click away. The top border
+ * picks up the category colour for instant context. */
+.pvStickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-top: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 12px 16px 0;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--on-surface) 6%, transparent);
+}
+.pvStickyTop {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+}
+
+/* Prominent Back button — replaces the subtle text link in the sticky
+ * viewer header so users can always see at a glance how to return to the
+ * library. Chip-style outlined; fills with the primary colour on hover. */
+.pvBackBtn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px 7px 11px;
+  border-radius: 999px;
+  border: 1.5px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+.pvBackBtn:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+  transform: translateX(-2px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.pvStickyMid {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+}
+.pvStickyTitleWrap { min-width: 0; flex: 1; }
+.pvStickyRef {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  margin-bottom: 2px;
+}
+.pvStickyTitle {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1.25;
+  margin: 0 0 4px;
+}
+.pvStickySubtitle {
+  font-size: 12px; color: var(--on-surface-variant);
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.pvStickyActions {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pvStickyStatus {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end;
+}
+
+/* Section quick-nav row below the sticky header. Each pill scrolls to an
+ * anchored section of the viewer. Conditional on the protocol actually
+ * having that section. */
+/* Section anchors — leave room below the sticky header when the
+ * sticky-CTA "Adopt for the group" jumps to the sign-off panel. */
+.pvRoot section[id^="section-"] {
+  scroll-margin-top: 180px;
+}
+
+/* ── Two-pane reading layout ─────────────────────────────────────────
+ *
+ * Replaces the older single-column flow + section-nav button row.
+ * The viewer now reads like an embedded PDF policy manifesto with a
+ * sticky action rail to its right.
+ *
+ *   ┌───────────────────────────────┬──────────────────┐
+ *   │  pvScrollPane                 │  pvActionRail    │
+ *   │  (continuous document body,   │  Version meta    │
+ *   │   overflow-y: auto, thin      │  ───────────     │
+ *   │   scrollbar, fixed max-height)│  …               │
+ *   │                               │  Read & Sign     │
+ *   │                               │  Submit btn ↘   │
+ *   └───────────────────────────────┴──────────────────┘
+ */
+
+.pvReadingGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  /* `start` (not stretch) so both columns share the SAME top edge —
+   * the left "paper sheet" and the right Version Control card now
+   * sit on the same horizontal baseline regardless of their internal
+   * content height. Explicit zero margins on the immediate children
+   * below guarantee no stray top-margin pushes the columns out of
+   * sync. */
+  align-items: start;
+  margin-top: 16px;
+}
+/* Hard-zero the top margin on the grid children + their first nested
+ * <section> so the paper sheet's top edge lines up to the pixel with
+ * the Version Control card's top edge. */
+.pvReadingGrid > .pvScrollPane,
+.pvReadingGrid > .pvActionRail { margin-top: 0; }
+.pvReadingGrid > .pvScrollPane > section:first-child,
+.pvReadingGrid > .pvActionRail  > section:first-child { margin-top: 0; }
+
+/* Left pane — fixed-height continuous scroll container, styled as a
+ * premium "PDF paper" sheet.
+ *
+ * Soft slate-50 background + thin slate-200 border + generous 36/40
+ * padding gives the impression of an officially printed policy
+ * document sheet sitting on the page. The inner Card primitive has
+ * its surface stripped (`.pvScrollPane .pvBodyCard` rule below) so
+ * the pane itself acts as the document.
+ *
+ * 220px below 100vh covers the sticky header + AppHeader + a little
+ * breathing room. Switches to a natural-flow layout under 960px so
+ * the right rail drops below the document on narrow screens. */
+.pvScrollPane {
+  background: #f8fafc;                          /* slate-50 — soft off-white sheet */
+  border: 1px solid #e2e8f0;                    /* slate-200 — thin crisp edge */
+  border-radius: var(--radius-lg);
+  padding: 36px 40px;                           /* generous interior, document-feel */
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+}
+.pvScrollPane::-webkit-scrollbar { width: 6px; }
+.pvScrollPane::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
+  border-radius: 999px;
+}
+.pvScrollPane::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.32);
+}
+.pvScrollPane::-webkit-scrollbar-track { background: transparent; }
+
+/* Strip the inner Card surface so the pane IS the document. Without
+ * this the Card primitive renders its own white background + border
+ * + 22px padding INSIDE the new sheet, producing a "card in a card"
+ * effect that breaks the PDF illusion. The Card's internal flex gap
+ * stays intact so sections still breathe. */
+.pvScrollPane .pvBodyCard {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Anchors inside the scroll pane don't need the same 180px offset
+ * the page-level scroll does — they jump within the pane itself. */
+.pvScrollPane section[id^="section-"] { scroll-margin-top: 8px; }
+
+/* Right rail — sticky, full-height flex column. */
+.pvActionRail {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: calc(100vh - 220px);
+}
+.pvActionRailTop {
+  flex: 0 0 auto;
+}
+/* margin-top: auto pushes the signature card to the bottom of the
+ * rail so the Submit Signature CTA always sits at the bottom-right
+ * edge — visible the entire time the reader is scrolling the doc. */
+.pvActionRailBottom {
+  margin-top: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 960px) {
+  .pvReadingGrid {
+    grid-template-columns: 1fr;
+  }
+  .pvScrollPane {
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+  .pvActionRail {
+    position: static;
+    max-height: none;
+  }
+  .pvActionRailBottom {
+    margin-top: 0;
+  }
+}
+
+/* ─── Protocol Compliance Dashboard ─────────────────────────────────────── */
+
+/* Top row in the library that holds Back button + Compliance CTA, justified
+ * to opposite sides. */
+.libTopRow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 6px;
+}
+
+/* CTA on the library page that opens the compliance dashboard. Same
+ * chip-button language as pvBackBtn but in a secondary-colour scheme so
+ * it doesn't compete visually with the primary Back action. */
+.complianceCTA {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+.complianceCTA:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+/* Summary tile strip at the top of the dashboard. Four tiles by default;
+ * wraps to two-up on narrow screens. */
+.complianceTileRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+.complianceTile {
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-left: 4px solid var(--outline);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.complianceTileLabel {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+.complianceTileValue {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1;
+}
+.complianceTileValue span {
+  font-size: 13px; font-weight: 600;
+  color: var(--on-surface-variant);
+  margin-left: 4px;
+}
+
+/* Generic card wrapper for dashboard sections. */
+.complianceCard { padding: 16px; margin-bottom: 16px; }
+.complianceCardHead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px;
+  margin-bottom: 10px;
+}
+.complianceCardTitle {
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 800;
+  color: var(--on-surface);
+  margin: 0;
+}
+.complianceCardHint {
+  font-size: 11px; font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+/* Site rollup list — each site row is clickable to filter the dashboard. */
+.complianceSiteList { display: flex; flex-direction: column; gap: 4px; }
+.complianceSiteRow {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 1.2fr) minmax(140px, 1.5fr) 60px;
+  align-items: center; gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.complianceSiteRow:hover {
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+.complianceSiteRowActive {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.complianceSiteName {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 700;
+  color: var(--on-surface);
+}
+.complianceSiteClinicians {
+  font-size: 11px; font-weight: 600;
+  color: var(--on-surface-variant);
+}
+.complianceSiteBar {
+  display: block;
+  height: 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--on-surface) 8%, transparent);
+  overflow: hidden;
+}
+.complianceSiteBarFill {
+  display: block; height: 100%; border-radius: 999px;
+}
+
+/* Gap-focus list */
+.complianceLensTabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.complianceLensTab {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 700;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.complianceLensTab:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 30%, transparent); }
+.complianceLensTabActive {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+.complianceLensTabCount {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 18px; padding: 0 6px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-size: 10px; font-weight: 800;
+}
+.complianceLensTabActive .complianceLensTabCount {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+}
+
+.complianceGapList { display: flex; flex-direction: column; gap: 6px; }
+.complianceGapRow {
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.complianceGapHead {
+  display: grid;
+  grid-template-columns: 80px minmax(180px, 2fr) minmax(120px, auto) minmax(140px, 1.2fr) 60px 14px;
+  align-items: center; gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  border: none; background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.complianceGapHead:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.complianceGapRef {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.03em;
+}
+.complianceGapTitle {
+  font-size: 13px; font-weight: 700; color: var(--on-surface);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.complianceGapMeta {
+  font-size: 11px; font-weight: 600;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+.complianceGapBar {
+  display: block;
+  height: 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--on-surface) 8%, transparent);
+  overflow: hidden;
+}
+.complianceGapBarFill {
+  display: block; height: 100%; border-radius: 999px;
+}
+.complianceGapPending {
+  padding: 12px 16px 14px;
+  background: color-mix(in srgb, var(--surface-container) 60%, transparent);
+  border-top: 1px solid var(--outline-variant);
+}
+.complianceGapPendingLabel {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  margin-bottom: 8px;
+}
+.complianceGapPendingList { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px; }
+.complianceGapPendingItem {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(110px, 1fr) minmax(90px, 1fr);
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+}
+.complianceGapPendingName { font-weight: 700; color: var(--on-surface); }
+.complianceGapPendingRole { color: var(--on-surface-variant); }
+.complianceGapPendingSite { color: var(--on-surface-variant); }
+
+/* Clinician list */
+.complianceClinicianList { display: flex; flex-direction: column; gap: 4px; }
+.complianceClinicianRow {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.2fr);
+  align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.complianceClinicianRow:last-child { border-bottom: none; }
+.complianceClinicianName { font-size: 13px; font-weight: 700; color: var(--on-surface); }
+.complianceClinicianMeta { font-size: 11px; color: var(--on-surface-variant); margin-top: 2px; }
+.complianceClinicianStats {
+  display: grid;
+  grid-template-columns: 80px minmax(80px, 1fr) 60px;
+  align-items: center; gap: 10px;
+}
+.complianceClinicianStat { font-size: 11px; font-weight: 600; color: var(--on-surface-variant); }
+.complianceClinicianBar {
+  display: block;
+  height: 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--on-surface) 8%, transparent);
+  overflow: hidden;
+}
+.complianceClinicianBarFill { display: block; height: 100%; border-radius: 999px; }
+
+.complianceEmpty {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px;
+  font-size: 13px; color: var(--on-surface-variant);
+  background: color-mix(in srgb, var(--surface-container) 60%, transparent);
+  border-radius: var(--radius-md);
+}
+.complianceFooter {
+  font-size: 12px; color: var(--on-surface-variant);
+  margin-top: 14px;
+}
+
+/* ── Clinical Protocols — layered library ──────────────────────────────── */
+
+.protoBreadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+  margin: 12px 0 6px;
+}
+.protoBreadcrumbCurrent {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.protoSearchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 14px;
+}
+.protoSearchWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+.protoSearchWrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.protoSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--on-surface);
+}
+.protoSearchInput::placeholder { color: var(--on-surface-variant); }
+.protoSearchClear {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  display: grid;
+  place-items: center;
+}
+.protoTotalChip {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  background: var(--surface-container);
+  border-radius: 999px;
+  padding: 6px 14px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.protoSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.protoSummaryCard {
+  background: var(--surface);
+  border: 1.5px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+}
+.protoSummaryCard:hover { border-color: var(--primary); }
+.protoSummaryCard:active { transform: scale(0.99); }
+.protoSummaryCardActive {
+  border-width: 1.5px;
+}
+.protoSummaryCount {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.protoSummaryLabel {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+.protoTabStrip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--outline-variant);
+  padding-bottom: 2px;
+}
+.protoTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--outline-variant);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  bottom: -1px;
+}
+.protoTabActive {
+  background: var(--surface);
+  border-color: var(--outline-variant);
+  color: var(--on-surface);
+  box-shadow: inset 0 2px 0 var(--primary);
+}
+.protoTabCount {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.protoStatusChipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.protoStatusChipLabel {
+  color: var(--on-surface-variant);
+  font-weight: 600;
+  margin-right: 4px;
+}
+.protoStatusChip {
+  padding: 4px 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--on-surface-variant);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.protoStatusChip:hover { background: var(--surface-low); }
+.protoStatusChipActive {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.protoBackToSpecs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-surface);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+.protoBackToSpecs:hover { background: var(--surface-low); }
+
+.protoCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+
+.protoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.protoCard:hover {
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--outline-variant));
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.protoCardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.protoCardRef {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+.protoCardTitleWrap { flex: 1; min-width: 0; }
+.protoCardTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+}
+.protoCardSubtitle {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+.protoCardStatusGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.protoCardMeta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 11.5px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 10px;
+}
+.protoCardMetaRow { display: contents; }
+.protoCardMetaLabel {
+  color: var(--on-surface-variant);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.protoCardMetaValue {
+  color: var(--on-surface);
+}
+
+.protoCardFoot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 10px;
+}
+
+.protoSpecGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.protoSpecCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--outline-variant);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, transform 0.05s, box-shadow 0.15s;
+}
+.protoSpecCard:hover {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.protoSpecCardHead { display: flex; align-items: center; gap: 8px; }
+.protoSpecCardDot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.protoSpecCardTitle {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.protoSpecCardCount {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+}
+.protoSpecCardSummary {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+  min-height: 16px;
+}
+.protoSpecCardCta {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.protoEmpty {
+  text-align: center;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.protoEmptyTitle {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin-top: 4px;
+}
+.protoEmptyBody {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+.protoSectionTitle {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  margin: 8px 0 12px;
+}
+
+
+/* ── Wizard per-site rail (steps 3 & 4 of PackSetup) ─────────────────────── */
+.siteSplit {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  margin-top: 4px;
+  align-items: start;
+}
+.siteSplitRail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  position: sticky;
+  top: 12px;
+}
+.siteSplitRailLabel {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+  padding: 2px 4px 4px;
+}
+.siteSplitPane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.siteSplitSection {
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.siteSplitSection:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.siteSplitSectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.siteSplitSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.siteRailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--on-surface);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.siteRailRow:hover { background: var(--surface); }
+.siteRailRowActive {
+  background: var(--surface);
+  border-color: var(--primary);
+}
+.siteRailRowName { font-size: 12px; font-weight: 600; }
+.siteRailRowPct {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-variant);
+}
+
+/* ── Equipment register (step 4) ─────────────────────────────────────────── */
+.equipmentEmpty {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  padding: 4px 2px 4px;
+}
+.equipmentAddCard {
+  border: 1px dashed var(--primary);
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Review step per-site cards (step 5) ─────────────────────────────────── */
+.reviewSiteCard {
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reviewSiteHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.reviewSiteRow {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--on-surface);
+}
+.reviewSiteLabel {
+  flex: 0 0 130px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+/* ── Documents & SOPs to Review (PackSetup step 6) ───────────────────────── */
+.docCountStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 6px 0 4px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.docCount {
+  padding: 4px 10px;
+  background: var(--surface-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: 99px;
+}
+.docCount strong {
+  font-family: var(--font-display);
+  color: var(--on-surface);
+  font-weight: 800;
+  margin-right: 4px;
+}
+
+.docTableHead, .docTableRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2.4fr) 100px 110px minmax(120px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 70px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.docTableHead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.docTableRow {
+  border-bottom: 1px solid var(--outline-variant);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.docTableRow:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.docTableRow:last-child { border-bottom: none; }
+.docTitleCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  min-width: 0;
+}
+.docTitleCell > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dim { color: var(--on-surface-variant); }
+
+.docEmpty {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+.skippedSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  list-style: none;
+}
+.skippedSummary::-webkit-details-marker { display: none; }
+.skippedSummary::before {
+  content: "▸";
+  font-size: 10px;
+  color: var(--on-surface-variant);
+  transition: transform 0.15s;
+}
+details[open] .skippedSummary::before { transform: rotate(90deg); }
+.skippedList {
+  margin: 10px 0 6px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.skippedList li { color: var(--on-surface); }
+.skippedReason {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.skippedReason code {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 11px;
+  padding: 1px 4px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+.skippedHint {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin: 8px 0 0;
+  font-style: italic;
+}
+
+/* ── Per-document editor modal (Documents to Review step) ────────────────── */
+.docModalScrim {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--on-surface) 32%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  z-index: 60;
+  overflow-y: auto;
+}
+.docModalCard {
+  width: 100%;
+  max-width: 1280px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 64px);
+}
+.docModalHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.docModalTitle {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: var(--on-surface);
+}
+.docModalSub {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.docModalClose {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+}
+.docModalClose:hover { background: var(--surface-low); }
+
+.docModalBody {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+.docModalGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 12px 16px;
+}
+.docModalSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.docModalEditCol, .docModalPreviewCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.docModalEditLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.docModalEdit {
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 12px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  resize: vertical;
+  min-height: 380px;
+}
+.docModalEdit:focus { outline: none; border-color: var(--primary); }
+.docModalEdit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.docModalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--outline-variant);
+}
+
+/* ── Site appendices step (PackSetup step 7) ─────────────────────────────── */
+.appendixTableHead, .appendixTableRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 2.2fr) minmax(200px, 1.8fr) 110px 80px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.appendixTableHead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.appendixTableRow {
+  border-bottom: 1px solid var(--outline-variant);
+  transition: background 0.12s ease;
+}
+.appendixTableRow:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.appendixTableRow:last-child { border-bottom: none; }
+
+/* ── Awaiting Approval screen (post-submit, pre-publish cascade) ─────────── */
+.approvalHeader { margin-bottom: 14px; }
+.approvalSummary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.approvalSummaryCard {
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.approvalSummaryNum {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+.approvalSummaryLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+}
+
+.approvalWarning {
+  padding: 12px 16px;
+  border-left: 4px solid #c62828;
+  background: color-mix(in srgb, #c62828 6%, var(--surface));
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.approvalWarningHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #7a1f1f;
+}
+
+.approvalDocGroup {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--outline-variant);
+}
+.approvalDocGroup:first-of-type {
+  border-top: none;
+  padding-top: 6px;
+}
+.approvalDocGroupHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.approvalDocGroupCount {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-weight: 600;
+}
+.approvalDocList {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 12px;
+  color: var(--on-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.approvalSiteList {
+  margin: 8px 0 0;
+  padding-left: 22px;
+  font-size: 13px;
+  color: var(--on-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.approvalActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.approvalConfirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--on-surface);
+  flex-wrap: wrap;
+}
+
+.approvalCommentBox {
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  color: var(--on-surface);
+  resize: vertical;
+  min-height: 100px;
+  margin-top: 10px;
+}
+.approvalCommentBox:focus { outline: none; border-color: var(--primary); }
+
+/* ── Audit & Evidence Setup step (PackSetup step 8) ──────────────────────── */
+.auditTableHead, .auditTableRow {
+  display: grid;
+  /* Sites column is fixed-width (210px) so it doesn't expand under long
+   * site-name pressure or push the Owner select out of view at 10+ sites.
+   * Owner column uses minmax for its select dropdown; Audit + Frequency
+   * keep their existing weights. */
+  grid-template-columns: minmax(220px, 2.2fr) 160px minmax(220px, 1fr) 210px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+.auditTableHead {
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.auditTableRow {
+  border-bottom: 1px solid var(--outline-variant);
+}
+.auditTableRow:last-child { border-bottom: none; }
+.auditCell { min-width: 0; }
+.auditTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-bottom: 2px;
+}
+.auditMeta {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.auditMeta code {
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 10px;
+  padding: 1px 4px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+.auditSitesCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.auditSiteCount {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+/* ── Submit gate (Review step required-before-submit checklist) ──────────── */
+.gateList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gateList li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+}
+.gateOk {
+  background: color-mix(in srgb, #2e7d32 6%, transparent);
+  color: var(--on-surface);
+}
+.gateFail {
+  background: color-mix(in srgb, #c62828 10%, transparent);
+  color: #7a1f1f;
+}
+.gateWarn {
+  background: color-mix(in srgb, #f57c00 10%, transparent);
+  color: #7a3c00;
+}
+.gateMark {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  width: 18px;
+  text-align: center;
+}
+.gateOk .gateMark { color: #2e7d32; }
+.gateFail .gateMark { color: #c62828; }
+.gateWarn .gateMark { color: #f57c00; }
+.gateLabel { flex: 1; }
+.gateBlockerNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #7a1f1f;
+  font-weight: 600;
+}
+.gateWarnNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #7a3c00;
+  font-style: italic;
+}
+
+/* ── Slim protocol card meta + footer (replaces the chunky grid layout) ── */
+.protoCardMetaSlim {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.4;
+}
+.protoMetaDot {
+  opacity: 0.5;
+  padding: 0 4px;
+}
+.protoCardFootSlim {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 8px;
+  font-size: 12px;
+}
+.protoStateOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: #2e7d32;
+}
+.protoStateWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: #b36000;
+}
+
+/* ── Inline quick-filter chips on the tab strip ───────────────────────────── */
+.protoQuickChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 6px 11px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.protoQuickChip:hover { color: var(--on-surface); }
+.protoQuickChipActive {
+  color: var(--on-surface);
+  border-color: currentColor;
+  background: color-mix(in srgb, var(--on-surface) 4%, var(--surface));
+}
+.protoQuickDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+/* ── Core-first IA: section header + back-to-core + browse more panel ───── */
+.protoSectionHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.protoSectionEyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: 4px;
+}
+.protoSectionTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--on-surface);
+}
+
+.protoBackHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.protoBackToCore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.protoBackToCore:hover { color: var(--on-surface); border-color: var(--on-surface-variant); }
+.protoTierTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+.protoBrowseMore {
+  margin-top: 28px;
+  padding: 18px 20px;
+  background: var(--surface-low);
+  border-radius: var(--radius-lg);
+}
+.protoBrowseMoreLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: 12px;
+}
+.protoBrowseMoreChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.protoBrowseChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--on-surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.protoBrowseChip:hover {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+.protoBrowseChipCount {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+  margin-left: 2px;
+}
+
+/* ── Card visual refresh — lighter, with left-edge category stripe ──────── */
+.protoCardGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)) !important;
+  gap: 14px !important;
+}
+.protoCard {
+  background: var(--surface);
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 0 var(--outline-variant), 0 0 0 1px var(--outline-variant) inset;
+  position: relative;
+  padding-left: 18px !important;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+.protoCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--outline-variant);
+}
+.protoCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 0 0 1px color-mix(in srgb, var(--primary) 30%, var(--outline-variant)) inset !important;
+  border-color: transparent !important;
+}
+
+/* Use the per-card --proto-stripe custom property (set inline from category color). */
+.protoCard::before {
+  background: var(--proto-stripe, var(--outline-variant)) !important;
+}
+
+/* ─── Polished Protocols page (v2) ─────────────────────────────────────── */
+
+/* Full-width title/intro followed by a predictable summary grid. */
+.pvDocHeaderRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.kpiStripV2 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.kpiV2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  /* Flat white panel — square corners, soft shadow, no border. */
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--shadow-card);
+  min-width: 130px;
+}
+
+@media (max-width: 900px) {
+  .kpiStripV2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .kpiStripV2 { grid-template-columns: 1fr; }
+  .protoTopRow > :first-child { min-width: 0; width: 100%; }
+}
+.kpiV2Icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.kpiV2Num {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--on-surface);
+  line-height: 1.1;
+}
+.kpiV2Lbl {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.25;
+  margin-top: 2px;
+  max-width: 110px;
+}
+
+/* Section card wrapper */
+.pcSection {
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.pcSectionHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.pcSectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.pcSectionTitleWrap { flex: 1; min-width: 0; }
+.pcSectionTitle {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: var(--on-surface);
+  line-height: 1.2;
+}
+.pcSectionSubtitle {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  margin-top: 2px;
+}
+.pcSectionCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+.pcSectionCta:hover { color: var(--on-surface); border-color: var(--primary); }
+
+/* Card v2 */
+.pcV2 {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 14px 16px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: box-shadow 0.15s, transform 0.12s;
+  min-width: 0;
+}
+.pcV2:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+}
+.pcV2Top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.pcV2Ref {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  border-radius: var(--radius-md);
+  text-transform: uppercase;
+}
+.pcV2StatusPill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.pcV2Title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.pcV2Desc {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.pcV2Meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pcV2Dot { opacity: 0.45; padding: 0 2px; }
+.pcV2Foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  margin: 0 -16px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.pcV2FootOk   { background: rgba(46, 125, 50, 0.08); color: #2e7d32; }
+.pcV2FootWarn { background: rgba(245, 124, 0, 0.08); color: #b36000; }
+
+/* Compact list rows for Specialty & Other */
+.pcRowList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pcRow {
+  display: grid;
+  grid-template-columns: 110px 1fr 100px 50px 130px 150px 14px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--outline-variant);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pcRow:first-child { border-top: none; }
+.pcRow:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+.pcRowRef {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 4px 9px;
+  border-radius: var(--radius-md);
+  text-transform: uppercase;
+  justify-self: start;
+}
+.pcRowTitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pcRowStatus {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  justify-self: start;
+}
+.pcRowVer, .pcRowReview {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+.pcRowAdoptOk, .pcRowAdoptWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.pcRowAdoptOk   { color: #2e7d32; }
+.pcRowAdoptWarn { color: #b36000; }
+
+/* Filter chip row (v2) — tier chips left + status chips right */
+.pcFilterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0 18px;
+}
+.pcFilterLeft, .pcFilterRight {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* Group label that prefixes each filter row ("Team", "Type") so the rows
+ * read as distinct filter axes rather than one long undifferentiated chip
+ * strip. */
+.pcFilterGroupLabel {
+  align-self: center;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+  margin-right: 4px;
+}
+.pcFilterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.pcFilterChip:hover { color: var(--on-surface); }
+.pcFilterChipActive {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+}
+
+/* ── Role chip row ─────────────────────────────────────────────────────
+ * Sits directly above the existing tier chips. Same chip primitive
+ * (.pcFilterChip) but with an emoji prefix + slightly heavier active
+ * tint so the role-as-identity selector reads as "who am I?" rather
+ * than just a filter. */
+
+.pcRoleRow {
+  margin-bottom: 10px;
+}
+.pcRoleChip {
+  padding: 7px 13px;
+  font-size: 12px;
+}
+/* Role chip line icon — sized to match the upper KPI tile icons so
+ * the role row reads as part of the same minimal system. */
+.pcRoleChip > svg {
+  flex-shrink: 0;
+  opacity: 0.78;
+}
+.pcRoleChip.pcFilterChipActive > svg {
+  opacity: 1;
+  color: var(--primary);
+}
+/* Slightly stronger active state for role chips — primary tint
+ * deeper than the tier chips since role is the more identity-bearing
+ * pick. */
+.pcRoleChip.pcFilterChipActive {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--outline-variant));
+}
+
+/* ── 🚨 Urgent Actions for Your Role banner ───────────────────────────
+ * High-priority attention banner above the chip rows. Soft-amber
+ * surround that pulls focus without screaming. Each card is a wide
+ * horizontal pill with a category-coloured reference chip, the
+ * action reason, and a primary CTA. */
+
+.urgentSection {
+  /* Tightened vertical rhythm — banner now sits as a single
+   * high-priority focus area that hands off cleanly to the role
+   * chips and accordion below. */
+  margin: 8px 0 10px;
+  padding: 10px 14px 12px;
+  background: color-mix(in srgb, #ef6c00 6%, var(--surface));
+  border: none;
+  border-left: 4px solid #ef6c00;
+  border-radius: 0;
+}
+.urgentHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.urgentEyebrow {
+  font-size: 18px;
+  line-height: 1;
+}
+.urgentTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  color: #934b00;
+}
+.urgentCount {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #934b00;
+  padding: 3px 9px;
+  background: color-mix(in srgb, #a34800 14%, transparent);
+  border-radius: 999px;
+}
+
+.urgentList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;     /* Tightened from 10px for denser vertical rhythm */
+}
+
+/* ── Chapter accordion — collapsed-by-default folder grouping ────────
+ * Renders when a role chip is active. Each chapter bar reads like a
+ * minimal table-of-contents row; clicking expands the body to reveal
+ * the protocol grid. Multiple chapters can be open simultaneously. */
+
+.chapterAccordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.chapterSection {
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.chapterSection:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--outline-variant));
+}
+.chapterSectionOpen {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--outline-variant));
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.chapterBar {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: var(--on-surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.chapterBar:hover {
+  background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+.chapterBar:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: -2px;
+}
+
+.chapterTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chapterIndex {
+  color: var(--on-surface-variant);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.chapterCount {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  padding: 3px 10px;
+  background: var(--surface-low);
+  border-radius: 999px;
+}
+.chapterSectionOpen .chapterCount {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+/* Chevron rotates when the section is expanded — pure CSS, no
+ * class swap needed, just sits on the last SVG in the bar. */
+.chapterBar > svg:last-of-type {
+  transition: transform 0.18s ease;
+}
+.chapterSectionOpen .chapterBar > svg:last-of-type {
+  transform: rotate(180deg);
+}
+
+.chapterBody {
+  padding: 4px 18px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+  animation: chapterReveal 0.18s ease-out;
+}
+@keyframes chapterReveal {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.urgentCard {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface-lowest);
+  border: none;
+  border-radius: 0;
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, transform 0.08s, box-shadow 0.15s;
+}
+.urgentCard:hover {
+  border-color: color-mix(in srgb, #ef6c00 55%, var(--outline-variant));
+  box-shadow: 0 4px 14px rgba(239, 108, 0, 0.12);
+  transform: translateY(-1px);
+}
+.urgentCard:focus-visible {
+  outline: 2px solid #ef6c00;
+  outline-offset: 2px;
+}
+
+.urgentRef {
+  flex-shrink: 0;
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 5px 10px;
+  border-radius: var(--radius-lg);
+}
+
+.urgentBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.urgentCardTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+  /* Single-line clamp keeps cards uniform. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.urgentReason {
+  font-size: 11.5px;
+  color: #934b00;
+  font-weight: 600;
+}
+
+.urgentCta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #a34800;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: 0.005em;
+}
+.urgentCard:hover .urgentCta {
+  background: #8f3f00;
+}
+
+/* ── Adoption status pill (compact ProtocolCard footer) ───────────────
+ * Replaces the older text-link `.pcV2ActionOk` / `.pcV2ActionWarn`
+ * pair. Always renders as a small left-aligned pill so state reads
+ * at a glance — green = adopted, amber = awaiting sign-off. */
+
+.adoptionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.adoptionPillOk {
+  background: color-mix(in srgb, #2e7d32 10%, transparent);
+  border-color: color-mix(in srgb, #2e7d32 28%, transparent);
+  color: #1b5e20;
+}
+.adoptionPillWarn {
+  /* Muted, low-key amber — "pending", not an alarm. No border. */
+  background: color-mix(in srgb, #9a7740 12%, transparent);
+  border-color: transparent;
+  color: #836838;
+}
+/* Themed (coloured) cards invert the pill to white-on-white-overlay
+ * so the green/amber tint isn't muddied by the category accent. */
+.pcV2Themed .adoptionPill {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+.pcFilterCount {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  color: inherit;
+  margin-left: 2px;
+}
+.pcFilterChipActive .pcFilterCount {
+  color: #00545d;
+}
+
+/* Breadcrumb + inline Compliance dashboard CTA */
+.pcBreadcrumbRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 14px;
+  flex-wrap: wrap;
+}
+
+/* Search bar + Compliance dashboard CTA on one line. */
+.protoTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 4px 0 18px;
+  flex-wrap: wrap;
+}
+/* The shared SearchBar renders as the first child — let it grow and drop its
+ * built-in 28px bottom margin so it sits level with the CTA pill. */
+.protoTopRow > :first-child {
+  flex: 1;
+  min-width: 280px;
+  margin-bottom: 0;
+}
+
+/* ── KPI tile "● LIVE" pill (Clinical Protocols page only) ─────────────── */
+.kpiV2Live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 2px 7px 2px 6px;
+  border-radius: 999px;
+  background: rgba(37, 111, 42, 0.10);
+  color: #256f2a;
+  align-self: flex-start;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.kpiV2LiveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #256f2a;
+  box-shadow: 0 0 0 2px rgba(37, 111, 42, 0.15);
+}
+
+/* ── Themed (colour-filled) protocol card variant ──────────────────────── */
+.pcV2Themed {
+  color: #fff;
+}
+.pcV2Themed .pcV2Title { color: #fff; }
+.pcV2Themed .pcV2Desc {
+  color: rgba(255, 255, 255, 0.78);
+}
+.pcV2Themed .pcV2Meta {
+  color: rgba(255, 255, 255, 0.65);
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+}
+.pcV2Themed .pcV2Dot { color: rgba(255, 255, 255, 0.45); }
+.pcV2Themed .pcV2Action { color: rgba(255, 255, 255, 0.95); }
+.pcV2Themed .pcV2ActionOk,
+.pcV2Themed .pcV2ActionWarn { color: #fff; }
+.pcV2Themed:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+/* Status pill dot (small filled circle inside the PUBLISHED pill) */
+.pcV2StatusDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Text-link bottom action (replaces the pill-style footer row) */
+.pcV2Action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0 2px;
+  margin: 0;
+  border-top: 1px solid var(--outline-variant);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pcV2ActionOk   { color: #2e7d32; }
+.pcV2ActionWarn { color: #b36000; }
+.pcV2Themed .pcV2Action { border-top-color: rgba(255, 255, 255, 0.16); }
+
+/* ── Client-Specific pack card variant (Audit & Evidence, Site-Specific SOPs) ─ */
+/* These two packs have no SaaS-provided master templates — they're entirely
+ * client-configured. Softer lavender background + "Client Specific" label
+ * inline with the icon makes the distinction obvious at-a-glance. */
+.packCardClientSpecific {
+  background: #faf7ff;
+  border-color: #e9e2f5;
+}
+.packCardHeadLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.packCardClientLabel {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(106, 27, 154, 0.10);
+  color: #6a1b9a;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .packCard { padding: 18px; }
+  .packCardHead { align-items: flex-start; flex-wrap: wrap; gap: 8px 12px; }
+  .packCardHeadLeft { min-width: 0; flex-wrap: wrap; }
+}
+
+/* Pulse ring applied to the element targeted by a Review-step "Fix →" link.
+ * Auto-removed after ~3s by the wizard root's useEffect. */
+.highlightPulse {
+  animation: hl-pulse 1.4s ease-in-out 2;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent),
+              0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: var(--radius-md);
+  outline: none !important;
+}
+@keyframes hl-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 35%, transparent),
+                         0 0 0 6px color-mix(in srgb, var(--primary) 12%, transparent); }
+  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 55%, transparent),
+                         0 0 0 9px color-mix(in srgb, var(--primary) 18%, transparent); }
+}

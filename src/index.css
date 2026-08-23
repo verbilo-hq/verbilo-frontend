@@ -12,15 +12,63 @@
 body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  /* VER-81: semantic token — defaults to --surface for Verbilo's
-     untenanted brand; tenants override --accent-bg with their
-     accentColor via TenantContext to tint the body background. */
-  background: var(--accent-bg);
+  background: var(--surface);
   color: var(--on-surface);
 }
 
 button {
   font-family: inherit;
+}
+
+/* Native form controls inherit the app font (browsers default them to the
+ * OS font, which visibly clashes) and pick up the brand accent for
+ * checkboxes / radios / range inputs. */
+input,
+select,
+textarea {
+  font-family: inherit;
+  accent-color: var(--primary);
+}
+
+/* ONE chevron for every native dropdown — replaces the OS arrow with the
+ * same primary double-gradient caret ThemedSelect draws, so custom and
+ * native dropdowns are visually identical. Control classes must set
+ * background-COLOR (not the `background` shorthand) or they wipe this out. */
+select {
+  appearance: none;
+  padding-right: 30px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--primary) 50%),
+    linear-gradient(135deg, var(--primary) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+/* Consistent keyboard-focus affordance everywhere. Components that manage
+ * their own focus style (outline: none + border/box-shadow) still win. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Shared control recipe — the ONE look for dropdowns/inputs, matching the
+ * tokenised design (radius-md controls per theme/tokens.css). Global (not
+ * a CSS module) so pages can apply it to bare <select>/<input> elements
+ * without new imports: className="ui-control". */
+.ui-control {
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 12px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--on-surface);
+  transition: border-color 0.15s;
+}
+.ui-control:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 a {

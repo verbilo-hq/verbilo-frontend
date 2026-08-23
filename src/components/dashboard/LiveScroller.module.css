@@ -1,0 +1,47 @@
+/**
+ * LiveScroller styles — subtle entrance animation per item so each
+ * rotation feels like a fresh news ticker tick. Respects
+ * prefers-reduced-motion via @media (set in the JS hook too).
+ */
+
+.scroller {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Slight inner padding so the new-item slide-in doesn't clip */
+  padding: 2px 0;
+}
+
+.scrollerItem {
+  /* The default state is the steady "after" pose. Each remount
+   * (via the offset-baked key) replays the entrance keyframes. */
+  animation: scrollerEnter 0.45s ease-out both;
+  opacity: 1;
+}
+
+/* The top item gets the more prominent entry to draw the eye to the
+ * latest activity. Older items slip in subtly. */
+.scrollerItemTop {
+  animation-name: scrollerEnterTop;
+  animation-duration: 0.55s;
+}
+
+@keyframes scrollerEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scrollerEnterTop {
+  0%   { opacity: 0; transform: translateY(-12px); }
+  60%  { opacity: 1; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Accessibility — static on reduced-motion. The JS also halts the
+ * auto-advance interval, so combined they yield a fully calm feed. */
+@media (prefers-reduced-motion: reduce) {
+  .scrollerItem,
+  .scrollerItemTop {
+    animation: none;
+  }
+}

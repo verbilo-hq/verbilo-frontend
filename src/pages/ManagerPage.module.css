@@ -1,8 +1,3 @@
-/* VER-47: the `uda*` classes relate to NHS UDA (Units of Dental Activity)
-   contract tracking — UK dental-sector only. Shown to dental tenants and
-   gated upstream via `Tenant.enabledModules`. Non-dental sectors will get
-   their own contract / activity tracking blocks. */
-
 /* ── UDA Hero ────────────────────────────────────────────────────────────── */
 .udaHero { padding: 24px; margin-bottom: 16px; }
 
@@ -51,6 +46,25 @@
   margin-bottom: 4px;
 }
 
+/* Scrollable rows container — caps at ~5 rows (~52px per row).
+ * Once a practice exceeds 5 dentists the rest scroll within this
+ * box without pushing the page. Thin custom scrollbar to match
+ * the modern-feel refresh. */
+.udaDentistScroll {
+  max-height: 162px;     /* ~3 rows × 52px row + tiny breathing room */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--outline-variant) transparent;
+}
+.udaDentistScroll::-webkit-scrollbar              { width: 6px; }
+.udaDentistScroll::-webkit-scrollbar-track        { background: transparent; }
+.udaDentistScroll::-webkit-scrollbar-thumb        {
+  background: var(--outline-variant);
+  border-radius: 999px;
+}
+.udaDentistScroll::-webkit-scrollbar-thumb:hover  { background: var(--on-surface-variant); }
+
 .udaDentistRow {
   display: flex;
   align-items: center;
@@ -82,8 +96,9 @@
   font-weight: 700;
 }
 
+/* Per-clinician bar — thicker to match the headline track. */
 .udaMiniBarTrack {
-  height: 8px;
+  height: 10px;
   background: var(--surface-container);
   border-radius: 999px;
   overflow: hidden;
@@ -181,6 +196,442 @@
 
 .actionRowCritical { border-left: 2px solid var(--error);  background: rgba(229,57,53,0.03);  }
 .actionRowWarning  { border-left: 2px solid #f57c00;       background: rgba(245,124,0,0.03);  }
+
+/* Inline "View Roster" text-button used inside the Practice Snapshot's
+ * Protocols rows. Low-weight underlined link, slate text, no chrome
+ * — sits where the chevron icon would on a standard action row. */
+.snapshotInlineLink {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--on-surface-variant) 35%, transparent);
+  text-underline-offset: 3px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  transition: color 0.12s, text-decoration-color 0.12s;
+}
+.snapshotInlineLink:hover {
+  color: var(--on-surface);
+  text-decoration-color: var(--on-surface);
+}
+.snapshotInlineLink:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* ── Clinician-mode alert banner ─────────────────────────────────────
+ * Replaces the UDA Performance Hero when the active dev role is
+ * `staff`. High-emphasis primary tint with a clear CTA on the right
+ * that deep-links to the Clinical Protocols viewer. */
+
+.clinicianAlert {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--outline-variant));
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md, 12px);
+}
+.clinicianAlertIcon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.clinicianAlertBody {
+  flex: 1;
+  min-width: 0;
+}
+.clinicianAlertTitle {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+.clinicianAlertSub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+.clinicianAlertBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  background: var(--primary);
+  color: var(--on-primary, #fff);
+  border: 0;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.08s, opacity 0.15s;
+}
+.clinicianAlertBtn:hover { transform: translateY(-1px); }
+.clinicianAlertBtn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── Adopted Group Protocols progress block (inside CQC drawer) ──── */
+
+.adoptedProtocolBlock {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed color-mix(in srgb, var(--outline-variant) 80%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.adoptedProtocolHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #6a1b9a;
+  letter-spacing: 0.005em;
+}
+.adoptedProtocolHint {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--on-surface-variant);
+  letter-spacing: 0;
+}
+
+.adoptedProtocolRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adoptedProtocolRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.adoptedProtocolTitle {
+  font-size: 12.5px;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+/* Pill rendered as a <button> — keeps the original chip dimensions
+ * + colour tokens but gains a hover affordance + inline View Roster
+ * CTA suffix to signal it opens the Roster modal. */
+.adoptedProtocolPill {
+  appearance: none;
+  border: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.12s, box-shadow 0.12s;
+}
+.adoptedProtocolPill:hover {
+  filter: brightness(0.94);
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 16%, transparent);
+}
+.adoptedProtocolPill:hover .adoptedProtocolPillCta {
+  text-decoration: underline;
+  opacity: 1;
+}
+.adoptedProtocolPill:focus-visible {
+  outline: 2px solid color-mix(in srgb, currentColor 60%, transparent);
+  outline-offset: 2px;
+}
+.adoptedProtocolPillCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.65;
+  font-weight: 600;
+  text-underline-offset: 2px;
+  transition: opacity 0.12s;
+}
+
+/* ── Protocol Sign-off Roster modal ──────────────────────────────────
+ * Standard scrim + centred dialog. Two columns inside the body —
+ * Signed (left, calm green tint) + Awaiting Sign-off (right, amber
+ * tint with the Nudge action). */
+
+.rosterScrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 80;
+  animation: rosterFade 0.18s ease-out;
+}
+@keyframes rosterFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.rosterModal {
+  width: 100%;
+  max-width: 760px;
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  overflow: hidden;
+}
+
+.rosterHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.rosterHead > div:first-child { flex: 1; min-width: 0; }
+.rosterEyebrow {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6a1b9a;
+}
+.rosterTitle {
+  margin: 3px 0 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+}
+
+.rosterClose {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  font-size: 26px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+.rosterClose:hover {
+  background: var(--surface-low);
+  color: var(--on-surface);
+}
+
+.rosterBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.rosterCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 16px 20px 20px;
+  background: color-mix(in srgb, #2e7d32 4%, var(--surface));
+}
+.rosterColWarn {
+  background: color-mix(in srgb, #ef6c00 5%, var(--surface));
+  border-left: 1px solid var(--outline-variant);
+}
+
+.rosterColHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1b5e20;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.rosterColWarn .rosterColHead { color: #b65100; }
+.rosterColIcon { font-size: 14px; line-height: 1; }
+.rosterColCount {
+  margin-left: 4px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  background: color-mix(in srgb, #2e7d32 14%, transparent);
+  color: #1b5e20;
+  border-radius: 999px;
+}
+.rosterColCountWarn {
+  background: color-mix(in srgb, #ef6c00 16%, transparent);
+  color: #b65100;
+}
+
+.rosterList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rosterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, #2e7d32 18%, var(--outline-variant));
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+}
+.rosterRowWarn {
+  border-color: color-mix(in srgb, #ef6c00 28%, var(--outline-variant));
+}
+
+.rosterRowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.rosterName {
+  font-weight: 700;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rosterRole {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+}
+
+.rosterDateSigned {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: color-mix(in srgb, #1b5e20 75%, var(--on-surface-variant));
+}
+
+.rosterNudgeBtn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #ef6c00;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.08s, background 0.12s;
+}
+.rosterNudgeBtn:hover { transform: translateY(-1px); background: #d05f00; }
+.rosterNudgeBtn:focus-visible {
+  outline: 2px solid color-mix(in srgb, #ef6c00 55%, transparent);
+  outline-offset: 2px;
+}
+/* "✓ Sent" micro-state — green pill, disabled, no transform on hover. */
+.rosterNudgeBtnSent {
+  background: color-mix(in srgb, #2e7d32 14%, var(--surface));
+  color: #1b5e20;
+  cursor: default;
+  pointer-events: none;
+}
+.rosterNudgeBtnSent:hover { transform: none; background: color-mix(in srgb, #2e7d32 14%, var(--surface)); }
+
+.rosterEmpty {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+
+.rosterFoot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  background: var(--surface-low);
+  border-top: 1px solid var(--outline-variant);
+}
+.rosterCloseBtn {
+  appearance: none;
+  padding: 9px 22px;
+  background: var(--surface);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.rosterCloseBtn:hover {
+  background: var(--surface-low);
+  border-color: color-mix(in srgb, var(--on-surface-variant) 30%, var(--outline-variant));
+}
+
+@media (max-width: 640px) {
+  .rosterBody {
+    grid-template-columns: 1fr;
+  }
+  .rosterColWarn {
+    border-left: 0;
+    border-top: 1px solid var(--outline-variant);
+  }
+}
+
+.adoptedProtocolBarTrack {
+  height: 6px;
+  background: var(--surface-low);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.adoptedProtocolBarFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
 
 .actionCategory {
   font-size: 10px;
@@ -328,8 +779,11 @@
 
 .udaBarWrap { margin-bottom: 12px; }
 
+/* Thicker bar — more presence, easier to read at a glance. The
+ * `--bar-color` CSS variable inherited from .udaBarFill is set
+ * inline (green when on-pace, red when behind). */
 .udaBarTrack {
-  height: 10px;
+  height: 14px;
   background: var(--surface-container);
   border-radius: 999px;
   overflow: visible;
@@ -349,7 +803,7 @@
   width: 2px;
   height: 18px;
   background: var(--on-surface-variant);
-  border-radius: 1px;
+  border-radius: var(--radius-md);
   transform: translateX(-50%);
   opacity: 0.5;
 }
@@ -370,6 +824,8 @@
   font-weight: 600;
   padding: 9px 14px;
   border-radius: var(--radius-md);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ── GDC Table ───────────────────────────────────────────────────────────── */
@@ -613,3 +1069,509 @@
   color: var(--on-surface-variant);
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+ * SLICE PM-1 — Active Action Queue + Compliance Rhythms + Mini Stats
+ * Two-column command-center layout between UDA hero and accordions.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+.udaEditBtn {
+  appearance: none;
+  border: 1px solid var(--outline-variant);
+  background: var(--surface);
+  color: var(--on-surface-variant);
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  margin-left: 10px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  vertical-align: middle;
+}
+.udaEditBtn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.udaManualLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
+
+.pmGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 60fr) minmax(0, 40fr);
+  gap: 18px;
+  margin: 0 0 18px;
+  align-items: start;
+}
+@media (max-width: 1024px) {
+  .pmGrid { grid-template-columns: 1fr; }
+}
+
+.queueCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+.queueHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.queueTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.queueCount {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-low);
+  color: var(--on-surface-variant);
+  letter-spacing: 0.02em;
+}
+.queueEmpty {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px;
+  background: color-mix(in srgb, #2e7d32 6%, var(--surface));
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--on-surface);
+}
+.queueList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.queueItem {
+  position: relative;
+  padding: 14px 18px 14px 16px;
+  /* Pure white card surface — pops against the grey page canvas
+   * (--surface). Previously was --surface which is the canvas
+   * itself, so cards were invisible against the background. */
+  background: var(--surface-lowest);
+  /* No outer 1px border — only the coloured left band remains.
+   * Tighter visual hierarchy: band = identity, surface = content. */
+  border: none;
+  /* 5px solid coloured band on the left edge — colour driven by
+   * inline borderLeftColor from TIER_META.tint (the SOLID tier
+   * colour, not the white badge-text colour). */
+  border-left: 3px solid var(--primary);
+  /* Completely flat — no corner radius. */
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.18s;
+}
+.queueItem:hover { box-shadow: var(--shadow-card); }
+.queueItemHead {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+}
+/* Modern-feel refresh: bold solid tier badge. Background colour comes
+ * from TIER_META.tint inline (solid, not tinted), text = white. */
+.queueTierBadge {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  align-self: center;
+}
+.queueItemTitle {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--on-surface);
+  line-height: 1.3;
+}
+.queueItemWhen {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.queueItemBody {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--on-surface-variant);
+}
+.queueItemActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  /* Generous breathing space above the action buttons — gives the
+   * card air, reads less crowded. */
+  margin-top: 14px;
+}
+.queuePrimaryBtn {
+  appearance: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.08s, opacity 0.12s;
+}
+.queuePrimaryBtn:hover { transform: translateY(-1px); opacity: 0.94; }
+.queueSecondaryBtn {
+  appearance: none;
+  background: var(--surface);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+  padding: 7px 13px;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.queueSecondaryBtn:hover {
+  background: var(--surface-low);
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--outline-variant));
+}
+
+.rhythmsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.rhythmsCard { padding: 18px 20px; }
+.rhythmsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.rhythmsTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.rhythmsTable { display: flex; flex-direction: column; }
+/* Grid: give Status its own 1fr column so the pill anchors LEFT,
+ * instead of `auto` (which collapses to pill-width + drags it right). */
+.rhythmsTableHead {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr auto;
+  gap: 10px;
+  padding: 6px 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.rhythmsRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 60%, transparent);
+}
+.rhythmsRow:last-child { border-bottom: 0; }
+.rhythmArea {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.rhythmAssigned {
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+}
+/* Modern-feel refresh: sharp rectangular pills with bold solid fills.
+ * Background + foreground colours come from RHYTHM_STATUS_META inline
+ * styles (saturated solid + white text). */
+/* Soft pill — title-case label, left-aligned in its column.
+ * Background + foreground colours come from RHYTHM_STATUS_META
+ * inline styles. */
+/* Hard-pin pill to its parent's left edge — `display: block` +
+ * `width: fit-content` makes the pill a block-level element hugging
+ * its content, sitting at column-start regardless of any text-align
+ * or grid-item alignment the parent might have. */
+.rhythmPill {
+  display: block;
+  width: fit-content;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  margin: 0;
+}
+/* Grid-native alignment: justify-self:start makes the cell shrink
+ * to content width AND sit at column-start — bulletproof against
+ * any text-align inheritance or inline-span quirks. */
+.rhythmsTableHead > span,
+.rhythmsRow > span {
+  justify-self: start;
+  min-width: 0;
+}
+.rhythmsTableHead > .rhythmsActionCol,
+.rhythmsRow > .rhythmsActionCol { justify-self: end; }
+.rhythmActionBtn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: var(--radius-lg);
+  transition: background 0.12s;
+}
+.rhythmActionBtn:hover { background: color-mix(in srgb, var(--primary) 8%, transparent); }
+
+.miniStatRow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+/* Borderless flat squares — soft grey fill, no border, no radius.
+ * Matches the mockup's understated reference boxes that sit BELOW
+ * the bordered Compliance Rhythms card. */
+.miniStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface-low);
+  border: 0;
+  border-radius: 0;
+}
+.miniStatLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.miniStatLabel {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+}
+.miniStatEdit {
+  appearance: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  color: var(--on-surface-variant);
+  transition: background 0.12s, color 0.12s;
+}
+.miniStatEdit:hover { background: var(--surface-low); color: var(--primary); }
+.miniStatValue {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--on-surface);
+  letter-spacing: -0.02em;
+}
+.miniStatHint {
+  font-size: 10.5px;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+}
+
+.pmFab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary, white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
+  transition: transform 0.1s, box-shadow 0.18s;
+  z-index: 40;
+}
+.pmFab:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28); }
+
+.pmToast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--on-surface);
+  color: var(--surface);
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.22);
+  z-index: 80;
+  animation: pmToastIn 0.2s ease-out;
+}
+@keyframes pmToastIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * SLICE PM-2 — Sub-tab navigation (Overview · Rota)
+ * Borderless segment-control style; sits between the TopBar/banner
+ * and the body content. Print hides itself.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+.pmTabs {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0 18px;
+  padding: 4px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+  align-self: flex-start;
+  width: fit-content;
+}
+
+.pmTab {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.pmTab:hover {
+  background: var(--surface);
+  color: var(--on-surface);
+}
+/* Active tab — solid teal fill, white text. Eliminates the
+ * "which tab am I on?" ambiguity the white-on-grey treatment
+ * created. Matches the bold primary-tab convention used in
+ * the UDA Contract modal. */
+.pmTabActive {
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.pmTab.pmTabActive:hover {
+  background: var(--primary);
+  color: white;
+}
+
+@media print {
+  .pmTabs { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * SIMPLIFICATION — drill-in chip row (replaces 6 accordion sections)
+ * Lightweight wayfinding under the PM-1 grid pointing the PM to the
+ * dedicated pages where the detail records actually live.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* Borderless flat row — matches the Staff on Site / Daily Labs
+ * treatment. No border, no radius, soft grey fill so it reads as
+ * a wayfinding strip not a contained card. */
+.pmDrillIn {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  background: var(--surface-low);
+  border: 0;
+  border-radius: 0;
+}
+
+.pmDrillInLabel {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: var(--on-surface-variant);
+  margin-right: 4px;
+}
+
+/* Square (sharp 4px) chips — matches the modern-feel refresh
+ * applied to the rest of PM Hub. Was capsule (999px). */
+.pmDrillChip {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+}
+.pmDrillChip:hover {
+  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--outline-variant));
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+.pmDrillChip:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}

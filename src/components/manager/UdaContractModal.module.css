@@ -1,0 +1,268 @@
+/* UdaContractModal — PM-2 monthly contract entry */
+
+.scrim {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 80;
+}
+
+.modal {
+  width: 100%; max-width: 720px; max-height: 96vh;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.32);
+}
+
+/* ─── Head ─────────────────────────────────────────────────── */
+
+.head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; padding: 20px 24px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.eyebrow {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+}
+.title {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 700; color: var(--on-surface);
+}
+.closeBtn {
+  appearance: none; border: 0; background: transparent;
+  font-size: 26px; font-weight: 300;
+  color: var(--on-surface-variant); cursor: pointer;
+  line-height: 1; padding: 4px 8px;
+}
+.closeBtn:hover { color: var(--on-surface); }
+
+/* ─── Tabs ─────────────────────────────────────────────────── */
+
+.tabBar {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 12px 24px 0;
+  align-items: center;
+}
+.tab {
+  appearance: none; border: 0;
+  background: var(--surface-low);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  color: var(--on-surface-variant);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.tab:hover { background: color-mix(in srgb, var(--primary) 6%, var(--surface-low)); color: var(--on-surface); }
+.tabActive {
+  background: var(--primary);
+  color: white;
+}
+.tabActive:hover { background: var(--primary); color: white; }
+
+.addTab {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px dashed var(--outline-variant);
+  background: transparent;
+  font: inherit; font-size: 11.5px; font-weight: 600;
+  color: var(--on-surface-variant);
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.addTab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  border-style: solid;
+}
+.tabMaxHint {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--on-surface-variant);
+  padding-left: 6px;
+}
+
+/* ─── Body ─────────────────────────────────────────────────── */
+
+/* `min-height: 0` is the magic — flex children default to
+ * `min-height: auto` which prevents shrinking below their
+ * content size, so the overflow-y: auto never engages. With
+ * min-height: 0 the body can shrink + scroll, which is why
+ * March was clipped without it. */
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+  display: flex; flex-direction: column;
+  gap: 16px;
+}
+
+.nameRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-low);
+  border-radius: var(--radius-md);
+}
+.nameLabel {
+  font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--on-surface-variant);
+  white-space: nowrap;
+}
+.nameInput {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 13.5px; font-weight: 600;
+  color: var(--on-surface);
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+}
+.nameInput:focus { outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 1px; border-color: var(--primary); }
+
+.removeBtn {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, #c62828 30%, var(--outline-variant));
+  color: #c62828;
+  font: inherit; font-size: 11.5px; font-weight: 600;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.removeBtn:hover { background: color-mix(in srgb, #c62828 8%, transparent); }
+
+/* ─── Grid ─────────────────────────────────────────────────── */
+
+.grid {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.gridHead {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 80px;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--surface-low);
+  border-bottom: 1px solid var(--outline-variant);
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.gridHeadCentre { text-align: center; }
+
+/* Tightened rows so all 12 months + Annual footer fit comfortably
+ * within the modal without aggressive scrolling. */
+.gridRow {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 3px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 50%, transparent);
+}
+.gridRow:last-of-type { border-bottom: 0; }
+
+.monthLabel {
+  font-size: 12px; font-weight: 600;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.cellInput {
+  font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--on-surface);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.cellInput::-webkit-outer-spin-button,
+.cellInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cellInput:focus {
+  outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.pctCell {
+  text-align: center;
+  font-size: 12px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-surface-variant);
+}
+.pctGood   { color: #1b5e20; }
+.pctSteady { color: var(--primary); }
+.pctWarn   { color: #b65100; }
+.pctBad    { color: #b71c1c; }
+
+.gridFootRow {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface-low));
+  border-top: 2px solid var(--outline-variant);
+}
+.totalCell {
+  text-align: center;
+  font-size: 13px; font-weight: 800;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Footer ───────────────────────────────────────────────── */
+
+.foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  padding: 14px 24px;
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface-low);
+}
+.liveHint {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--on-surface-variant);
+  font-style: italic;
+}
+.footBtns { display: inline-flex; gap: 8px; }
+
+.btnGhost {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  color: var(--on-surface);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.btnGhost:hover { background: var(--surface-low); }
+
+.btnPrimary {
+  appearance: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--primary);
+  border: 0;
+  color: white;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity 0.12s, transform 0.08s;
+}
+.btnPrimary:hover { transform: translateY(-1px); opacity: 0.94; }

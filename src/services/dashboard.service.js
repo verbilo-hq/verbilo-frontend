@@ -1,56 +1,10 @@
 import {
   groupUpdatesFixture, tipsFixture, defaultQuickLinksFixture,
-  linkIconsFixture, rssFeedsFixture, fallbackNewsFixture,
-} from "../fixtures/demo/dashboard";
-import { isDemoMode } from "../lib/mode";
+  linkIconsFixture, fallbackNewsFixture,
+} from "./fixtures/dashboard.fixture";
 import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
-
-const RSS2JSON = "https://api.rss2json.com/v1/api.json?count=3&rss_url=";
-
-const EMPTY_SUMMARY = {
-  patientCount: 0,
-  todaysAppointments: 0,
-  openTasks: 0,
-  recentActivity: [],
-};
-
-// VER-39: synthetic summary shown on demo.verbilo.co.uk. Plausible
-// mid-sized practice numbers so the dashboard header cards have content
-// instead of "0 patients". Numbers are static — the demo doesn't need
-// to feel live, just complete.
-const DEMO_SUMMARY = {
-  patientCount: 1248,
-  todaysAppointments: 23,
-  openTasks: 7,
-  recentActivity: [
-    { id: "a1", label: "Sarah Patel completed CPD: Safeguarding Children", at: "2h ago" },
-    { id: "a2", label: "New patient registered: Tom Brennan",              at: "4h ago" },
-    { id: "a3", label: "Lab case #4421 returned from Henry Schein",        at: "yesterday" },
-  ],
-};
-
-/**
- * Tenant + site-scoped summary for the DashboardPage header.
- * Shape mirrors the VER-25 backend DTO:
- *   { patientCount, todaysAppointments, openTasks, recentActivity[] }
- *
- * On 401/403 returns an empty-state shape so the page renders rather
- * than crashing — the auth layer will redirect to /login separately.
- */
-export async function getDashboardSummary() {
-  // VER-39: demo surface has no backend session and no real numbers;
-  // serve synthetic data so the dashboard renders fully.
-  if (isDemoMode()) return { ...DEMO_SUMMARY };
-  try {
-    return await fetchJson("/dashboard/summary");
-  } catch (err) {
-    if (err?.code === "UNAUTHORIZED" || err?.code === "FORBIDDEN") {
-      return { ...EMPTY_SUMMARY };
-    }
-    throw err;
-  }
-}
+const INTERNAL_NEWS_KEY = "inspire_internal_news";
 
 const stripHtml = (html) =>
   (html ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
@@ -98,38 +52,70 @@ export async function fetchNews({ force = false } = {}) {
       : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   };
 
-  const results = await Promise.allSettled(
-    rssFeedsFixture.map((feed) =>
-      fetch(`${RSS2JSON}${encodeURIComponent(feed.url)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.status !== "ok") return [];
-          return data.items.slice(0, 2).map((item) => ({
-            tag:   feed.tag,
-            icon:  feed.icon,
-            bg:    feed.bg,
-            color: feed.color,
-            title: item.title?.trim() ?? "",
-            desc:  stripHtml(item.description),
-            date:  fmtDate(item.pubDate),
-            href:  item.link,
-            _ts:   new Date(item.pubDate).getTime(),
-          }));
-        })
-    )
-  );
-  const items = results
-    .filter((r) => r.status === "fulfilled")
-    .flatMap((r) => r.value)
-    .sort((a, b) => b._ts - a._ts)
-    .slice(0, 5);
+  let items = [];
+  try {
+    const response = await fetchJson("/dashboard/news");
+    items = Array.isArray(response)
+      ? response.map((item) => ({
+          ...item,
+          title: String(item.title ?? "").trim(),
+          desc: stripHtml(item.desc),
+          date: item.date || fmtDate(item.pubDate),
+        }))
+      : [];
+  } catch {
+    // UI-only local work does not require the backend. The static regulator
+    // links below are the deliberate offline fallback, not fabricated news.
+  }
 
   newsCache = items.length ? items : [...fallbackNewsFixture];
   newsCacheDay = todayKey();
   return newsCache;
 }
 
-// VER-93: the localStorage-backed `listInternalNews` / `saveInternalNews`
-// stub was replaced by the real Announcement endpoint in
-// `services/announcements.service.js`. Removed deliberately so nothing
-// new accidentally writes to the old `verbilo_internal_news` key.
+/* Internal news / Verbilo Pulse posts — persisted to localStorage for the
+   demo; swap to fetchJson("/dashboard/internal-news") when backend lands.
+   The dashboard renders the newest post as the Pulse card; management
+   roles author new ones via the "New post" composer. */
+export function listInternalNews() {
+  try {
+    return JSON.parse(localStorage.getItem(INTERNAL_NEWS_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveInternalNews(posts) {
+  localStorage.setItem(INTERNAL_NEWS_KEY, JSON.stringify(posts));
+}
+
+/* Anonymous suggestion box — submissions persist so the management team
+   can actually review them (the card promises a weekly review). No user
+   identity is stored, deliberately: the box is advertised as anonymous. */
+const SUGGESTIONS_KEY = "verbilo_suggestions";
+
+export function listSuggestions() {
+  try {
+    return JSON.parse(localStorage.getItem(SUGGESTIONS_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSuggestion(text) {
+  const entry = {
+    id: `sug-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    text,
+    at: new Date().toISOString(),
+  };
+  const all = [entry, ...listSuggestions()].slice(0, 100);
+  try { localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(all)); } catch { /* noop */ }
+  return entry;
+}
+
+/** Remove a reviewed suggestion; returns the remaining list. */
+export function dismissSuggestion(id) {
+  const all = listSuggestions().filter((s) => s.id !== id);
+  try { localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(all)); } catch { /* noop */ }
+  return all;
+}
