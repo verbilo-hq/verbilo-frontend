@@ -1,0 +1,145 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Base utilities — ALL sections consume these. No per-file padding
+   reinvention. If you need a custom rhythm, add a new token in tokens.css.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Skip link for keyboard users */
+.skip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-100%);
+  padding: var(--space-3) var(--space-4);
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  z-index: 1000;
+  border-radius: 0 0 var(--r-sm) 0;
+}
+.skip:focus-visible { transform: translateY(0); }
+
+/* Layout primitives */
+.container {
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.container--tight {
+  max-width: var(--content-sm);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section            { padding-block: var(--section-pad);       position: relative; }
+.section--tight     { padding-block: var(--section-pad-tight); position: relative; }
+.section--hero      { padding-block: var(--section-pad-hero);  position: relative; }
+.section--surface   { background: var(--surface-2); }
+.section--paper-3   { background: var(--paper-3); }
+
+/* Section header (eyebrow + heading + optional lead) */
+.section-head {
+  max-width: var(--content-sm);
+  margin: 0 auto var(--section-head-mb);
+  text-align: center;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: -.005em;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: var(--tracking-tighter);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.display--section { font-size: var(--display-section); }
+.display--hero    { font-size: var(--display-hero); line-height: 1.02; }
+
+.lead {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.4;
+  color: var(--muted);
+  max-width: 56ch;
+  margin-inline: auto;
+}
+
+/* Reveal-on-scroll (IntersectionObserver toggles .is-in) */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.reveal.is-in { opacity: 1; transform: none; }
+.reveal.d-1 { transition-delay: 80ms; }
+.reveal.d-2 { transition-delay: 160ms; }
+.reveal.d-3 { transition-delay: 240ms; }
+.reveal.d-4 { transition-delay: 320ms; }
+.reveal.d-5 { transition-delay: 400ms; }
+.reveal.d-6 { transition-delay: 480ms; }
+
+/* ── Editorial section numbering — globally available so each section's
+   CSS module doesn't have to re-declare them. Used inside .eyebrow:
+     <p class="..eyebrow"><span class="eyebrow-num">01</span>
+        <span class="eyebrow-divider"></span> Eyebrow text</p>
+   The number lives in Newsreader italic for an editorial-magazine cadence.
+*/
+.eyebrow-num {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1em;
+  color: var(--accent);
+  letter-spacing: -.02em;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  margin-right: 2px;
+}
+.eyebrow-divider {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: .4;
+  vertical-align: middle;
+  margin: 0 10px 2px 6px;
+}
+
+/* Subtle dot-grid background pattern. Drop on any element with
+   `position: relative; overflow: hidden;` to layer it underneath content. */
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: 0 0;
+  opacity: 0.18;
+  pointer-events: none;
+  mask-image: radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(80% 70% at 50% 40%, #000 30%, transparent 100%);
+}
+
+/* Visually hidden */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Reduced-motion: instant reveal, no Y offset */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
