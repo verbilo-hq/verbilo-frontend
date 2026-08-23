@@ -53,7 +53,7 @@ export function LandingPage({ onLoginClick, contactHref = null }) {
         <TrainingSection />
         <IntegrationsSection />
         <QuotesScene />
-        <PricingSection />
+        <PricingSection demoCta={demoCta} />
         <FaqSection />
         <CtaSection demoCta={demoCta} contactHref={contactHref} />
       </main>
