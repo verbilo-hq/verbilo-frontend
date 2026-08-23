@@ -40,3 +40,14 @@ export function hasLocalMockCognito() {
   const h = window.location.hostname;
   return Boolean(import.meta.env?.DEV) && (h === "localhost" || h === "127.0.0.1" || h === "[::1]");
 }
+
+/**
+ * True on a deployed demo host, where demo mode is on but there is no
+ * backend this bundle can authenticate against (the session token is minted
+ * locally). Callers use this to skip pointless API round-trips that would
+ * only 401/404. Local dev is deliberately excluded: the mock-Cognito stack
+ * and the local API are both real there, so behaviour is unchanged.
+ */
+export function isOfflineDemo() {
+  return isDemoMode() && !hasLocalMockCognito();
+}

@@ -4,6 +4,7 @@ import {
 } from "./fixtures/dashboard.fixture";
 import { simulateLatency } from "./delay";
 import { fetchJson } from "./http";
+import { isOfflineDemo } from "../lib/demoMode.js";
 const INTERNAL_NEWS_KEY = "inspire_internal_news";
 
 const stripHtml = (html) =>
@@ -54,6 +55,9 @@ export async function fetchNews({ force = false } = {}) {
 
   let items = [];
   try {
+    // Deployed demo has no backend it can authenticate against - fall straight
+    // through to the offline regulator-link fallback below.
+    if (isOfflineDemo()) throw new Error("offline demo");
     const response = await fetchJson("/dashboard/news");
     items = Array.isArray(response)
       ? response.map((item) => ({
