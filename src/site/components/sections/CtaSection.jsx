@@ -1,7 +1,7 @@
 import s from './CtaSection.module.css';
 import Button from '../Button.jsx';
 
-export default function CtaSection({ bookDemoHref, contactHref }) {
+export default function CtaSection({ demoCta = {}, contactHref }) {
   return (
     <section className={s.section} aria-labelledby="cta-h">
       <div className="container">
@@ -17,13 +17,13 @@ export default function CtaSection({ bookDemoHref, contactHref }) {
           <div className={s.content}>
             <p className={s.eyebrow}>Two ways to start</p>
             <h2 id="cta-h" className={s.title}>
-              Book a demo or try Verbilo <em>free for a month.</em>
+              See Verbilo in action or try it <em>free for a month.</em>
             </h2>
             <p className={s.lead}>
-              The demo is a 30-minute walk-through with us. The trial is the full product, on your own data, for a month. No card. No subscription. Walk away if it doesn't fit.
+              The demo is the live product, open to explore right now. The trial is the full product, on your own data, for a month. No card. No subscription. Walk away if it doesn't fit.
             </p>
             <div className={s.actions}>
-              <Button href={bookDemoHref || '#demo'} variant="invert-primary" size="lg" arrow>Book a demo</Button>
+              <Button {...demoCta} variant="invert-primary" size="lg" arrow>View demo</Button>
               <Button href={contactHref || '#trial'} variant="invert-secondary" size="lg">Start 1-month trial</Button>
             </div>
             <p className={s.trust}>

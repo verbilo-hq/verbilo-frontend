@@ -160,7 +160,6 @@ export default function App() {
     return (
       <LandingPage
         onLoginClick={() => setShowLogin(true)}
-        bookDemoHref={import.meta.env.VITE_BOOK_DEMO_URL?.trim() || null}
         contactHref={import.meta.env.VITE_CONTACT_URL?.trim() || null}
       />
     );
